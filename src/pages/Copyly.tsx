@@ -124,100 +124,98 @@ C'est votre dernière chance de...
   };
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <div className="flex-1 overflow-auto p-8">
-        <div className="space-y-6 fade-in max-w-5xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center gap-3">
-                <span className="text-2xl">🦉</span>
-                Copyly - Générateur de contenu IA
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Création de contenu marketing optimisé par intelligence artificielle
-              </p>
-            </div>
-          </div>
+    <div className="space-y-6 fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <span className="text-2xl">🦉</span>
+            Copyly - Générateur de contenu IA
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Création de contenu marketing optimisé par intelligence artificielle
+          </p>
+        </div>
+      </div>
 
-          {aiMessage && (
-            <div className="rounded-md bg-muted p-4 text-sm" data-testid="ai-message">
-              {aiMessage}
-            </div>
-          )}
+      {aiMessage && (
+        <div className="rounded-md bg-muted p-4 text-sm" data-testid="ai-message">
+          {aiMessage}
+        </div>
+      )}
 
-          <Tabs defaultValue="social" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="social" className="gap-2">
-                <Instagram className="w-4 h-4" />
-                Réseaux sociaux
-              </TabsTrigger>
-              <TabsTrigger value="sales" className="gap-2">
-                <Globe className="w-4 h-4" />
-                Page de vente
-              </TabsTrigger>
-              <TabsTrigger value="email" className="gap-2">
-                <Mail className="w-4 h-4" />
-                Séquence email
-              </TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="social" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="social" className="gap-2">
+            <Instagram className="w-4 h-4" />
+            Réseaux sociaux
+          </TabsTrigger>
+          <TabsTrigger value="sales" className="gap-2">
+            <Globe className="w-4 h-4" />
+            Page de vente
+          </TabsTrigger>
+          <TabsTrigger value="email" className="gap-2">
+            <Mail className="w-4 h-4" />
+            Séquence email
+          </TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="social" className="space-y-6">
-              <Card className="glass-glow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Instagram className="w-5 h-5 text-pink-500" />
-                    Générateur de captions sociales
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="topic">Sujet / Thème</Label>
-                      <Input
-                        id="topic"
-                        value={socialForm.topic}
-                        onChange={(e) => setSocialForm({ ...socialForm, topic: e.target.value })}
-                        placeholder="Ex: Innovation digitale"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="platform">Plateforme</Label>
-                      <select
-                        className="w-full p-2 border rounded-md bg-background"
-                        value={socialForm.platform}
-                        onChange={(e) => setSocialForm({ ...socialForm, platform: e.target.value })}
-                      >
-                        <option value="instagram">Instagram</option>
-                        <option value="linkedin">LinkedIn</option>
-                        <option value="twitter">Twitter</option>
-                        <option value="facebook">Facebook</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="tone">Ton</Label>
-                      <select
-                        id="tone"
-                        className="w-full p-2 border rounded-md bg-background"
-                        value={socialForm.tone}
-                        onChange={(e) => setSocialForm({ ...socialForm, tone: e.target.value })}
-                      >
-                        <option value="professionnel">Professionnel</option>
-                        <option value="amical">Amical</option>
-                        <option value="humoristique">Humoristique</option>
-                      </select>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={handleSocialGeneration}
-                    disabled={isGenerating || !socialForm.topic}
-                    className="gap-2"
+        <TabsContent value="social" className="space-y-6">
+          <Card className="glass-glow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Instagram className="w-5 h-5 text-pink-500" />
+                Générateur de captions sociales
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="topic">Sujet / Thème</Label>
+                  <Input
+                    id="topic"
+                    value={socialForm.topic}
+                    onChange={(e) => setSocialForm({ ...socialForm, topic: e.target.value })}
+                    placeholder="Ex: Innovation digitale"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="platform">Plateforme</Label>
+                  <select
+                    className="w-full p-2 border rounded-md bg-background"
+                    value={socialForm.platform}
+                    onChange={(e) => setSocialForm({ ...socialForm, platform: e.target.value })}
                   >
-                    <Wand2 className="w-4 h-4" />
-                    {isGenerating ? 'Génération...' : 'Générer la caption'}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                    <option value="instagram">Instagram</option>
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="twitter">Twitter</option>
+                    <option value="facebook">Facebook</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="tone">Ton</Label>
+                  <select
+                    id="tone"
+                    className="w-full p-2 border rounded-md bg-background"
+                    value={socialForm.tone}
+                    onChange={(e) => setSocialForm({ ...socialForm, tone: e.target.value })}
+                  >
+                    <option value="professionnel">Professionnel</option>
+                    <option value="amical">Amical</option>
+                    <option value="humoristique">Humoristique</option>
+                  </select>
+                </div>
+              </div>
+              <Button
+                onClick={handleSocialGeneration}
+                disabled={isGenerating || !socialForm.topic}
+                className="gap-2"
+              >
+                <Wand2 className="w-4 h-4" />
+                {isGenerating ? 'Génération...' : 'Générer la caption'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
             <TabsContent value="sales" className="space-y-6">
               <Card className="glass-glow">
@@ -338,33 +336,31 @@ C'est votre dernière chance de...
             </TabsContent>
           </Tabs>
 
-          {generatedContent && (
-            <Card className="glass-glow mt-6">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Contenu généré</CardTitle>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={copyToClipboard}
-                    className="gap-2"
-                  >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copied ? 'Copié !' : 'Copier'}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={generatedContent}
-                  readOnly
-                  className="min-h-[400px] font-mono text-sm"
-                />
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+      {generatedContent && (
+        <Card className="glass-glow mt-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Contenu généré</CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={copyToClipboard}
+                className="gap-2"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copié !' : 'Copier'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={generatedContent}
+              readOnly
+              className="min-h-[400px] font-mono text-sm"
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
