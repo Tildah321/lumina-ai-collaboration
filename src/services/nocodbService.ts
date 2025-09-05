@@ -437,7 +437,7 @@ class NocoDBService {
   // Tâches - Filtered by user's projects
   async getTasks(
     projetId?: string,
-    options: { onlyCurrentUser?: boolean } = {}
+    options: { onlyCurrentUser?: boolean; fields?: string; limit?: number } = {},
   ) {
     // Optionally filter by current Supabase user
     const currentUserId = options.onlyCurrentUser
@@ -450,9 +450,18 @@ class NocoDBService {
       .map((p: any) => (p.Id || p.id)?.toString())
       .filter(Boolean);
 
-    const endpoint = projetId
-      ? `/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`
-      : `/${this.config.tableIds.taches}`;
+    const params: string[] = [];
+    if (projetId) {
+      params.push(`where=(projet_id,eq,${projetId})`);
+    }
+    if (options.fields) {
+      params.push(`fields=${options.fields}`);
+    }
+    if (options.limit) {
+      params.push(`limit=${options.limit}`);
+    }
+    const query = params.length ? `?${params.join('&')}` : '';
+    const endpoint = `/${this.config.tableIds.taches}${query}`;
 
     const response = await this.makeRequest(endpoint);
     let list = response.list || [];
@@ -468,7 +477,6 @@ class NocoDBService {
         userProjectIds.includes(task.projet_id?.toString())
       );
     }
-
     if (options.onlyCurrentUser && currentUserId) {
       list = list.filter((task: any) => {
         const taskUserId =
@@ -492,7 +500,7 @@ class NocoDBService {
 
   async getTasksCount(
     projetId: string,
-    options: { onlyCurrentUser?: boolean } = {},
+    options: { onlyCurrentUser?: boolean; fields?: string; limit?: number } = {},
   ) {
     if (!this.cachedProjectIds) {
       await this.getProjets();
@@ -599,7 +607,7 @@ class NocoDBService {
   }
 
   // Jalons - Filtered by user's spaces
-  async getMilestones(projetId?: string, options: { fields?: string } = {}) {
+  async getMilestones(projetId?: string, options: { fields?: string; limit?: number } = {}) {
     const userSpaceIds = await this.getUserSpaceIds();
 
     if (projetId && !userSpaceIds.includes(projetId)) {
@@ -607,10 +615,18 @@ class NocoDBService {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
-    const fieldsParam = options.fields ? `&fields=${options.fields}` : '';
-    const endpoint = projetId
-      ? `/${this.config.tableIds.jalons}?where=(projet_id,eq,${projetId})${fieldsParam}`
-      : `/${this.config.tableIds.jalons}${fieldsParam ? `?${fieldsParam.slice(1)}` : ''}`;
+    const params: string[] = [];
+    if (projetId) {
+      params.push(`where=(projet_id,eq,${projetId})`);
+    }
+    if (options.fields) {
+      params.push(`fields=${options.fields}`);
+    }
+    if (options.limit) {
+      params.push(`limit=${options.limit}`);
+    }
+    const query = params.length ? `?${params.join('&')}` : '';
+    const endpoint = `/${this.config.tableIds.jalons}${query}`;
 
     const response = await this.makeRequest(endpoint);
 
@@ -650,7 +666,7 @@ class NocoDBService {
   }
 
   // Factures - Filtered by user's spaces
-  async getInvoices(projetId?: string) {
+  async getInvoices(projetId?: string, options: { fields?: string; limit?: number } = {}) {
     const userSpaceIds = await this.getUserSpaceIds();
     
     if (projetId && !userSpaceIds.includes(projetId)) {
@@ -658,9 +674,18 @@ class NocoDBService {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
-    const endpoint = projetId 
-      ? `/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`
-      : `/${this.config.tableIds.factures}`;
+    const params: string[] = [];
+    if (projetId) {
+      params.push(`where=(projet_id,eq,${projetId})`);
+    }
+    if (options.fields) {
+      params.push(`fields=${options.fields}`);
+    }
+    if (options.limit) {
+      params.push(`limit=${options.limit}`);
+    }
+    const query = params.length ? `?${params.join('&')}` : '';
+    const endpoint = `/${this.config.tableIds.factures}${query}`;
     
     const response = await this.makeRequest(endpoint);
 
