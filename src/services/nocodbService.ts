@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 class NocoDBService {
   private config: NocoDBConfig;
+  private cachedProjectIds: string[] | null = null;
 
   constructor() {
     this.config = {
@@ -79,6 +80,10 @@ class NocoDBService {
   private invalidateCache(endpoint: string) {
     const url = `${this.config.baseUrl}${endpoint}`;
     NocoDBService.requestCache.delete(url);
+  }
+
+  private invalidateProjectCache() {
+    this.cachedProjectIds = null;
   }
   
   private async makeRequest(
@@ -383,6 +388,9 @@ class NocoDBService {
 
     // If user has no registered spaces, return everything
     if (userSpaceIds.length === 0) {
+      this.cachedProjectIds = (response.list || [])
+        .map((p: any) => (p.Id || p.id)?.toString())
+        .filter(Boolean);
       return response;
     }
 
@@ -390,6 +398,11 @@ class NocoDBService {
     const filteredList = (response.list || []).filter((projet: any) =>
       userSpaceIds.includes(projet.client_id?.toString())
     );
+
+    this.cachedProjectIds = filteredList
+      .map((p: any) => (p.Id || p.id)?.toString())
+      .filter(Boolean);
+
     return {
       ...response,
       list: filteredList,
@@ -398,10 +411,12 @@ class NocoDBService {
   }
 
   async createProjet(data: any) {
-    return this.makeRequest(`/${this.config.tableIds.projets}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.projets}`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    this.invalidateProjectCache();
+    return response;
   }
 
   async updateProjet(id: string, data: any) {
@@ -412,9 +427,11 @@ class NocoDBService {
   }
 
   async deleteProjet(id: string) {
-    return this.makeRequest(`/${this.config.tableIds.projets}/${id}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.projets}/${id}`, {
       method: 'DELETE',
     });
+    this.invalidateProjectCache();
+    return response;
   }
 
   // Tâches - Filtered by user's projects
@@ -477,10 +494,11 @@ class NocoDBService {
     projetId: string,
     options: { onlyCurrentUser?: boolean } = {},
   ) {
-    const projetsResponse = await this.getProjets();
-    const userProjectIds = (projetsResponse.list || [])
-      .map((p: any) => (p.Id || p.id)?.toString())
-      .filter(Boolean);
+    if (!this.cachedProjectIds) {
+      await this.getProjets();
+    }
+
+    const userProjectIds = this.cachedProjectIds || [];
     if (userProjectIds.length > 0 && !userProjectIds.includes(projetId)) {
       return 0;
     }
@@ -669,6 +687,63 @@ class NocoDBService {
     const endpoint = `/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})&fields=Id&limit=1`;
     const response = await this.makeRequest(endpoint);
     return response.pageInfo?.totalRows ?? (response.list || []).length;
+  }
+
+  async getProjectsWithStats(clientIds: string[]) {
+    if (clientIds.length === 0) {
+      return {};
+    }
+
+    const currentUserId = await this.getCurrentUserId();
+    const ids = clientIds.join(',');
+
+    const tasksWhere = `(projet_id,in,${ids})` + (currentUserId ? `~and(supabase_user_id,eq,${currentUserId})` : '');
+    const milestonesWhere = `(projet_id,in,${ids})`;
+    const invoicesWhere = `(projet_id,in,${ids})`;
+
+    const [tasksRes, milestonesRes, invoicesRes] = await Promise.all([
+      this.makeRequest(
+        `/${this.config.tableIds.taches}?where=${tasksWhere}&fields=projet_id&limit=1000`
+      ),
+      this.makeRequest(
+        `/${this.config.tableIds.jalons}?where=${milestonesWhere}&fields=projet_id,terminé,termine&limit=1000`
+      ),
+      this.makeRequest(
+        `/${this.config.tableIds.factures}?where=${invoicesWhere}&fields=projet_id&limit=1000`
+      )
+    ]);
+
+    const stats: Record<string, { tasksCount: number; milestonesCount: number; invoicesCount: number; doneMilestones: number }> = {};
+    clientIds.forEach(id => {
+      stats[id] = { tasksCount: 0, milestonesCount: 0, invoicesCount: 0, doneMilestones: 0 };
+    });
+
+    (tasksRes.list || []).forEach((task: any) => {
+      const pid = task.projet_id?.toString();
+      if (pid && stats[pid]) {
+        stats[pid].tasksCount++;
+      }
+    });
+
+    (milestonesRes.list || []).forEach((milestone: any) => {
+      const pid = milestone.projet_id?.toString();
+      if (pid && stats[pid]) {
+        stats[pid].milestonesCount++;
+        const status = milestone.terminé ?? milestone.termine;
+        if (status === true || status === 'true') {
+          stats[pid].doneMilestones++;
+        }
+      }
+    });
+
+    (invoicesRes.list || []).forEach((invoice: any) => {
+      const pid = invoice.projet_id?.toString();
+      if (pid && stats[pid]) {
+        stats[pid].invoicesCount++;
+      }
+    });
+
+    return stats;
   }
 
   async createInvoice(data: any) {
