@@ -349,67 +349,74 @@ const Pipou = () => {
                           <p className="text-sm text-muted-foreground">
                             {project.description}
                           </p>
-                          <div className="flex gap-2 pt-2 flex-wrap">
-                            <Button
-                              size="sm"
-                              onClick={() => navigate(`/client-space/${project.id}`)}
-                              className="gap-2"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                              Ouvrir l’espace
-                            </Button>
-                            {project.driveLink && (
+                          <div className="flex items-center justify-between pt-2 gap-2">
+                            <div className="flex gap-2 flex-wrap">
+                              <Button
+                                size="sm"
+                                onClick={() => navigate(`/client-space/${project.id}`)}
+                                className="gap-2"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                Ouvrir l’espace
+                              </Button>
+                              {project.driveLink && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-2"
+                                  asChild
+                                >
+                                  <a href={project.driveLink} target="_blank" rel="noopener noreferrer">
+                                    <FileText className="w-4 h-4" />
+                                    Fichiers
+                                  </a>
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="outline"
+                                onClick={() => setMilestonesProject(project)}
                                 className="gap-2"
-                                asChild
                               >
-                                <a href={project.driveLink} target="_blank" rel="noopener noreferrer">
-                                  <FileText className="w-4 h-4" />
-                                  Fichiers
-                                </a>
+                                <Target className="w-4 h-4" />
+                                Jalons
                               </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setInvoicesProject(project)}
+                                className="gap-2"
+                              >
+                                <Euro className="w-4 h-4" />
+                                Factures
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedProject(project);
+                                  setShareDialogOpen(true);
+                                }}
+                                className="gap-2"
+                              >
+                                <Share2 className="w-4 h-4" />
+                                Partager
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => handleProjectSummary(project)}
+                                className="gap-2"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                Analyse IA
+                              </Button>
+                            </div>
+                            {project.price > 0 && (
+                              <div className="text-lg font-bold whitespace-nowrap ml-auto">
+                                {project.price}€
+                              </div>
                             )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setMilestonesProject(project)}
-                              className="gap-2"
-                            >
-                              <Target className="w-4 h-4" />
-                              Jalons
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setInvoicesProject(project)}
-                              className="gap-2"
-                            >
-                              <Euro className="w-4 h-4" />
-                              Factures
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedProject(project);
-                                setShareDialogOpen(true);
-                              }}
-                              className="gap-2"
-                            >
-                              <Share2 className="w-4 h-4" />
-                              Partager
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => handleProjectSummary(project)}
-                              className="gap-2"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                              Analyse IA
-                            </Button>
                           </div>
                         </CardContent>
                       </Card>
