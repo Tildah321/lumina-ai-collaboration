@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bot, CheckSquare, Users, Edit3, Moon, Sun, LogOut, ChevronLeft, ChevronRight, Menu, Crown, Lock, User } from 'lucide-react';
+import { Bot, CheckSquare, Users, Edit3, Moon, Sun, LogOut, ChevronLeft, ChevronRight, Menu, Crown, Lock, User, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -53,6 +53,14 @@ const Navigation = () => {
       icon: Edit3,
       description: 'Générateur de contenu',
       color: 'text-purple-500',
+      requiresPro: true
+    },
+    {
+      name: 'Mailo',
+      href: '/mailo',
+      icon: Mail,
+      description: 'Séquences cold email',
+      color: 'text-violet-500',
       requiresPro: true
     }
   ];
