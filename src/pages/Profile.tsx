@@ -19,12 +19,14 @@ import {
   X,
   CheckCircle,
   AlertTriangle,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Palette
 } from 'lucide-react';
 import { usePlan } from '@/contexts/PlanContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { loadBranding, saveBranding } from '@/lib/branding';
 
 const Profile = () => {
   const { user, changePassword } = useAuth();
@@ -39,7 +41,9 @@ const Profile = () => {
     darkMode: false,
     paymentLink: '',
     messageLink: '',
-    meetingLink: ''
+    meetingLink: '',
+    brandName: '',
+    brandColor: '#895af6'
   });
 
   const [isPasswordEditing, setIsPasswordEditing] = useState(false);
@@ -50,11 +54,14 @@ const Profile = () => {
 
   useEffect(() => {
     const savedLinks = JSON.parse(localStorage.getItem('defaultLinks') || '{}');
+    const savedBranding = loadBranding();
     setFormData(prev => ({
       ...prev,
       paymentLink: savedLinks.paymentLink || '',
       messageLink: savedLinks.messageLink || '',
-      meetingLink: savedLinks.meetingLink || ''
+      meetingLink: savedLinks.meetingLink || '',
+      brandName: savedBranding.brandName || '',
+      brandColor: savedBranding.brandColor || '#895af6'
     }));
   }, []);
 
@@ -65,6 +72,7 @@ const Profile = () => {
       messageLink: formData.messageLink,
       meetingLink: formData.meetingLink
     }));
+    saveBranding({ brandName: formData.brandName, brandColor: formData.brandColor });
     toast({
       title: "Profil mis à jour",
       description: "Vos modifications ont été enregistrées avec succès."
@@ -244,11 +252,45 @@ const Profile = () => {
                 disabled={!isEditing}
               />
             </div>
+        </CardContent>
+      </Card>
+
+      {/* Branding Premium */}
+      {userPlan?.plan_type === 'pro' && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Palette className="w-5 h-5" />
+              <CardTitle>Branding</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="brandName">Nom de l'entreprise</Label>
+              <Input
+                id="brandName"
+                value={formData.brandName}
+                onChange={(e) => setFormData(prev => ({ ...prev, brandName: e.target.value }))}
+                disabled={!isEditing}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="brandColor">Couleur principale</Label>
+              <Input
+                id="brandColor"
+                type="color"
+                value={formData.brandColor}
+                onChange={(e) => setFormData(prev => ({ ...prev, brandColor: e.target.value }))}
+                disabled={!isEditing}
+                className="w-16 h-10 p-1"
+              />
+            </div>
           </CardContent>
         </Card>
+      )}
 
-        {/* Préférences */}
-        <Card>
+      {/* Préférences */}
+      <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Settings className="w-5 h-5" />

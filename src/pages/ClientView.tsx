@@ -28,6 +28,7 @@ import MilestoneManager from '@/components/milestones/MilestoneManager';
 import InvoiceManager from '@/components/invoices/InvoiceManager';
 import nocodbService from '@/services/nocodbService';
 import clientAuthService from '@/services/clientAuthService';
+import { loadBranding, applyBranding } from '@/lib/branding';
 
 const navItems = [
   { value: 'home', icon: Home, label: 'Accueil' },
@@ -35,11 +36,6 @@ const navItems = [
   { value: 'collaborator', icon: Users, label: 'Collaborateur' }
 ];
 
-const providerInfo = {
-  name: 'Lumina',
-  website: 'https://lumina.app',
-  email: 'contact@lumina.app'
-};
 
 const ClientView = () => {
   const { id } = useParams();
@@ -50,6 +46,15 @@ const ClientView = () => {
   const [passwordInput, setPasswordInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [needsPassword, setNeedsPassword] = useState(false);
+  const branding = loadBranding();
+  useEffect(() => {
+    applyBranding(branding);
+  }, []);
+  const providerInfo = {
+    name: branding.brandName || 'Lumina',
+    website: 'https://lumina.app',
+    email: 'contact@lumina.app'
+  };
 
   useEffect(() => {
     const loadSpace = async () => {

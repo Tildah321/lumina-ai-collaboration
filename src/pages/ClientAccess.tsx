@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { ArrowRight, Users, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { clientAuthService } from '@/services/clientAuthService';
+import { loadBranding, applyBranding } from '@/lib/branding';
 
 const ClientAccess = () => {
   const [token, setToken] = useState('');
@@ -14,6 +15,11 @@ const ClientAccess = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const branding = loadBranding();
+
+  useEffect(() => {
+    applyBranding(branding);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,10 +179,10 @@ const ClientAccess = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow bg-black">
-              <img src="/lovable-uploads/cb6c54cf-a6f8-4ef1-aca0-b5011c552548.png" alt="Lumina Logo" className="w-6 h-6" />
+              <img src="/lovable-uploads/cb6c54cf-a6f8-4ef1-aca0-b5011c552548.png" alt={`${branding.brandName || 'Lumina'} Logo`} className="w-6 h-6" />
             </div>
             <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Lumina
+              {branding.brandName || 'Lumina'}
             </span>
           </Link>
           <Link to="/auth">
