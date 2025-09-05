@@ -39,6 +39,12 @@ const FIELD_KEYS = {
     'Réseaux / Site',
     'reseaux',
     'reseaux_site',
+    'website',
+    'lien',
+    'liens',
+    'link',
+    'links',
+    'url'
     'website'
   ]
 } as const;
@@ -53,6 +59,21 @@ const getFieldValue = (
   }, {});
   for (const key of keys) {
     const nk = normalizeKey(key);
+    if (normalized[nk]) {
+      const value = record[normalized[nk]];
+      if (typeof value === 'string') return value;
+      if (Array.isArray(value)) {
+        const first = value[0];
+        if (typeof first === 'string') return first;
+        if (first && typeof first === 'object' && 'url' in first) {
+          const url = (first as { url?: unknown }).url;
+          if (typeof url === 'string') return url;
+        }
+      }
+      if (value && typeof value === 'object' && 'url' in value) {
+        const url = (value as { url?: unknown }).url;
+        if (typeof url === 'string') return url;
+      }
     if (normalized[nk] && typeof record[normalized[nk]] === 'string') {
       return record[normalized[nk]] as string;
     }
