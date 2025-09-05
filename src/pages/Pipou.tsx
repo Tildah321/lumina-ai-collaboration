@@ -103,7 +103,7 @@ const Pipou = () => {
         const clientsRes = await nocodbService.getClients(true);
         const clients = (clientsRes.list || []) as NocoRecord[];
 
-        let first = true;
+        const loadedProjects: Project[] = [];
         await asyncPool(
           CONCURRENCY_LIMIT,
           clients,
@@ -155,18 +155,12 @@ const Pipou = () => {
             }
           },
           (project) => {
-            if (!project) return;
-            setProjects(prev => [...prev, project]);
-            if (first) {
-              first = false;
-              setIsLoadingProjects(false);
-            }
+            if (project) loadedProjects.push(project);
           }
         );
 
-        if (first) {
-          setIsLoadingProjects(false);
-        }
+        setProjects(loadedProjects);
+        setIsLoadingProjects(false);
       } catch (error) {
         console.error('Erreur chargement projets:', error);
         setIsLoadingProjects(false);
