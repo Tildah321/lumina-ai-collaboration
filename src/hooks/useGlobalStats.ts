@@ -44,6 +44,9 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const useGlobalStats = () => {
   const { toast } = useToast();
+  // Stocker la fonction toast dans une ref pour éviter que le hook se relance
+  // à chaque rendu lorsque la référence de `toast` change. Cela causait une
+  // boucle de chargement infinie des statistiques globales.
   const toastRef = useRef(toast);
   useEffect(() => {
     toastRef.current = toast;
@@ -164,7 +167,13 @@ export const useGlobalStats = () => {
           showToast({
             title: 'Limite de requêtes atteinte',
             description: 'Les statistiques seront rechargées automatiquement',
-            variant: 'default',
+        
+        const showToast = toastRef.current;
+        if (errorMessage.includes('Too many requests')) {
+          showToast({
+            title: "Limite de requêtes atteinte",
+            description: "Les statistiques seront rechargées automatiquement",
+            variant: "default"
           });
           setTimeout(() => {
             loadGlobalStats();
@@ -174,6 +183,9 @@ export const useGlobalStats = () => {
             title: 'Erreur de chargement',
             description: 'Impossible de charger les statistiques globales',
             variant: 'destructive',
+            title: "Erreur de chargement",
+            description: "Impossible de charger les statistiques globales",
+            variant: "destructive"
           });
         }
 
@@ -185,6 +197,12 @@ export const useGlobalStats = () => {
 
     const interval = setInterval(loadGlobalStats, CACHE_DURATION);
     return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
+  // Le chargement initial et l'intervalle ne dépendent pas de la fonction toast
+  // grâce à l'utilisation de `toastRef` ci-dessus.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return stats;
