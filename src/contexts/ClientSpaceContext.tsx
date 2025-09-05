@@ -99,7 +99,7 @@ export const ClientSpaceProvider: React.FC<{
           milestones: milestonesResponse,
           invoices: invoicesResponse,
         } = await nocodbService.getSpaceData(spaceId, isClient, {
-          onlyCurrentUser: true,
+          onlyCurrentUser: !isClient,
         });
 
         // Normaliser les données - inclure TOUTES les tâches (admin et client)
