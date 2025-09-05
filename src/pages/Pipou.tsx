@@ -469,7 +469,25 @@ const Pipou = () => {
                               <span>Téléphone</span>
                               <span className="font-medium">{prospect.phone}</span>
                             </div>
-                            
+                            <div className="flex gap-2 pt-2 flex-wrap">
+                              {prospect.email && (
+                                <Button size="sm" className="gap-2" asChild>
+                                  <a href={`mailto:${prospect.email}`}>
+                                    <Mail className="w-4 h-4" />
+                                    Contacter
+                                  </a>
+                                </Button>
+                              )}
+                              {prospect.phone && (
+                                <Button size="sm" variant="secondary" className="gap-2" asChild>
+                                  <a href={`tel:${prospect.phone}`}>
+                                    <Phone className="w-4 h-4" />
+                                    Appeler
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+
                           </CardContent>
                         </Card>
                       ))}
