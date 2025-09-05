@@ -16,6 +16,7 @@ import ClientAccess from "./pages/ClientAccess";
 import Tasky from "./pages/Tasky";
 import Pipou from "./pages/Pipou";
 import Copyly from "./pages/Copyly";
+import Mailo from "./pages/Mailo";
 import Upgrade from "./pages/Upgrade";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -87,6 +88,11 @@ const App = () => (
             <Route path="/copyly" element={
               <ProtectedRoute>
                 <Copyly />
+              </ProtectedRoute>
+            } />
+            <Route path="/mailo" element={
+              <ProtectedRoute>
+                <Mailo />
               </ProtectedRoute>
             } />
             <Route path="/upgrade" element={
