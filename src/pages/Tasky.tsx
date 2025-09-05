@@ -134,6 +134,56 @@ const Tasky = () => {
     }
   };
 
+  const mapPriority = (priority: string) => {
+    switch (priority?.toLowerCase()) {
+      case 'faible':
+      case 'basse':
+        return 'Basse';
+      case 'moyenne':
+        return 'Moyenne';
+      case 'haute':
+        return 'Haute';
+      default:
+        return priority;
+    }
+  };
+
+  const mapPriorityToNoco = (priority: string) => {
+    switch (priority) {
+      case 'Basse':
+        return 'faible';
+      case 'Moyenne':
+        return 'moyenne';
+      case 'Haute':
+        return 'haute';
+      default:
+        return priority;
+    }
+  };
+
+  const mapResponsible = (responsible: string) => {
+    switch (responsible?.toLowerCase()) {
+      case 'moi':
+      case 'nous':
+        return 'Nous';
+      case 'client':
+        return 'Client';
+      default:
+        return responsible;
+    }
+  };
+
+  const mapResponsibleToNoco = (responsible: string) => {
+    switch (responsible) {
+      case 'Nous':
+        return 'moi';
+      case 'Client':
+        return 'client';
+      default:
+        return responsible;
+    }
+  };
+
   const handleTimeUpdate = (taskId: string, time: number) => {
     setTasks(prev => prev.map(t => (t.id === taskId ? { ...t, time_spent: time } : t)));
   };
@@ -154,6 +204,21 @@ const Tasky = () => {
         if (taskScope === 'client') {
 
           list = list.filter((t: any) => {
+            const responsible = (
+              t.responsable ||
+              t.responsible ||
+              t.assigne_a ||
+              t['assigné_a'] ||
+              ''
+            )
+              .toString()
+              .trim()
+              .toLowerCase();
+            return responsible !== 'client';
+          });
+
+
+          list = list.filter((t: any) => {
             const responsible = (t.responsable || t.responsible || '')
               .toString()
               .trim()
@@ -165,12 +230,17 @@ const Tasky = () => {
             (t: any) => (t.responsable || t.responsible) !== 'Client'
           );
 
+
         }
 
         const tasksWithNames = list.map((t: any) => ({
           ...t,
           id: t.Id || t.id,
           status: mapStatus(t.statut),
+          responsable: mapResponsible(
+            t.assigne_a || t['assigné_a'] || t.responsable || t.responsible
+          ),
+          priorite: mapPriority(t.priorite || t.priorité || t.priority),
           isInternal: t.isInternal,
           _spaceName: t.isInternal
             ? 'Interne'
@@ -228,7 +298,8 @@ const Tasky = () => {
     e.preventDefault();
   };
 
-  const isClientTask = (task: any) => task.responsible === 'Client' || task.responsable === 'Client';
+  const isClientTask = (task: any) =>
+    (task.responsable || task.responsible || '') === 'Client';
 
   const handleTaskDeconstruct = (task: any) => {
     alert(`✨ Décomposition de "${task.titre}": Cette tâche peut être décomposée en 3 sous-tâches :\n    1. Recherche et benchmark\n    2. Création des wireframes\n    3. Tests et validation`);
@@ -242,9 +313,9 @@ const Tasky = () => {
     try {
       const payload: any = {
         titre: newTask.title,
-        responsable: newTask.responsible,
+        assigne_a: mapResponsibleToNoco(newTask.responsible),
         statut: mapStatusToNoco(newTask.status),
-        priorite: newTask.priority,
+        priorite: mapPriorityToNoco(newTask.priority),
         deadline: newTask.deadline,
       };
       const isInternal = !newTask.spaceId.trim();
@@ -281,9 +352,9 @@ const Tasky = () => {
     try {
       const payload: any = {
         titre: editTask.title,
-        responsable: editTask.responsible,
+        assigne_a: mapResponsibleToNoco(editTask.responsible),
         statut: mapStatusToNoco(editTask.status),
-        priorite: editTask.priority,
+        priorite: mapPriorityToNoco(editTask.priority),
         deadline: editTask.deadline,
       };
       if (editTask.isInternal) {
