@@ -35,7 +35,7 @@ const TaskManager = ({
   onDataChange
 }: TaskManagerProps) => {
   const { toast } = useToast();
-  const spaceData = useSpaceData(projetId);
+  const spaceData = useSpaceData(projetId, isClient);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
