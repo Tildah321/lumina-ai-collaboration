@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Globe, Target, Euro } from 'lucide-react';
+import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Target, Euro } from 'lucide-react';
 import { usePlan } from '@/contexts/PlanContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,65 @@ type NocoRecord = Record<string, unknown>;
 const PROSPECT_COMPANY_COLUMN = 'cxi03jrd1enf3n2';
 const PROSPECT_PHONE_COLUMN = 'ch2fw3p077t9y6w';
 const PROSPECT_SITE_COLUMN = 'coo7e2wbo6zvvux';
+
+const normalizeKey = (key: string) =>
+  key
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+const FIELD_KEYS = {
+  company: [PROSPECT_COMPANY_COLUMN, 'entreprise', 'Entreprise', 'company'],
+  phone: [PROSPECT_PHONE_COLUMN, 'telephone', 'Téléphone', 'numero', 'phone'],
+  website: [
+    PROSPECT_SITE_COLUMN,
+    'site',
+    'site_web',
+    'Réseaux / Site',
+    'reseaux',
+    'reseaux_site',
+    'website'
+  ]
+} as const;
+
+const getFieldValue = (
+  record: Record<string, unknown>,
+  keys: readonly string[]
+) => {
+  const normalized = Object.keys(record).reduce<Record<string, string>>((acc, k) => {
+    acc[normalizeKey(k)] = k;
+    return acc;
+  }, {});
+  for (const key of keys) {
+    const nk = normalizeKey(key);
+    if (normalized[nk] && typeof record[normalized[nk]] === 'string') {
+      return record[normalized[nk]] as string;
+    }
+  }
+  return '';
+};
+
+const buildProspectPayload = (p: {
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  website: string;
+  status: string;
+  lastContact: string;
+}) => {
+  const payload: Record<string, string> = {
+    name: p.name,
+    email: p.email,
+    status: mapProspectStatusToNoco(p.status),
+    dernier_contact: p.lastContact
+  };
+  FIELD_KEYS.company.forEach(key => (payload[key] = p.company));
+  FIELD_KEYS.phone.forEach(key => (payload[key] = p.phone));
+  FIELD_KEYS.website.forEach(key => (payload[key] = p.website));
+  return payload;
+};
 
 interface Project {
   id: string; // Client space ID
@@ -129,34 +188,13 @@ const Pipou = () => {
       const list = (response.list || []).map((p: Record<string, unknown>) => ({
         id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
         name: (p as { name?: string }).name || '',
-        company:
-          (p as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
-          (p as { entreprise?: string }).entreprise ||
-          (p as { company?: string }).company ||
-          '',
+        company: getFieldValue(p, FIELD_KEYS.company),
         email: (p as { email?: string }).email || '',
-        phone:
-          (p as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
-          (p as { telephone?: string }).telephone ||
-          (p as { numero?: string }).numero ||
-          (p as { phone?: string }).phone ||
-          (p as Record<string, string>)['t_l_phone'] ||
-          (p as Record<string, string>)['téléphone'] ||
-          (p as Record<string, string>)['Téléphone'] ||
-          '',
-        website:
-          (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
-          (p as { site?: string }).site ||
-          (p as { reseaux?: string }).reseaux ||
-          (p as { website?: string }).website ||
-          (p as Record<string, string>)['reseaux_site'] ||
-          (p as Record<string, string>)['site_web'] ||
-          '',
+        phone: getFieldValue(p, FIELD_KEYS.phone),
+        website: getFieldValue(p, FIELD_KEYS.website),
         status: mapProspectStatus((p as { status?: string }).status || 'nouveau'),
         lastContact:
-          (p as { lastContact?: string; dernier_contact?: string }).lastContact ||
-          (p as { dernier_contact?: string }).dernier_contact ||
-          ''
+          getFieldValue(p, ['lastContact', 'dernier_contact']) || ''
       }));
       setProspects(prev => [...prev, ...list]);
       setProspectOffset(prev => prev + list.length);
@@ -176,53 +214,22 @@ const Pipou = () => {
   const addProspect = async () => {
     if (!newProspect.name || !newProspect.company) return;
     try {
-      const payload = {
-        name: newProspect.name,
-        [PROSPECT_COMPANY_COLUMN]: newProspect.company,
-        email: newProspect.email,
-        [PROSPECT_PHONE_COLUMN]: newProspect.phone,
-        telephone: newProspect.phone,
-        phone: newProspect.phone,
-        Téléphone: newProspect.phone,
-        [PROSPECT_SITE_COLUMN]: newProspect.website,
-        site: newProspect.website,
-        reseaux: newProspect.website,
-        website: newProspect.website,
-        status: mapProspectStatusToNoco('Nouveau'),
-        dernier_contact: new Date().toISOString().split('T')[0]
-      };
+      const payload = buildProspectPayload({
+        ...newProspect,
+        status: 'Nouveau',
+        lastContact: new Date().toISOString().split('T')[0]
+      });
       const response = (await nocodbService.createProspect(payload)) as Record<string, unknown>;
       const created: Prospect = {
         id: ((response as { Id?: unknown; id?: unknown }).Id || (response as { Id?: unknown; id?: unknown }).id || '').toString(),
-        name: (response as { name?: string }).name || '',
-        company:
-          (response as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
-          (response as { entreprise?: string }).entreprise ||
-          (response as { company?: string }).company ||
-          newProspect.company,
-        email: (response as { email?: string }).email || '',
-        phone:
-          (response as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
-          (response as { telephone?: string }).telephone ||
-          (response as { numero?: string }).numero ||
-          (response as { phone?: string }).phone ||
-          (response as Record<string, string>)['t_l_phone'] ||
-          (response as Record<string, string>)['téléphone'] ||
-          (response as Record<string, string>)['Téléphone'] ||
-          newProspect.phone,
-        website:
-          (response as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
-          (response as { site?: string }).site ||
-          (response as { reseaux?: string }).reseaux ||
-          (response as { website?: string }).website ||
-          (response as Record<string, string>)['reseaux_site'] ||
-          (response as Record<string, string>)['site_web'] ||
-          newProspect.website,
+        name: (response as { name?: string }).name || newProspect.name,
+        company: getFieldValue(response, FIELD_KEYS.company) || newProspect.company,
+        email: (response as { email?: string }).email || newProspect.email,
+        phone: getFieldValue(response, FIELD_KEYS.phone) || newProspect.phone,
+        website: getFieldValue(response, FIELD_KEYS.website) || newProspect.website,
         status: mapProspectStatus((response as { status?: string }).status || 'nouveau'),
         lastContact:
-          (response as { lastContact?: string; dernier_contact?: string }).lastContact ||
-          (response as { dernier_contact?: string }).dernier_contact ||
-          payload.dernier_contact
+          getFieldValue(response, ['lastContact', 'dernier_contact']) || payload.dernier_contact
       };
       setProspects(prev => [...prev, created]);
       setProspectOffset(prev => prev + 1);
@@ -244,21 +251,10 @@ const Pipou = () => {
     setEditingProspect(null);
 
     try {
-      await nocodbService.updateProspect(id, {
-        name: editingProspect.name,
-        [PROSPECT_COMPANY_COLUMN]: editingProspect.company,
-        email: editingProspect.email,
-        [PROSPECT_PHONE_COLUMN]: editingProspect.phone,
-        telephone: editingProspect.phone,
-        phone: editingProspect.phone,
-        Téléphone: editingProspect.phone,
-        [PROSPECT_SITE_COLUMN]: editingProspect.website,
-        site: editingProspect.website,
-        reseaux: editingProspect.website,
-        website: editingProspect.website,
-        status: mapProspectStatusToNoco(editingProspect.status),
-        dernier_contact: editingProspect.lastContact
-      });
+      await nocodbService.updateProspect(
+        id,
+        buildProspectPayload(editingProspect)
+      );
     } catch (error) {
       console.error('Erreur mise à jour prospect:', error);
       if (previous) {
