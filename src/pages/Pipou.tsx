@@ -205,12 +205,16 @@ const Pipou = () => {
             (p as { telephone?: string }).telephone ||
             (p as { numero?: string }).numero ||
             (p as { phone?: string }).phone ||
+            (p as Record<string, string>)['t_l_phone'] ||
+            (p as Record<string, string>)['téléphone'] ||
             '',
           website:
             (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
             (p as { site?: string }).site ||
             (p as { reseaux?: string }).reseaux ||
             (p as { website?: string }).website ||
+            (p as Record<string, string>)['reseaux_site'] ||
+            (p as Record<string, string>)['site_web'] ||
             '',
           status: mapProspectStatus((p as { status?: string }).status || 'nouveau'),
           lastContact:
@@ -237,7 +241,12 @@ const Pipou = () => {
         [PROSPECT_COMPANY_COLUMN]: newProspect.company,
         email: newProspect.email,
         [PROSPECT_PHONE_COLUMN]: newProspect.phone,
+        telephone: newProspect.phone,
+        phone: newProspect.phone,
         [PROSPECT_SITE_COLUMN]: newProspect.website,
+        site: newProspect.website,
+        reseaux: newProspect.website,
+        website: newProspect.website,
         status: mapProspectStatusToNoco('Nouveau'),
         dernier_contact: new Date().toISOString().split('T')[0]
       };
@@ -256,12 +265,16 @@ const Pipou = () => {
           (response as { telephone?: string }).telephone ||
           (response as { numero?: string }).numero ||
           (response as { phone?: string }).phone ||
+          (response as Record<string, string>)['t_l_phone'] ||
+          (response as Record<string, string>)['téléphone'] ||
           newProspect.phone,
         website:
           (response as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
           (response as { site?: string }).site ||
           (response as { reseaux?: string }).reseaux ||
           (response as { website?: string }).website ||
+          (response as Record<string, string>)['reseaux_site'] ||
+          (response as Record<string, string>)['site_web'] ||
           newProspect.website,
         status: mapProspectStatus((response as { status?: string }).status || 'nouveau'),
         lastContact:
@@ -293,7 +306,12 @@ const Pipou = () => {
         [PROSPECT_COMPANY_COLUMN]: editingProspect.company,
         email: editingProspect.email,
         [PROSPECT_PHONE_COLUMN]: editingProspect.phone,
+        telephone: editingProspect.phone,
+        phone: editingProspect.phone,
         [PROSPECT_SITE_COLUMN]: editingProspect.website,
+        site: editingProspect.website,
+        reseaux: editingProspect.website,
+        website: editingProspect.website,
         status: mapProspectStatusToNoco(editingProspect.status),
         dernier_contact: editingProspect.lastContact
       });
