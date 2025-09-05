@@ -8,10 +8,11 @@ import { loadBranding, applyBranding } from '@/lib/branding';
 
 interface ClientNavigationProps {
   spaceName?: string;
+  spacePrice?: number;
   onSidebarChange?: (collapsed: boolean) => void;
 }
 
-const ClientNavigation = ({ spaceName, onSidebarChange }: ClientNavigationProps) => {
+const ClientNavigation = ({ spaceName, spacePrice, onSidebarChange }: ClientNavigationProps) => {
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -56,6 +57,9 @@ const ClientNavigation = ({ spaceName, onSidebarChange }: ClientNavigationProps)
     <div className="px-6 py-4 bg-muted/30 border-b border-border/50">
       <div className="space-y-2">
         <h2 className="font-semibold text-lg truncate">{spaceName}</h2>
+        {spacePrice && spacePrice > 0 && (
+          <div className="text-2xl font-bold text-primary">{spacePrice}€</div>
+        )}
         <p className="text-xs text-muted-foreground">Votre espace de collaboration</p>
       </div>
     </div>
@@ -73,7 +77,7 @@ const ClientNavigation = ({ spaceName, onSidebarChange }: ClientNavigationProps)
             className={cn('w-full justify-start gap-3 text-muted-foreground', collapsed && !isMobile && 'justify-center px-2')}
           >
             <ExternalLink className="w-4 h-4" />
-            {(!collapsed || isMobile) && 'Découvrir Lumina'}
+            {(!collapsed || isMobile) && `Découvrir ${brandLabel}`}
           </Button>
 
           {/* Dark mode toggle */}
