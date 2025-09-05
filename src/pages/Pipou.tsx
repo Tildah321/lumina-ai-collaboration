@@ -116,6 +116,65 @@ const Pipou = () => {
         });
 
         setProjects(projectsData);
+
+        const loadedProjects: Project[] = [];
+        await asyncPool(
+          CONCURRENCY_LIMIT,
+          clients,
+          async (c) => {
+            try {
+              const clientId = ((c as { Id?: unknown; id?: unknown }).Id || (c as { Id?: unknown; id?: unknown }).id)?.toString() || '';
+              const [tasksCount, milestonesRes, invoicesCount] = await Promise.all([
+                fetchWithRetry(() => nocodbService.getTasksCount(clientId, { onlyCurrentUser: true })),
+                fetchWithRetry(() => nocodbService.getMilestones(clientId, { fields: 'terminé,termine' })),
+                fetchWithRetry(() => nocodbService.getInvoicesCount(clientId))
+              ]);
+
+              const milestonesList = (milestonesRes.list || []) as NocoRecord[];
+              const doneMilestones = milestonesList.filter((m: NocoRecord) => {
+                const status = (m as { terminé?: unknown; termine?: unknown }).terminé || (m as { terminé?: unknown; termine?: unknown }).termine;
+                return status === true || status === 'true';
+              }).length;
+              const progress = milestonesList.length > 0 ? Math.round((doneMilestones / milestonesList.length) * 100) : 0;
+
+              const record = c as Record<string, unknown>;
+              const name = (record.nom as string) || (record.name as string) || 'Client';
+              const desc = (record.description as string) || '';
+
+              const spaceName = desc || name;
+              const status = (record.statut as string) || 'En cours';
+              const rawDeadline = (record.deadline as string) || '';
+              const deadline = rawDeadline ? new Date(rawDeadline).toLocaleDateString() : 'Aucune';
+              const driveLink = (record['lien_portail'] as string) || '';
+              const price = (record['prix_payement'] as number) || 0;
+
+              return {
+                id: clientId,
+                projectId: clientId,
+                client: name,
+                spaceName,
+                status,
+                deadline,
+                progress,
+                description: desc,
+                tasksCount: tasksCount,
+                milestonesCount: milestonesRes.pageInfo?.totalRows ?? milestonesList.length,
+                invoicesCount: invoicesCount,
+                driveLink,
+                price
+              } as Project;
+            } catch (error) {
+              console.error('Erreur chargement client:', error);
+              return null;
+            }
+          },
+          (project) => {
+            if (project) loadedProjects.push(project);
+          }
+        );
+
+        setProjects(loadedProjects);
+        setIsLoadingProjects(false);
       } catch (error) {
         console.error('Erreur chargement projets:', error);
       } finally {
