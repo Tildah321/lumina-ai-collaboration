@@ -425,11 +425,6 @@ const Pipou = () => {
                             <div className="flex items-start justify-between">
                               <div>
                                 <CardTitle className="text-lg">{prospect.name}</CardTitle>
-                                {prospect.company && (
-                                  <p className="mt-2 text-sm text-muted-foreground">
-                                    {prospect.company}
-                                  </p>
-                                )}
                               </div>
                               <div className="flex items-center gap-2">
                                 {prospect.status && (
@@ -470,40 +465,7 @@ const Pipou = () => {
                               <span>Téléphone</span>
                               <span className="font-medium">{prospect.phone}</span>
                             </div>
-                            <div className="flex justify-between">
-                              <span>Réseaux / Site</span>
-                              <span className="font-medium">{prospect.website}</span>
-                            </div>
-                            <div className="flex gap-2 pt-2 flex-wrap">
-                              {prospect.email && (
-                                <Button size="sm" className="gap-2" asChild>
-                                  <a href={`mailto:${prospect.email}`}>
-                                    <Mail className="w-4 h-4" />
-                                    Contacter
-                                  </a>
-                                </Button>
-                              )}
-                              {prospect.phone && (
-                                <Button size="sm" variant="secondary" className="gap-2" asChild>
-                                  <a href={`tel:${prospect.phone}`}>
-                                    <Phone className="w-4 h-4" />
-                                    Appeler
-                                  </a>
-                                </Button>
-                              )}
-                              {prospect.website && (
-                                <Button size="sm" variant="outline" className="gap-2" asChild>
-                                  <a
-                                    href={prospect.website.startsWith('http') ? prospect.website : `https://${prospect.website}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Globe className="w-4 h-4" />
-                                    Site
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
+                            
                           </CardContent>
                         </Card>
                       ))}
