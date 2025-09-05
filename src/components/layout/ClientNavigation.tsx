@@ -8,16 +8,16 @@ import { loadBranding, applyBranding } from '@/lib/branding';
 
 interface ClientNavigationProps {
   spaceName?: string;
-  spacePrice?: number;
   onSidebarChange?: (collapsed: boolean) => void;
 }
 
-const ClientNavigation = ({ spaceName, spacePrice, onSidebarChange }: ClientNavigationProps) => {
+const ClientNavigation = ({ spaceName, onSidebarChange }: ClientNavigationProps) => {
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const branding = loadBranding();
+  const brandLabel = branding.brandName?.trim() || 'Lumina';
 
   useEffect(() => {
     applyBranding(branding);
@@ -44,7 +44,7 @@ const ClientNavigation = ({ spaceName, spacePrice, onSidebarChange }: ClientNavi
           </div>
           {(!collapsed || isMobile) && (
             <div>
-              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">{branding.brandName || 'Lumina'}</h1>
+              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">{brandLabel}</h1>
               <p className="text-sm text-muted-foreground">Espace Client</p>
             </div>
           )}
@@ -56,9 +56,6 @@ const ClientNavigation = ({ spaceName, spacePrice, onSidebarChange }: ClientNavi
     <div className="px-6 py-4 bg-muted/30 border-b border-border/50">
       <div className="space-y-2">
         <h2 className="font-semibold text-lg truncate">{spaceName}</h2>
-        {spacePrice && spacePrice > 0 && (
-          <div className="text-2xl font-bold text-primary">{spacePrice}€</div>
-        )}
         <p className="text-xs text-muted-foreground">Votre espace de collaboration</p>
       </div>
     </div>
@@ -76,7 +73,7 @@ const ClientNavigation = ({ spaceName, spacePrice, onSidebarChange }: ClientNavi
             className={cn('w-full justify-start gap-3 text-muted-foreground', collapsed && !isMobile && 'justify-center px-2')}
           >
             <ExternalLink className="w-4 h-4" />
-            {(!collapsed || isMobile) && `Découvrir ${branding.brandName || 'Lumina'}`}
+            {(!collapsed || isMobile) && 'Découvrir Lumina'}
           </Button>
 
           {/* Dark mode toggle */}
@@ -117,7 +114,7 @@ const ClientNavigation = ({ spaceName, spacePrice, onSidebarChange }: ClientNavi
               <Bot className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">{branding.brandName || 'Lumina'}</h1>
+              <h1 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">{brandLabel}</h1>
               {spaceName && (
                 <p className="text-xs text-muted-foreground truncate max-w-32">{spaceName}</p>
               )}

@@ -433,7 +433,6 @@ const ClientByToken = () => {
       {!isMobile && (
         <ClientNavigation
           spaceName={space.description}
-          spacePrice={space.prix_payement}
           onSidebarChange={setSidebarCollapsed}
         />
       )}
