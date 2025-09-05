@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 class NocoDBService {
   private config: NocoDBConfig;
+  private cachedProjectIds: string[] | null = null;
 
   constructor() {
     this.config = {
@@ -79,6 +80,10 @@ class NocoDBService {
   private invalidateCache(endpoint: string) {
     const url = `${this.config.baseUrl}${endpoint}`;
     NocoDBService.requestCache.delete(url);
+  }
+
+  private invalidateProjectCache() {
+    this.cachedProjectIds = null;
   }
   
   private async makeRequest(
@@ -378,6 +383,9 @@ class NocoDBService {
 
     // If user has no registered spaces, return everything
     if (userSpaceIds.length === 0) {
+      this.cachedProjectIds = (response.list || [])
+        .map((p: any) => (p.Id || p.id)?.toString())
+        .filter(Boolean);
       return response;
     }
 
@@ -385,6 +393,11 @@ class NocoDBService {
     const filteredList = (response.list || []).filter((projet: any) =>
       userSpaceIds.includes(projet.client_id?.toString())
     );
+
+    this.cachedProjectIds = filteredList
+      .map((p: any) => (p.Id || p.id)?.toString())
+      .filter(Boolean);
+
     return {
       ...response,
       list: filteredList,
@@ -393,10 +406,12 @@ class NocoDBService {
   }
 
   async createProjet(data: any) {
-    return this.makeRequest(`/${this.config.tableIds.projets}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.projets}`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    this.invalidateProjectCache();
+    return response;
   }
 
   async updateProjet(id: string, data: any) {
@@ -407,9 +422,11 @@ class NocoDBService {
   }
 
   async deleteProjet(id: string) {
-    return this.makeRequest(`/${this.config.tableIds.projets}/${id}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.projets}/${id}`, {
       method: 'DELETE',
     });
+    this.invalidateProjectCache();
+    return response;
   }
 
   // Tâches - Filtered by user's projects
@@ -472,10 +489,11 @@ class NocoDBService {
     projetId: string,
     options: { onlyCurrentUser?: boolean } = {},
   ) {
-    const projetsResponse = await this.getProjets();
-    const userProjectIds = (projetsResponse.list || [])
-      .map((p: any) => (p.Id || p.id)?.toString())
-      .filter(Boolean);
+    if (!this.cachedProjectIds) {
+      await this.getProjets();
+    }
+
+    const userProjectIds = this.cachedProjectIds || [];
     if (userProjectIds.length > 0 && !userProjectIds.includes(projetId)) {
       return 0;
     }
