@@ -39,30 +39,6 @@ interface Project {
   price: number;
 }
 
-const CONCURRENCY_LIMIT = 3;
-
-async function asyncPool<T, R>(
-  limit: number,
-  array: T[],
-  iteratorFn: (item: T) => Promise<R>,
-  onResult?: (result: R) => void
-): Promise<R[]> {
-  const ret: R[] = [];
-  let i = 0;
-
-  const workers = Array.from({ length: Math.min(limit, array.length) }, async () => {
-    while (i < array.length) {
-      const currentIndex = i++;
-      const res = await iteratorFn(array[currentIndex]);
-      ret[currentIndex] = res;
-      onResult?.(res);
-    }
-  });
-
-  await Promise.all(workers);
-  return ret;
-}
-
 async function fetchWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
   try {
     return await fn();
@@ -99,9 +75,47 @@ const Pipou = () => {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        // Force refresh to avoid returning cached client spaces
-        const clientsRes = await nocodbService.getClients(true);
+        const clientsRes = await nocodbService.getClients();
         const clients = (clientsRes.list || []) as NocoRecord[];
+        const clientIds = clients
+          .map(c => ((c as { Id?: unknown; id?: unknown }).Id || (c as { Id?: unknown; id?: unknown }).id)?.toString() || '')
+          .filter(Boolean);
+
+        const stats = await fetchWithRetry(() => nocodbService.getProjectsWithStats(clientIds));
+
+        const projectsData = clients.map(c => {
+          const clientId = ((c as { Id?: unknown; id?: unknown }).Id || (c as { Id?: unknown; id?: unknown }).id)?.toString() || '';
+          const record = c as Record<string, unknown>;
+          const name = (record.nom as string) || (record.name as string) || 'Client';
+          const desc = (record.description as string) || '';
+          const spaceName = desc || name;
+          const status = (record.statut as string) || 'En cours';
+          const rawDeadline = (record.deadline as string) || '';
+          const deadline = rawDeadline ? new Date(rawDeadline).toLocaleDateString() : 'Aucune';
+          const driveLink = (record['lien_portail'] as string) || '';
+          const price = (record['prix_payement'] as number) || 0;
+
+          const stat = stats[clientId] || { tasksCount: 0, milestonesCount: 0, invoicesCount: 0, doneMilestones: 0 };
+          const progress = stat.milestonesCount > 0 ? Math.round((stat.doneMilestones / stat.milestonesCount) * 100) : 0;
+
+          return {
+            id: clientId,
+            projectId: clientId,
+            client: name,
+            spaceName,
+            status,
+            deadline,
+            progress,
+            description: desc,
+            tasksCount: stat.tasksCount,
+            milestonesCount: stat.milestonesCount,
+            invoicesCount: stat.invoicesCount,
+            driveLink,
+            price
+          } as Project;
+        });
+
+        setProjects(projectsData);
 
         const loadedProjects: Project[] = [];
         await asyncPool(
@@ -163,6 +177,7 @@ const Pipou = () => {
         setIsLoadingProjects(false);
       } catch (error) {
         console.error('Erreur chargement projets:', error);
+      } finally {
         setIsLoadingProjects(false);
       }
     };
@@ -348,22 +363,14 @@ const Pipou = () => {
 
   const refreshProjectData = async (projectId: string) => {
     try {
-      const [tasksCount, milestonesRes, invoicesCount] = await Promise.all([
-        fetchWithRetry(() => nocodbService.getTasksCount(projectId, { onlyCurrentUser: true })),
-        fetchWithRetry(() => nocodbService.getMilestones(projectId, { fields: 'terminé,termine' })),
-        fetchWithRetry(() => nocodbService.getInvoicesCount(projectId))
-      ]);
-      const milestonesList = (milestonesRes.list || []) as NocoRecord[];
-      const doneMilestones = milestonesList.filter((m: NocoRecord) => {
-        const status = (m as { terminé?: unknown; termine?: unknown }).terminé || (m as { terminé?: unknown; termine?: unknown }).termine;
-        return status === true || status === 'true';
-      }).length;
-      const progress = milestonesList.length > 0 ? Math.round((doneMilestones / milestonesList.length) * 100) : 0;
+      const stats = await fetchWithRetry(() => nocodbService.getProjectsWithStats([projectId]));
+      const stat = stats[projectId] || { tasksCount: 0, milestonesCount: 0, invoicesCount: 0, doneMilestones: 0 };
+      const progress = stat.milestonesCount > 0 ? Math.round((stat.doneMilestones / stat.milestonesCount) * 100) : 0;
       setProjects(prev => prev.map(p => p.id === projectId ? {
         ...p,
-        tasksCount,
-        milestonesCount: milestonesRes.pageInfo?.totalRows ?? milestonesList.length,
-        invoicesCount,
+        tasksCount: stat.tasksCount,
+        milestonesCount: stat.milestonesCount,
+        invoicesCount: stat.invoicesCount,
         progress
       } : p));
     } catch (error) {
