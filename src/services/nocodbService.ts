@@ -333,8 +333,13 @@ class NocoDBService {
   }
 
   // Prospects
-  async getProspects(forceRefresh = false) {
-    return this.makeRequest(`/${this.config.tableIds.prospects}`, {}, 0, !forceRefresh);
+  async getProspects(
+    limit = 50,
+    offset = 0,
+    forceRefresh = false
+  ) {
+    const query = `/${this.config.tableIds.prospects}?limit=${limit}&offset=${offset}`;
+    return this.makeRequest(query, {}, 0, !forceRefresh);
   }
 
   async createProspect(data: any) {
