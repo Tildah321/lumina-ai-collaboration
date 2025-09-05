@@ -394,16 +394,17 @@ const Tasky = () => {
                                 )}
                               </div>
                             <div className="space-y-2 mt-3">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
-                                className="w-full gap-2 text-xs"
-                                disabled={isClientTask(task)}
-                              >
-                                <Clock className="w-3 h-3" />
-                                Timer
-                              </Button>
+                              {!task.isInternal && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
+                                  className="w-full gap-2 text-xs"
+                                >
+                                  <Clock className="w-3 h-3" />
+                                  Timer
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -460,16 +461,17 @@ const Tasky = () => {
                           {!task.isInternal && task._spaceName && (
                             <Badge variant="outline">{task._spaceName}</Badge>
                           )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
-                            className="gap-2"
-                            disabled={isClientTask(task)}
-                          >
-                            <Clock className="w-4 h-4" />
-                            Timer
-                          </Button>
+                          {!task.isInternal && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
+                              className="gap-2"
+                            >
+                              <Clock className="w-4 h-4" />
+                              Timer
+                            </Button>
+                          )}
                             <Button
                               size="sm"
                               variant="ghost"
