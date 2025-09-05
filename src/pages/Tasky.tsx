@@ -152,9 +152,19 @@ const Tasky = () => {
         }
 
         if (taskScope === 'client') {
+
+          list = list.filter((t: any) => {
+            const responsible = (t.responsable || t.responsible || '')
+              .toString()
+              .trim()
+              .toLowerCase();
+            return !responsible.includes('client');
+          });
+
           list = list.filter(
             (t: any) => (t.responsable || t.responsible) !== 'Client'
           );
+
         }
 
         const tasksWithNames = list.map((t: any) => ({
