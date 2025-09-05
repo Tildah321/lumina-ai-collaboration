@@ -666,6 +666,63 @@ class NocoDBService {
     return response.pageInfo?.totalRows ?? (response.list || []).length;
   }
 
+  async getProjectsWithStats(clientIds: string[]) {
+    if (clientIds.length === 0) {
+      return {};
+    }
+
+    const currentUserId = await this.getCurrentUserId();
+    const ids = clientIds.join(',');
+
+    const tasksWhere = `(projet_id,in,${ids})` + (currentUserId ? `~and(supabase_user_id,eq,${currentUserId})` : '');
+    const milestonesWhere = `(projet_id,in,${ids})`;
+    const invoicesWhere = `(projet_id,in,${ids})`;
+
+    const [tasksRes, milestonesRes, invoicesRes] = await Promise.all([
+      this.makeRequest(
+        `/${this.config.tableIds.taches}?where=${tasksWhere}&fields=projet_id&limit=1000`
+      ),
+      this.makeRequest(
+        `/${this.config.tableIds.jalons}?where=${milestonesWhere}&fields=projet_id,terminé,termine&limit=1000`
+      ),
+      this.makeRequest(
+        `/${this.config.tableIds.factures}?where=${invoicesWhere}&fields=projet_id&limit=1000`
+      )
+    ]);
+
+    const stats: Record<string, { tasksCount: number; milestonesCount: number; invoicesCount: number; doneMilestones: number }> = {};
+    clientIds.forEach(id => {
+      stats[id] = { tasksCount: 0, milestonesCount: 0, invoicesCount: 0, doneMilestones: 0 };
+    });
+
+    (tasksRes.list || []).forEach((task: any) => {
+      const pid = task.projet_id?.toString();
+      if (pid && stats[pid]) {
+        stats[pid].tasksCount++;
+      }
+    });
+
+    (milestonesRes.list || []).forEach((milestone: any) => {
+      const pid = milestone.projet_id?.toString();
+      if (pid && stats[pid]) {
+        stats[pid].milestonesCount++;
+        const status = milestone.terminé ?? milestone.termine;
+        if (status === true || status === 'true') {
+          stats[pid].doneMilestones++;
+        }
+      }
+    });
+
+    (invoicesRes.list || []).forEach((invoice: any) => {
+      const pid = invoice.projet_id?.toString();
+      if (pid && stats[pid]) {
+        stats[pid].invoicesCount++;
+      }
+    });
+
+    return stats;
+  }
+
   async createInvoice(data: any) {
     return this.makeRequest(`/${this.config.tableIds.factures}`, {
       method: 'POST',
