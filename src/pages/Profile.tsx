@@ -3,17 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { 
+import {
   User,
   Crown,
   Zap,
   Users,
   Settings,
-  Bell,
   Shield,
   ArrowRight,
   Edit3,
@@ -37,7 +35,6 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     displayName: user?.user_metadata?.display_name || user?.email?.split('@')[0] || '',
-    notifications: true,
     emailUpdates: true,
     darkMode: false,
     paymentLink: '',
@@ -258,23 +255,7 @@ const Profile = () => {
                 <CardTitle>Préférences</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4" />
-                    <Label>Notifications push</Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Recevoir des notifications pour les mises à jour importantes
-                  </p>
-                </div>
-                <Switch
-                  checked={formData.notifications}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, notifications: checked }))}
-                />
-              </div>
-              <Separator />
+          <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Emails de mise à jour</Label>
@@ -467,8 +448,14 @@ const Profile = () => {
                   {planLimits.supportResponseTime}
                 </p>
               </div>
-              <Button variant="outline" className="w-full">
-                Contacter le support
+              <Button variant="outline" className="w-full" asChild>
+                <a
+                  href="https://wa.me/33620945269"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Contacter le support
+                </a>
               </Button>
             </CardContent>
           </Card>
