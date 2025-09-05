@@ -142,6 +142,7 @@ const Pipou = () => {
           (p as { phone?: string }).phone ||
           (p as Record<string, string>)['t_l_phone'] ||
           (p as Record<string, string>)['téléphone'] ||
+          (p as Record<string, string>)['Téléphone'] ||
           '',
         website:
           (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
@@ -182,6 +183,7 @@ const Pipou = () => {
         [PROSPECT_PHONE_COLUMN]: newProspect.phone,
         telephone: newProspect.phone,
         phone: newProspect.phone,
+        Téléphone: newProspect.phone,
         [PROSPECT_SITE_COLUMN]: newProspect.website,
         site: newProspect.website,
         reseaux: newProspect.website,
@@ -206,6 +208,7 @@ const Pipou = () => {
           (response as { phone?: string }).phone ||
           (response as Record<string, string>)['t_l_phone'] ||
           (response as Record<string, string>)['téléphone'] ||
+          (response as Record<string, string>)['Téléphone'] ||
           newProspect.phone,
         website:
           (response as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
@@ -248,6 +251,7 @@ const Pipou = () => {
         [PROSPECT_PHONE_COLUMN]: editingProspect.phone,
         telephone: editingProspect.phone,
         phone: editingProspect.phone,
+        Téléphone: editingProspect.phone,
         [PROSPECT_SITE_COLUMN]: editingProspect.website,
         site: editingProspect.website,
         reseaux: editingProspect.website,
