@@ -85,8 +85,17 @@ const GlobalStats = ({ stats, activeClients }: GlobalStatsProps) => {
       />
       <StatCard
         label="Temps"
-        value={`${stats.totalTimeSpent.toFixed(1)}h`}
-        subLabel="Total"
+        value={(() => {
+          const hours = Math.floor(stats.totalTimeSpent / 3600);
+          const minutes = Math.floor((stats.totalTimeSpent % 3600) / 60);
+          const seconds = Math.floor(stats.totalTimeSpent % 60);
+          const parts = [] as string[];
+          if (hours > 0) parts.push(`${hours}h`);
+          if (minutes > 0 || hours > 0) parts.push(`${minutes}m`);
+          parts.push(`${seconds}s`);
+          return parts.join(' ');
+        })()}
+        subLabel={`≈ ${(stats.totalTimeSpent / 3600).toFixed(2)}h`}
         icon={Clock}
       />
       <StatCard
