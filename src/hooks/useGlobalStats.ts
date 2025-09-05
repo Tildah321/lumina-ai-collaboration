@@ -102,6 +102,7 @@ export const useGlobalStats = () => {
         const totalHours = totalSeconds / 3600;
         // Affiche un taux horaire uniquement après au moins 1h de travail
         const averageHourlyRate = totalHours >= 1 ? paidRevenue / totalHours : 0;
+        const averageHourlyRate = totalHours > 0 ? paidRevenue / totalHours : 0;
 
         setStats({
           totalTasks: tasks.length,
