@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import nocodbService from '@/services/nocodbService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,8 +16,39 @@ export interface GlobalStats {
   isLoading: boolean;
 }
 
+interface Task {
+  statut?: string;
+  status?: string;
+  time_spent?: string | number | null;
+}
+
+interface Milestone {
+  projet_id?: string | number;
+  terminé?: boolean | string;
+  termine?: boolean | string;
+  completed?: boolean;
+}
+
+interface Invoice {
+  projet_id?: string | number;
+  montant?: number | string;
+  amount?: number | string;
+  payée?: boolean | string;
+  paid?: boolean;
+}
+
+let cachedStats: GlobalStats | null = null;
+let lastFetch = 0;
+let fetchPromise: Promise<void> | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export const useGlobalStats = () => {
   const { toast } = useToast();
+  const toastRef = useRef(toast);
+  useEffect(() => {
+    toastRef.current = toast;
+  }, [toast]);
+
   const [stats, setStats] = useState<GlobalStats>({
     totalTasks: 0,
     completedTasks: 0,
@@ -29,153 +60,132 @@ export const useGlobalStats = () => {
     paidRevenue: 0,
     totalTimeSpent: 0,
     averageHourlyRate: 0,
-    isLoading: true
+    isLoading: true,
   });
 
   useEffect(() => {
     const loadGlobalStats = async () => {
       setStats(prev => ({ ...prev, isLoading: true }));
-      
+
+      const now = Date.now();
+      if (cachedStats && now - lastFetch < CACHE_DURATION) {
+        setStats({ ...cachedStats, isLoading: false });
+        return;
+      }
+
       try {
-        console.log('📊 Chargement des statistiques globales...');
-        
-        // Charger les données en parallèle pour accélérer l'affichage des statistiques
-        // Récupérer uniquement les tâches de l'utilisateur courant
-        const [tasksResponse, milestonesResponse, invoicesResponse] = await Promise.all([
-          nocodbService.getTasks(undefined, {
-            onlyCurrentUser: true,
-            fields: 'statut,status,time_spent,projet_id,supabase_user_id,user_id,owner_id',
-            limit: 1000
-          }),
-          nocodbService.getMilestones(undefined, {
-            fields: 'projet_id,terminé,termine',
-            limit: 1000
-          }),
-          nocodbService.getInvoices(undefined, {
-            fields: 'projet_id,montant,amount,payée,paid',
-            limit: 1000
-          })
-        ]);
-        
-        const tasks = tasksResponse.list || [];
-        const milestones = milestonesResponse.list || [];
-        const invoices = invoicesResponse.list || [];
+        if (!fetchPromise) {
+          fetchPromise = (async () => {
+            const [tasksResponse, milestonesResponse, invoicesResponse] = await Promise.all([
+              nocodbService.getTasks(undefined, {
+                fields: 'statut,status,time_spent,projet_id',
+                limit: 1000,
+              }),
+              nocodbService.getMilestones(undefined, {
+                fields: 'projet_id,terminé,termine',
+                limit: 1000,
+              }),
+              nocodbService.getInvoices(undefined, {
+                fields: 'projet_id,montant,amount,payée,paid',
+                limit: 1000,
+              }),
+            ]);
 
-        console.log('📊 Données chargées:', {
-          tasks: tasks.length,
-          milestones: milestones.length,
-          invoices: invoices.length
-        });
+            const tasks = (tasksResponse.list || []) as Task[];
+            const milestones = (milestonesResponse.list || []) as Milestone[];
+            const invoices = (invoicesResponse.list || []) as Invoice[];
 
-        // Calculer les statistiques des tâches
-        const completedTasks = tasks.filter((t: any) => 
-          (t.statut || t.status) === 'fait' || (t.statut || t.status) === 'terminé'
-        ).length;
+            const completedTasks = tasks.filter(
+              t => (t.statut || t.status) === 'fait' || (t.statut || t.status) === 'terminé'
+            ).length;
 
-        // Calculer les statistiques des jalons
-        const completedMilestones = milestones.filter((m: any) => 
-          m.terminé === true || m.terminé === 'true' || m.completed === true
-        ).length;
+            const completedMilestones = milestones.filter(
+              m => m.terminé === true || m.terminé === 'true' || m.completed === true
+            ).length;
 
-        // Calculer les statistiques des factures
-        const paidInvoices = invoices.filter((i: any) => 
-          i.payée === true || i.payée === 'true' || i.paid === true
-        ).length;
+            const paidInvoices = invoices.filter(
+              i => i.payée === true || i.payée === 'true' || i.paid === true
+            ).length;
 
-        const totalRevenue = invoices.reduce((acc: number, i: any) => 
-          acc + (Number(i.montant) || Number(i.amount) || 0), 0
-        );
+            const totalRevenue = invoices.reduce(
+              (acc, i) => acc + (Number(i.montant) || Number(i.amount) || 0),
+              0
+            );
 
-        const paidRevenue = invoices
-          .filter((i: any) => i.payée === true || i.payée === 'true' || i.paid === true)
-          .reduce((acc: number, i: any) => acc + (Number(i.montant) || Number(i.amount) || 0), 0);
+            const paidRevenue = invoices
+              .filter(i => i.payée === true || i.payée === 'true' || i.paid === true)
+              .reduce((acc, i) => acc + (Number(i.montant) || Number(i.amount) || 0), 0);
 
-        // Calculer le temps total passé sur les tâches (en secondes)
-        const totalSeconds = tasks.reduce((sum: number, task: any) => {
-          const time = task.time_spent;
-          if (!time) return sum;
+            const totalSeconds = tasks.reduce((sum, task) => {
+              const time = task.time_spent;
+              if (!time) return sum;
 
-          if (typeof time === 'string') {
-            const timeStr = time.toString();
-            if (timeStr.includes(':')) {
-              const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-              return sum + hours * 3600 + minutes * 60 + seconds;
-            }
-            // Format décimal d'heures
-            return sum + parseFloat(timeStr) * 3600;
-          }
+              if (typeof time === 'string') {
+                const timeStr = time.toString();
+                if (timeStr.includes(':')) {
+                  const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+                  return sum + hours * 3600 + minutes * 60 + seconds;
+                }
+                return sum + parseFloat(timeStr) * 3600;
+              }
 
-          // Rétrocompatibilité : temps stocké en minutes
-          return sum + Number(time) * 60;
-        }, 0);
+              return sum + Number(time) * 60;
+            }, 0);
 
-        const totalHours = totalSeconds / 3600;
-        const averageHourlyRate = totalHours > 0 ? paidRevenue / totalHours : 0;
+            const totalHours = totalSeconds / 3600;
+            const averageHourlyRate = totalHours > 0 ? paidRevenue / totalHours : 0;
 
-        setStats({
-          totalTasks: tasks.length,
-          completedTasks,
-          totalMilestones: milestones.length,
-          completedMilestones,
-          totalInvoices: invoices.length,
-          paidInvoices,
-          totalRevenue,
-          paidRevenue,
-          totalTimeSpent: totalSeconds,
-          averageHourlyRate,
-          isLoading: false
-        });
+            cachedStats = {
+              totalTasks: tasks.length,
+              completedTasks,
+              totalMilestones: milestones.length,
+              completedMilestones,
+              totalInvoices: invoices.length,
+              paidInvoices,
+              totalRevenue,
+              paidRevenue,
+              totalTimeSpent: totalSeconds,
+              averageHourlyRate,
+              isLoading: false,
+            };
+            lastFetch = Date.now();
+            fetchPromise = null;
+          })();
+        }
 
-        console.log('✅ Statistiques globales calculées:', {
-          totalTasks: tasks.length,
-          completedTasks,
-          totalMilestones: milestones.length,
-          completedMilestones,
-          totalInvoices: invoices.length,
-          paidInvoices,
-          totalRevenue,
-          paidRevenue,
-          totalTimeSpent: totalSeconds,
-          averageHourlyRate
-        });
-
+        await fetchPromise;
+        if (cachedStats) {
+          setStats({ ...cachedStats, isLoading: false });
+        }
       } catch (error) {
-        console.error('❌ Erreur lors du chargement des statistiques globales:', error);
-        
         const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-        
+        const showToast = toastRef.current;
         if (errorMessage.includes('Too many requests')) {
-          toast({
-            title: "Limite de requêtes atteinte",
-            description: "Les statistiques seront rechargées automatiquement",
-            variant: "default"
+          showToast({
+            title: 'Limite de requêtes atteinte',
+            description: 'Les statistiques seront rechargées automatiquement',
+            variant: 'default',
           });
-          
-          // Réessayer après 15 secondes
           setTimeout(() => {
             loadGlobalStats();
           }, 15000);
         } else {
-          toast({
-            title: "Erreur de chargement",
-            description: "Impossible de charger les statistiques globales",
-            variant: "destructive"
+          showToast({
+            title: 'Erreur de chargement',
+            description: 'Impossible de charger les statistiques globales',
+            variant: 'destructive',
           });
         }
-        
+
         setStats(prev => ({ ...prev, isLoading: false }));
       }
     };
 
     loadGlobalStats();
-    
-    // Actualiser toutes les 5 minutes pour éviter le throttling
-    const interval = setInterval(loadGlobalStats, 300000);
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [toast]);
+    const interval = setInterval(loadGlobalStats, CACHE_DURATION);
+    return () => clearInterval(interval);
+  }, []);
 
   return stats;
 };
