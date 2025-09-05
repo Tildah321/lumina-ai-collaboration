@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Globe, Target, Euro } from 'lucide-react';
+import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Target, Euro } from 'lucide-react';
 import { usePlan } from '@/contexts/PlanContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import nocodbService from '@/services/nocodbService';
 import ClientShareDialog from '@/components/client/ClientShareDialog';
 import ProspectKanban from '@/components/prospection/ProspectKanban';
+import ProspectForm, { ProspectFormData } from '@/components/prospection/ProspectForm';
 import { Prospect } from '@/types/prospect';
 import { mapProspectStatus, mapProspectStatusToNoco } from '@/lib/prospectStatus';
 import MilestoneManager from '@/components/milestones/MilestoneManager';
@@ -107,17 +106,33 @@ const Pipou = () => {
   const [isLoadingProspects, setIsLoadingProspects] = useState(true);
   const [prospectOffset, setProspectOffset] = useState(0);
   const [hasMoreProspects, setHasMoreProspects] = useState(true);
-  const [newProspect, setNewProspect] = useState({
-    name: '',
-    company: '',
-    email: '',
-    phone: '',
-    website: ''
-  });
   const [isCreateProspectDialogOpen, setIsCreateProspectDialogOpen] = useState(false);
   const [isEditProspectDialogOpen, setIsEditProspectDialogOpen] = useState(false);
   const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
   const [activeTab, setActiveTab] = useState('clients');
+
+  const buildProspectPayload = (
+    data: ProspectFormData & { status: string; lastContact?: string }
+  ) => ({
+    name: data.name,
+    [PROSPECT_COMPANY_COLUMN]: data.company,
+    entreprise: data.company,
+    Entreprise: data.company,
+    email: data.email,
+    [PROSPECT_PHONE_COLUMN]: data.phone,
+    telephone: data.phone,
+    Telephone: data.phone,
+    Téléphone: data.phone,
+    phone: data.phone,
+    [PROSPECT_SITE_COLUMN]: data.website,
+    site: data.website,
+    reseaux: data.website,
+    website: data.website,
+    'Réseaux / Site': data.website,
+    status: mapProspectStatusToNoco(data.status),
+    dernier_contact:
+      data.lastContact || new Date().toISOString().split('T')[0]
+  });
 
   const loadProspects = useCallback(async () => {
     setIsLoadingProspects(true);
@@ -133,6 +148,7 @@ const Pipou = () => {
           (p as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
           (p as { entreprise?: string }).entreprise ||
           (p as { company?: string }).company ||
+          (p as Record<string, string>)['Entreprise'] ||
           '',
         email: (p as { email?: string }).email || '',
         phone:
@@ -143,6 +159,7 @@ const Pipou = () => {
           (p as Record<string, string>)['t_l_phone'] ||
           (p as Record<string, string>)['téléphone'] ||
           (p as Record<string, string>)['Téléphone'] ||
+          (p as Record<string, string>)['Telephone'] ||
           '',
         website:
           (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
@@ -151,6 +168,7 @@ const Pipou = () => {
           (p as { website?: string }).website ||
           (p as Record<string, string>)['reseaux_site'] ||
           (p as Record<string, string>)['site_web'] ||
+          (p as Record<string, string>)['Réseaux / Site'] ||
           '',
         status: mapProspectStatus((p as { status?: string }).status || 'nouveau'),
         lastContact:
@@ -173,34 +191,21 @@ const Pipou = () => {
     loadProspects();
   }, [activeTab, prospects.length, loadProspects]);
 
-  const addProspect = async () => {
-    if (!newProspect.name || !newProspect.company) return;
+  const addProspect = async (data: ProspectFormData) => {
+    if (!data.name || !data.company) return;
     try {
-      const payload = {
-        name: newProspect.name,
-        [PROSPECT_COMPANY_COLUMN]: newProspect.company,
-        email: newProspect.email,
-        [PROSPECT_PHONE_COLUMN]: newProspect.phone,
-        telephone: newProspect.phone,
-        phone: newProspect.phone,
-        Téléphone: newProspect.phone,
-        [PROSPECT_SITE_COLUMN]: newProspect.website,
-        site: newProspect.website,
-        reseaux: newProspect.website,
-        website: newProspect.website,
-        status: mapProspectStatusToNoco('Nouveau'),
-        dernier_contact: new Date().toISOString().split('T')[0]
-      };
+      const payload = buildProspectPayload({ ...data, status: 'Nouveau' });
       const response = (await nocodbService.createProspect(payload)) as Record<string, unknown>;
       const created: Prospect = {
         id: ((response as { Id?: unknown; id?: unknown }).Id || (response as { Id?: unknown; id?: unknown }).id || '').toString(),
-        name: (response as { name?: string }).name || '',
+        name: (response as { name?: string }).name || data.name,
         company:
           (response as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
           (response as { entreprise?: string }).entreprise ||
           (response as { company?: string }).company ||
-          newProspect.company,
-        email: (response as { email?: string }).email || '',
+          (response as Record<string, string>)['Entreprise'] ||
+          data.company,
+        email: (response as { email?: string }).email || data.email,
         phone:
           (response as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
           (response as { telephone?: string }).telephone ||
@@ -209,7 +214,8 @@ const Pipou = () => {
           (response as Record<string, string>)['t_l_phone'] ||
           (response as Record<string, string>)['téléphone'] ||
           (response as Record<string, string>)['Téléphone'] ||
-          newProspect.phone,
+          (response as Record<string, string>)['Telephone'] ||
+          data.phone,
         website:
           (response as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
           (response as { site?: string }).site ||
@@ -217,7 +223,8 @@ const Pipou = () => {
           (response as { website?: string }).website ||
           (response as Record<string, string>)['reseaux_site'] ||
           (response as Record<string, string>)['site_web'] ||
-          newProspect.website,
+          (response as Record<string, string>)['Réseaux / Site'] ||
+          data.website,
         status: mapProspectStatus((response as { status?: string }).status || 'nouveau'),
         lastContact:
           (response as { lastContact?: string; dernier_contact?: string }).lastContact ||
@@ -226,39 +233,35 @@ const Pipou = () => {
       };
       setProspects(prev => [...prev, created]);
       setProspectOffset(prev => prev + 1);
-      setNewProspect({ name: '', company: '', email: '', phone: '', website: '' });
       setIsCreateProspectDialogOpen(false);
     } catch (error) {
       console.error('Erreur création prospect:', error);
     }
   };
 
-  const handleEditProspect = async () => {
-    if (!editingProspect || !editingProspect.id) return;
-    const id = editingProspect.id;
+  const handleEditProspect = async (data: Prospect) => {
+    if (!data.id) return;
+    const id = data.id;
     const previous = prospects.find(p => p.id === id);
 
     // Mise à jour optimiste
-    setProspects(prev => prev.map(p => (p.id === id ? editingProspect : p)));
+    setProspects(prev => prev.map(p => (p.id === id ? data : p)));
     setIsEditProspectDialogOpen(false);
     setEditingProspect(null);
 
     try {
-      await nocodbService.updateProspect(id, {
-        name: editingProspect.name,
-        [PROSPECT_COMPANY_COLUMN]: editingProspect.company,
-        email: editingProspect.email,
-        [PROSPECT_PHONE_COLUMN]: editingProspect.phone,
-        telephone: editingProspect.phone,
-        phone: editingProspect.phone,
-        Téléphone: editingProspect.phone,
-        [PROSPECT_SITE_COLUMN]: editingProspect.website,
-        site: editingProspect.website,
-        reseaux: editingProspect.website,
-        website: editingProspect.website,
-        status: mapProspectStatusToNoco(editingProspect.status),
-        dernier_contact: editingProspect.lastContact
-      });
+      await nocodbService.updateProspect(
+        id,
+        buildProspectPayload({
+          name: data.name,
+          company: data.company,
+          email: data.email,
+          phone: data.phone,
+          website: data.website,
+          status: data.status,
+          lastContact: data.lastContact
+        })
+      );
     } catch (error) {
       console.error('Erreur mise à jour prospect:', error);
       if (previous) {
@@ -530,55 +533,11 @@ const Pipou = () => {
           <DialogHeader>
             <DialogTitle>Créer un prospect</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
-            <div className="space-y-2">
-              <Label htmlFor="new-prospect-name">Nom</Label>
-              <Input
-                id="new-prospect-name"
-                value={newProspect.name}
-                onChange={(e) => setNewProspect({ ...newProspect, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-prospect-company">Entreprise</Label>
-              <Input
-                id="new-prospect-company"
-                value={newProspect.company}
-                onChange={(e) => setNewProspect({ ...newProspect, company: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-prospect-email">Email</Label>
-              <Input
-                id="new-prospect-email"
-                type="email"
-                value={newProspect.email}
-                onChange={(e) => setNewProspect({ ...newProspect, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-prospect-phone">Téléphone</Label>
-              <Input
-                id="new-prospect-phone"
-                value={newProspect.phone}
-                onChange={(e) => setNewProspect({ ...newProspect, phone: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-prospect-website">Réseaux / Site</Label>
-              <Input
-                id="new-prospect-website"
-                value={newProspect.website}
-                onChange={(e) => setNewProspect({ ...newProspect, website: e.target.value })}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setIsCreateProspectDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={addProspect}>Créer</Button>
-          </div>
+          <ProspectForm
+            onCancel={() => setIsCreateProspectDialogOpen(false)}
+            onSubmit={addProspect}
+            submitLabel="Créer"
+          />
         </DialogContent>
       </Dialog>
       {editingProspect && (
@@ -593,55 +552,12 @@ const Pipou = () => {
             <DialogHeader>
               <DialogTitle>Modifier le prospect</DialogTitle>
             </DialogHeader>
-            <div className="space-y-2">
-              <div className="space-y-2">
-                <Label htmlFor="edit-prospect-name">Nom</Label>
-                <Input
-                  id="edit-prospect-name"
-                  value={editingProspect.name}
-                  onChange={(e) => setEditingProspect({ ...editingProspect, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-prospect-company">Entreprise</Label>
-                <Input
-                  id="edit-prospect-company"
-                  value={editingProspect.company}
-                  onChange={(e) => setEditingProspect({ ...editingProspect, company: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-prospect-email">Email</Label>
-                <Input
-                  id="edit-prospect-email"
-                  type="email"
-                  value={editingProspect.email}
-                  onChange={(e) => setEditingProspect({ ...editingProspect, email: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-prospect-phone">Téléphone</Label>
-                <Input
-                  id="edit-prospect-phone"
-                  value={editingProspect.phone}
-                  onChange={(e) => setEditingProspect({ ...editingProspect, phone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-prospect-website">Réseaux / Site</Label>
-                <Input
-                  id="edit-prospect-website"
-                  value={editingProspect.website}
-                  onChange={(e) => setEditingProspect({ ...editingProspect, website: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-4">
-              <Button variant="outline" onClick={() => setIsEditProspectDialogOpen(false)}>
-                Annuler
-              </Button>
-              <Button onClick={handleEditProspect}>Mettre à jour</Button>
-            </div>
+            <ProspectForm
+              initialData={editingProspect}
+              onCancel={() => setIsEditProspectDialogOpen(false)}
+              onSubmit={(data) => handleEditProspect({ ...editingProspect, ...data })}
+              submitLabel="Mettre à jour"
+            />
           </DialogContent>
         </Dialog>
       )}

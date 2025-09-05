@@ -18,6 +18,7 @@ const statuses = [
   { id: 'Nouveau', title: 'Nouveau', color: 'bg-gray-100 dark:bg-gray-800' },
   { id: 'En contact', title: 'En contact', color: 'bg-blue-100 dark:bg-blue-900/30' },
   { id: 'En discussion', title: 'En discussion', color: 'bg-yellow-100 dark:bg-yellow-900/30' },
+  { id: 'Proposition', title: 'Proposition', color: 'bg-purple-100 dark:bg-purple-900/30' },
   { id: 'Converti', title: 'Converti', color: 'bg-green-100 dark:bg-green-900/30' },
 ];
 
@@ -42,7 +43,7 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       {statuses.map(column => (
         <div
           key={column.id}

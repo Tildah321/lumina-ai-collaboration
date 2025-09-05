@@ -6,6 +6,8 @@ export const mapProspectStatus = (status: string) => {
       return 'En contact';
     case 'en discussion':
       return 'En discussion';
+    case 'proposition':
+      return 'Proposition';
     case 'converti':
       return 'Converti';
     default:
@@ -21,6 +23,8 @@ export const mapProspectStatusToNoco = (status: string) => {
       return 'en contact';
     case 'En discussion':
       return 'en discussion';
+    case 'Proposition':
+      return 'proposition';
     case 'Converti':
       return 'converti';
     default:
