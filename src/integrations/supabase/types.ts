@@ -35,6 +35,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_branding: {
+        Row: {
+          user_id: string
+          company_name: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          logo_url: string | null
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          company_name?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          logo_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          company_name?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          logo_url?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_plans: {
         Row: {
           active_spaces_count: number
