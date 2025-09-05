@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import nocodbService from '@/services/nocodbService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,6 +18,13 @@ export interface GlobalStats {
 
 export const useGlobalStats = () => {
   const { toast } = useToast();
+  // Stocker la fonction toast dans une ref pour éviter que le hook se relance
+  // à chaque rendu lorsque la référence de `toast` change. Cela causait une
+  // boucle de chargement infinie des statistiques globales.
+  const toastRef = useRef(toast);
+  useEffect(() => {
+    toastRef.current = toast;
+  }, [toast]);
   const [stats, setStats] = useState<GlobalStats>({
     totalTasks: 0,
     completedTasks: 0,
@@ -144,8 +151,9 @@ export const useGlobalStats = () => {
         
         const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
         
+        const showToast = toastRef.current;
         if (errorMessage.includes('Too many requests')) {
-          toast({
+          showToast({
             title: "Limite de requêtes atteinte",
             description: "Les statistiques seront rechargées automatiquement",
             variant: "default"
@@ -156,7 +164,7 @@ export const useGlobalStats = () => {
             loadGlobalStats();
           }, 15000);
         } else {
-          toast({
+          showToast({
             title: "Erreur de chargement",
             description: "Impossible de charger les statistiques globales",
             variant: "destructive"
@@ -175,7 +183,10 @@ export const useGlobalStats = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [toast]);
+  // Le chargement initial et l'intervalle ne dépendent pas de la fonction toast
+  // grâce à l'utilisation de `toastRef` ci-dessus.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return stats;
 };
