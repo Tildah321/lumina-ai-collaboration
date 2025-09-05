@@ -151,6 +151,16 @@ const Tasky = () => {
           list = (res.list || []).map((t: any) => ({ ...t, isInternal: false }));
         }
 
+        if (taskScope === 'client') {
+          list = list.filter((t: any) => {
+            const responsible = (t.responsable || t.responsible || '')
+              .toString()
+              .trim()
+              .toLowerCase();
+            return !responsible.includes('client');
+          });
+        }
+
         const tasksWithNames = list.map((t: any) => ({
           ...t,
           id: t.Id || t.id,
