@@ -12,6 +12,7 @@ import { usePlan } from '@/contexts/PlanContext';
 import { Navigate } from 'react-router-dom';
 import nocodbService from '@/services/nocodbService';
 import { TimeTracker } from '@/components/time/TimeTracker';
+import TaskManager from '@/components/tasks/TaskManager';
 
 const Tasky = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
@@ -68,6 +69,7 @@ const Tasky = () => {
   };
 
   const [editTask, setEditTask] = useState<any | null>(null);
+  const [spaceTasksProject, setSpaceTasksProject] = useState<any | null>(null);
 
   const getProjectName = (projet: any) => projet.nom || projet.name || 'Projet';
 
@@ -355,11 +357,25 @@ const Tasky = () => {
             Nouvelle tâche
           </Button>
         </div>
-      </div>
-      {viewMode === 'kanban' ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
-            {columns.map((column) => (
-              <div
+        </div>
+        {projects.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-4">
+            {projects.map((p) => (
+              <Button
+                key={p.id}
+                size="sm"
+                variant="outline"
+                onClick={() => setSpaceTasksProject(p)}
+              >
+                {getProjectName(p)}
+              </Button>
+            ))}
+          </div>
+        )}
+        {viewMode === 'kanban' ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
+              {columns.map((column) => (
+                <div
                 key={column.id}
                 className={`${column.color} rounded-lg p-4`}
                 onDragOver={handleDragOver}
@@ -657,9 +673,22 @@ const Tasky = () => {
               </DialogFooter>
             </DialogContent>
           )}
-        </Dialog>
-      </div>
-  );
-};
+          </Dialog>
+          <Dialog
+            open={!!spaceTasksProject}
+            onOpenChange={(o) => !o && setSpaceTasksProject(null)}
+          >
+            {spaceTasksProject && (
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Tâches {getProjectName(spaceTasksProject)}</DialogTitle>
+                </DialogHeader>
+                <TaskManager projetId={spaceTasksProject.id} />
+              </DialogContent>
+            )}
+          </Dialog>
+        </div>
+    );
+  };
 
-export default Tasky;
+  export default Tasky;
