@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Mail } from 'lucide-react';
 
 const Mailo = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
@@ -96,6 +97,18 @@ const Mailo = () => {
       </div>
 
       <Card className="glass-glow hover:shadow-glow transition-all duration-300">
+    <div className="space-y-8">
+      <div className="text-center space-y-2">
+        <div className="flex items-center justify-center gap-2">
+          <Mail className="w-8 h-8 text-violet-600" />
+          <h1 className="text-3xl font-bold">Mailo — Séquences cold email</h1>
+        </div>
+        <p className="text-muted-foreground">
+          Crée, personnalise et automatise tes campagnes de prospection email.
+        </p>
+      </div>
+
+      <Card>
         <CardHeader className="bg-violet-50">
           <CardTitle className="text-violet-700">Campagne</CardTitle>
         </CardHeader>
@@ -124,8 +137,8 @@ const Mailo = () => {
           </div>
         </CardContent>
       </Card>
-
       <Card className="glass-glow hover:shadow-glow transition-all duration-300">
+      <Card>
         <CardHeader className="bg-violet-50 flex justify-between items-center">
           <CardTitle className="text-violet-700">Étapes</CardTitle>
           <Button size="sm" variant="outline" onClick={addStep} className="gap-2">
@@ -167,8 +180,8 @@ const Mailo = () => {
           ))}
         </CardContent>
       </Card>
-
       <Card className="glass-glow hover:shadow-glow transition-all duration-300">
+      <Card>
         <CardHeader className="bg-violet-50">
           <CardTitle className="text-violet-700">Contacts</CardTitle>
         </CardHeader>
@@ -204,6 +217,7 @@ const Mailo = () => {
       </Card>
 
       <Card className="glass-glow hover:shadow-glow transition-all duration-300">
+      <Card>
         <CardHeader className="bg-violet-50">
           <CardTitle className="text-violet-700">Actions finales</CardTitle>
         </CardHeader>
