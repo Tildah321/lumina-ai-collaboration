@@ -1,0 +1,209 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Lumina Design System - Apple x Linear x Notion inspired */
+
+@layer base {
+  :root {
+    /* Lumina Brand Colors */
+    --primary: 258 90% 66%; /* Violet lumineux */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 258 100% 80%;
+    
+    --secondary: 220 100% 12%; /* Bleu nuit profond */
+    --secondary-foreground: 0 0% 100%;
+    
+    --accent: 258 50% 85%; /* Violet clair */
+    --accent-foreground: 220 100% 12%;
+    
+    /* Interface */
+    --background: 0 0% 100%;
+    --foreground: 220 50% 10%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 220 50% 10%;
+    --card-glass: 0 0% 100% / 0.8;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 50% 10%;
+    
+    --muted: 220 20% 97%;
+    --muted-foreground: 220 20% 50%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 20% 90%;
+    --input: 220 20% 95%;
+    --ring: 258 90% 66%;
+
+    
+    /* Gradients & Effects */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--card-glass)), hsl(var(--muted)));
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.3);
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.2);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Dark Mode Colors */
+    --background: 220 100% 4%;
+    --foreground: 0 0% 95%;
+    
+    --card: 220 50% 8%;
+    --card-foreground: 0 0% 95%;
+    --card-glass: 220 50% 8% / 0.8;
+    
+    --popover: 220 50% 8%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 258 90% 66%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 50% 15%;
+    --secondary-foreground: 0 0% 95%;
+    
+    --accent: 258 30% 25%;
+    --accent-foreground: 258 50% 85%;
+    
+    --muted: 220 30% 12%;
+    --muted-foreground: 220 20% 65%;
+    
+    --border: 220 30% 18%;
+    --input: 220 30% 15%;
+    --ring: 258 90% 66%;
+    
+    /* Dark Gradients */
+    --gradient-glass: linear-gradient(135deg, hsl(var(--card-glass)), hsl(var(--muted)));
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+  }
+}
+
+@layer components {
+  /* Lumina Glass Effect */
+  .glass {
+    @apply backdrop-blur-md bg-gradient-to-br from-card-glass to-muted/50 border border-border/50;
+  }
+  
+  .glass-glow {
+    @apply glass shadow-elegant;
+  }
+  
+  /* Glow Effects */
+  .glow-primary {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .glow-hover {
+    @apply transition-all duration-300 hover:shadow-glow;
+  }
+  
+  /* Animations */
+  .fade-in {
+    @apply animate-in fade-in-0 duration-500;
+  }
+  
+  .slide-in-up {
+    @apply animate-in slide-in-from-bottom-4 duration-300;
+  }
+  
+  .scale-hover {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  /* Animated Glow Effects */
+  .floating-glow {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.3), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .floating-glow-1 {
+    width: 300px;
+    height: 300px;
+    top: 10%;
+    left: 10%;
+    animation: float 20s ease-in-out infinite;
+  }
+  
+  .floating-glow-2 {
+    width: 200px;
+    height: 200px;
+    top: 60%;
+    right: 15%;
+    animation: float 25s ease-in-out infinite reverse;
+  }
+  
+  .floating-glow-3 {
+    width: 150px;
+    height: 150px;
+    bottom: 20%;
+    left: 20%;
+    animation: pulse-glow 15s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translateY(-20px) translateX(10px);
+      opacity: 0.6;
+    }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.2;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.4;
+    }
+  }
+
+  /* Animation delays for staggered entrance effects */
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+  .animation-delay-800 {
+    animation-delay: 800ms;
+  }
+  .animation-delay-1000 {
+    animation-delay: 1000ms;
+  }
+  .animation-delay-1200 {
+    animation-delay: 1200ms;
+  }
+  .animation-delay-1400 {
+    animation-delay: 1400ms;
+  }
+}
