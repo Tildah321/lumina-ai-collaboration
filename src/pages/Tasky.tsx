@@ -359,6 +359,7 @@ const Tasky = () => {
         </div>
         </div>
         {projects.length > 0 && (
+        {taskScope === 'client' && projects.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-4">
             {projects.map((p) => (
               <Button
