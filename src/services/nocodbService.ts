@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface NocoDBConfig {
   apiToken: string;
   baseUrl: string;
@@ -79,7 +80,11 @@ class NocoDBService {
 
   private invalidateCache(endpoint: string) {
     const url = `${this.config.baseUrl}${endpoint}`;
-    NocoDBService.requestCache.delete(url);
+    for (const key of NocoDBService.requestCache.keys()) {
+      if (key.startsWith(url)) {
+        NocoDBService.requestCache.delete(key);
+      }
+    }
   }
 
   private invalidateProjectCache() {
@@ -521,23 +526,29 @@ class NocoDBService {
     if (userId) {
       (payload as any).supabase_user_id = userId;
     }
-    return this.makeRequest(`/${this.config.tableIds.taches}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.taches}`, {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+    this.invalidateCache(`/${this.config.tableIds.taches}`);
+    return response;
   }
 
   async updateTask(id: string, data: any) {
-    return this.makeRequest(`/${this.config.tableIds.taches}/${id}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.taches}/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+    this.invalidateCache(`/${this.config.tableIds.taches}`);
+    return response;
   }
 
   async deleteTask(id: string) {
-    return this.makeRequest(`/${this.config.tableIds.taches}/${id}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.taches}/${id}`, {
       method: 'DELETE',
     });
+    this.invalidateCache(`/${this.config.tableIds.taches}`);
+    return response;
   }
 
   // Tâches internes
@@ -579,23 +590,29 @@ class NocoDBService {
     if (userId) {
       (payload as any).supabase_user_id = userId;
     }
-    return this.makeRequest(`/${this.config.tableIds.tachesInternes}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.tachesInternes}`, {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+    this.invalidateCache(`/${this.config.tableIds.tachesInternes}`);
+    return response;
   }
 
   async updateInternalTask(id: string, data: any) {
-    return this.makeRequest(`/${this.config.tableIds.tachesInternes}/${id}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.tachesInternes}/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+    this.invalidateCache(`/${this.config.tableIds.tachesInternes}`);
+    return response;
   }
 
   async deleteInternalTask(id: string) {
-    return this.makeRequest(`/${this.config.tableIds.tachesInternes}/${id}`, {
+    const response = await this.makeRequest(`/${this.config.tableIds.tachesInternes}/${id}`, {
       method: 'DELETE',
     });
+    this.invalidateCache(`/${this.config.tableIds.tachesInternes}`);
+    return response;
   }
 
   // Jalons - Filtered by user's spaces
