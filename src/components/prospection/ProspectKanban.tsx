@@ -5,7 +5,7 @@ import { mapProspectStatusToNoco } from '@/lib/prospectStatus';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Edit, Trash2 } from 'lucide-react';
+import { Mail, Phone, Edit, Trash2, Globe } from 'lucide-react';
 
 interface ProspectKanbanProps {
   prospects: Prospect[];
@@ -111,6 +111,12 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                           <span>{p.phone}</span>
                         </div>
                       )}
+                      {p.website && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="w-4 h-4" />
+                          <span>{p.website}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-2 pt-2 flex-wrap" onClick={e => e.stopPropagation()}>
@@ -122,15 +128,27 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                           </a>
                         </Button>
                       )}
-                      {p.phone && (
-                        <Button size="sm" variant="secondary" className="gap-2" asChild>
-                          <a href={`tel:${p.phone}`}>
-                            <Phone className="w-4 h-4" />
-                            Appeler
-                          </a>
-                        </Button>
-                      )}
-                    </div>
+                    {p.phone && (
+                      <Button size="sm" variant="secondary" className="gap-2" asChild>
+                        <a href={`tel:${p.phone}`}>
+                          <Phone className="w-4 h-4" />
+                          Appeler
+                        </a>
+                      </Button>
+                    )}
+                    {p.website && (
+                      <Button size="sm" variant="outline" className="gap-2" asChild>
+                        <a
+                          href={p.website.startsWith('http') ? p.website : `https://${p.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Globe className="w-4 h-4" />
+                          Site
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                   </CardContent>
                 </Card>
               ))}
