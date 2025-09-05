@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, Sparkles, Users, Target, Zap } from 'lucide-react';
+import { loadBranding } from '@/lib/branding';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Auth = () => {
@@ -18,6 +19,8 @@ const Auth = () => {
     password: '',
     confirmPassword: ''
   });
+  const branding = loadBranding();
+  const brandLabel = branding.brandName?.trim() || 'Lumina';
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -115,7 +118,7 @@ const Auth = () => {
             </p>
             <Link to="/" className="inline-flex items-center gap-2 text-primary hover:underline mt-2">
               <Sparkles className="w-4 h-4" />
-              Découvrir Lumina
+                {`Découvrir ${brandLabel}`}
             </Link>
           </div>
         </div>
