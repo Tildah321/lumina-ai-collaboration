@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AssistantWidget from '@/components/assistants/AssistantWidget';
+import ColdEmailLauncher from '@/components/prospection/ColdEmailLauncher';
 
 const Copyly = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
@@ -23,6 +24,7 @@ const Copyly = () => {
   }, [hasFeatureAccess, upgradeRequired, navigate, loading]);
   const [aiMessage, setAiMessage] = useState('');
   const [generatedContent, setGeneratedContent] = useState('');
+  const [generatedType, setGeneratedType] = useState<'social' | 'sales' | 'email' | ''>('');
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -46,6 +48,7 @@ const Copyly = () => {
 
   const handleSocialGeneration = async () => {
     setIsGenerating(true);
+    setGeneratedType('social');
     setAiMessage('🦉 Je réfléchis à du contenu engageant...');
     
     // Simulation génération IA
@@ -72,6 +75,7 @@ Prêt(e) à passer au niveau supérieur ?
 
   const handleSalesGeneration = async () => {
     setIsGenerating(true);
+    setGeneratedType('sales');
     setAiMessage('🦉 Création d\'une page de vente persuasive...');
     
     setTimeout(() => {
@@ -110,6 +114,7 @@ Vous perdez du temps et de l'énergie avec des solutions inadaptées...
 
   const handleEmailGeneration = async () => {
     setIsGenerating(true);
+    setGeneratedType('email');
     setAiMessage('🦉 Rédaction d\'une séquence email captivante...');
     
     setTimeout(() => {
@@ -336,29 +341,34 @@ C'est votre dernière chance de...
           </Tabs>
 
           {generatedContent && (
-            <Card className="glass-glow mt-6">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Contenu généré</CardTitle>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={copyToClipboard}
-                    className="gap-2"
-                  >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copied ? 'Copié !' : 'Copier'}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Textarea 
-                  value={generatedContent} 
-                  readOnly
-                  className="min-h-[300px] font-mono text-sm"
-                />
-              </CardContent>
-            </Card>
+            <>
+              <Card className="glass-glow mt-6">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Contenu généré</CardTitle>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={copyToClipboard}
+                      className="gap-2"
+                    >
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copied ? 'Copié !' : 'Copier'}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    value={generatedContent}
+                    readOnly
+                    className="min-h-[300px] font-mono text-sm"
+                  />
+                </CardContent>
+              </Card>
+              {generatedType === 'email' && (
+                <ColdEmailLauncher content={generatedContent} />
+              )}
+            </>
           )}
         </div>
 
