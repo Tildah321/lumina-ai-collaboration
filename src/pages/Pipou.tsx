@@ -45,6 +45,7 @@ const FIELD_KEYS = {
     'link',
     'links',
     'url'
+    'website'
   ]
 } as const;
 
@@ -73,6 +74,8 @@ const getFieldValue = (
         const url = (value as { url?: unknown }).url;
         if (typeof url === 'string') return url;
       }
+    if (normalized[nk] && typeof record[normalized[nk]] === 'string') {
+      return record[normalized[nk]] as string;
     }
   }
   return '';
