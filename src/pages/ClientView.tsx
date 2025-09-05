@@ -295,7 +295,7 @@ const ClientView = () => {
             </div>
           )}
 
-          <StatisticsOverview spaceId={id || ''} />
+          <StatisticsOverview spaceId={id || ''} isPublic />
 
           {space.onboardingLink && space.onboardingLink.trim() && (
             <Card>
@@ -318,7 +318,7 @@ const ClientView = () => {
         </TabsContent>
 
         <TabsContent value="project" className="container mx-auto px-4 py-6 space-y-6">
-          <StatisticsOverview spaceId={id || ''} />
+          <StatisticsOverview spaceId={id || ''} isPublic />
           <Tabs defaultValue="tasks" className="w-full">
             <TabsList className="justify-start mb-4">
               {projectNavItems.map((item) => (
