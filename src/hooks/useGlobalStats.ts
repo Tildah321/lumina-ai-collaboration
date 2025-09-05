@@ -11,7 +11,7 @@ export interface GlobalStats {
   paidInvoices: number;
   totalRevenue: number;
   paidRevenue: number;
-  totalTimeSpent: number;
+  totalTimeSpent: number; // en secondes
   averageHourlyRate: number;
   isLoading: boolean;
 }
@@ -80,21 +80,28 @@ export const useGlobalStats = () => {
           .filter((i: any) => i.payée === true || i.payée === 'true' || i.paid === true)
           .reduce((acc: number, i: any) => acc + (Number(i.montant) || Number(i.amount) || 0), 0);
 
-        // Calculer le temps total passé sur les tâches
-        const totalMinutes = tasks.reduce((sum: number, task: any) => {
-          if (task.time_spent) {
-            const timeStr = task.time_spent.toString();
+        // Calculer le temps total passé sur les tâches (en secondes)
+        const totalSeconds = tasks.reduce((sum: number, task: any) => {
+          const time = task.time_spent;
+          if (!time) return sum;
+
+          if (typeof time === 'string') {
+            const timeStr = time.toString();
             if (timeStr.includes(':')) {
               const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-              return sum + hours * 60 + minutes + seconds / 60;
+              return sum + hours * 3600 + minutes * 60 + seconds;
             }
-            return sum + parseFloat(timeStr) * 60;
+            // Format décimal d'heures
+            return sum + parseFloat(timeStr) * 3600;
           }
-          return sum;
+
+          // Rétrocompatibilité : temps stocké en minutes
+          return sum + Number(time) * 60;
         }, 0);
 
-        const totalHours = totalMinutes / 60;
-        const averageHourlyRate = totalHours > 0 ? paidRevenue / totalHours : 0;
+        const totalHours = totalSeconds / 3600;
+        // Affiche un taux horaire uniquement après au moins 1h de travail
+        const averageHourlyRate = totalHours >= 1 ? paidRevenue / totalHours : 0;
 
         setStats({
           totalTasks: tasks.length,
@@ -105,7 +112,7 @@ export const useGlobalStats = () => {
           paidInvoices,
           totalRevenue,
           paidRevenue,
-          totalTimeSpent: totalHours,
+          totalTimeSpent: totalSeconds,
           averageHourlyRate,
           isLoading: false
         });
@@ -119,7 +126,7 @@ export const useGlobalStats = () => {
           paidInvoices,
           totalRevenue,
           paidRevenue,
-          totalTimeSpent: totalHours,
+          totalTimeSpent: totalSeconds,
           averageHourlyRate
         });
 
