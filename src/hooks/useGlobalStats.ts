@@ -42,9 +42,19 @@ export const useGlobalStats = () => {
         // Charger les données en parallèle pour accélérer l'affichage des statistiques
         // Récupérer uniquement les tâches de l'utilisateur courant
         const [tasksResponse, milestonesResponse, invoicesResponse] = await Promise.all([
-          nocodbService.getTasks(undefined, { onlyCurrentUser: true }),
-          nocodbService.getMilestones(),
-          nocodbService.getInvoices()
+          nocodbService.getTasks(undefined, {
+            onlyCurrentUser: true,
+            fields: 'statut,status,time_spent,projet_id,supabase_user_id,user_id,owner_id',
+            limit: 1000
+          }),
+          nocodbService.getMilestones(undefined, {
+            fields: 'projet_id,terminé,termine',
+            limit: 1000
+          }),
+          nocodbService.getInvoices(undefined, {
+            fields: 'projet_id,montant,amount,payée,paid',
+            limit: 1000
+          })
         ]);
         
         const tasks = tasksResponse.list || [];
