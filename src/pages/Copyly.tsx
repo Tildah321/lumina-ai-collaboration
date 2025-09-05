@@ -9,6 +9,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+const TONE_OPTIONS = [
+  { value: 'professionnel', label: 'Professionnel' },
+  { value: 'amical', label: 'Amical' },
+  { value: 'humoristique', label: 'Humoristique' },
+  { value: 'inspirant', label: 'Inspirant' },
+  { value: 'persuasif', label: 'Persuasif' },
+  { value: 'informel', label: 'Informel' },
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'motivant', label: 'Motivant' },
+  { value: 'neutre', label: 'Neutre' },
+  { value: 'educatif', label: 'Éducatif' },
+  { value: 'formel', label: 'Formel' },
+  { value: 'creatif', label: 'Créatif' }
+];
+
 const Copyly = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
   const navigate = useNavigate();
@@ -199,9 +214,11 @@ C'est votre dernière chance de...
                     value={socialForm.tone}
                     onChange={(e) => setSocialForm({ ...socialForm, tone: e.target.value })}
                   >
-                    <option value="professionnel">Professionnel</option>
-                    <option value="amical">Amical</option>
-                    <option value="humoristique">Humoristique</option>
+                    {TONE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -300,9 +317,11 @@ C'est votre dernière chance de...
                       value={emailForm.tone}
                       onChange={(e) => setEmailForm({ ...emailForm, tone: e.target.value })}
                     >
-                      <option value="professionnel">Professionnel</option>
-                      <option value="amical">Amical</option>
-                      <option value="humoristique">Humoristique</option>
+                      {TONE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
