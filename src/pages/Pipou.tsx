@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Globe } from 'lucide-react';
+import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Globe, Target, Euro } from 'lucide-react';
 import { usePlan } from '@/contexts/PlanContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,9 @@ import ClientShareDialog from '@/components/client/ClientShareDialog';
 import ProspectKanban from '@/components/prospection/ProspectKanban';
 import { Prospect } from '@/types/prospect';
 import { mapProspectStatus, mapProspectStatusToNoco } from '@/lib/prospectStatus';
+import MilestoneManager from '@/components/milestones/MilestoneManager';
+import NocoInvoiceManager from '@/components/invoices/NocoInvoiceManager';
+import { Progress } from '@/components/ui/progress';
 
 type NocoRecord = Record<string, unknown>;
 
@@ -90,6 +93,8 @@ const Pipou = () => {
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [milestonesProject, setMilestonesProject] = useState<Project | null>(null);
+  const [invoicesProject, setInvoicesProject] = useState<Project | null>(null);
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -187,6 +192,7 @@ const Pipou = () => {
   const [activeTab, setActiveTab] = useState('clients');
 
   useEffect(() => {
+    if (activeTab !== 'prospection' || prospects.length > 0) return;
     const loadProspects = async () => {
       setIsLoadingProspects(true);
       try {
@@ -229,9 +235,8 @@ const Pipou = () => {
         setIsLoadingProspects(false);
       }
     };
-
     loadProspects();
-  }, []);
+  }, [activeTab, prospects.length]);
 
   const addProspect = async () => {
     if (!newProspect.name || !newProspect.company) return;
@@ -347,6 +352,31 @@ const Pipou = () => {
     alert(`✉️ Message automatique pour ${project.client}:\n\n"Bonjour ! Voici un point sur l'avancement de votre projet '${project.spaceName}'.\n\nNous avons bien progressé avec ${project.progress}% de réalisation. L'équipe travaille actuellement sur les derniers ajustements pour respecter votre deadline du ${project.deadline}.\n\nN'hésite pas si tu as des questions !\nL'équipe Lumina 🚀"`);
   };
 
+  const refreshProjectData = async (projectId: string) => {
+    try {
+      const [tasksCount, milestonesRes, invoicesCount] = await Promise.all([
+        fetchWithRetry(() => nocodbService.getTasksCount(projectId, { onlyCurrentUser: true })),
+        fetchWithRetry(() => nocodbService.getMilestones(projectId, { fields: 'terminé,termine' })),
+        fetchWithRetry(() => nocodbService.getInvoicesCount(projectId))
+      ]);
+      const milestonesList = (milestonesRes.list || []) as NocoRecord[];
+      const doneMilestones = milestonesList.filter((m: NocoRecord) => {
+        const status = (m as { terminé?: unknown; termine?: unknown }).terminé || (m as { terminé?: unknown; termine?: unknown }).termine;
+        return status === true || status === 'true';
+      }).length;
+      const progress = milestonesList.length > 0 ? Math.round((doneMilestones / milestonesList.length) * 100) : 0;
+      setProjects(prev => prev.map(p => p.id === projectId ? {
+        ...p,
+        tasksCount,
+        milestonesCount: milestonesRes.pageInfo?.totalRows ?? milestonesList.length,
+        invoicesCount,
+        progress
+      } : p));
+    } catch (error) {
+      console.error('Erreur rafraîchissement projet:', error);
+    }
+  };
+
   return (
     <div className="space-y-6 fade-in">
       <div className="flex items-center justify-between">
@@ -397,7 +427,18 @@ const Pipou = () => {
                           <p className="text-sm text-muted-foreground">
                             {project.description}
                           </p>
-
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Avancement</span>
+                              <span className="font-medium">{project.progress}%</span>
+                            </div>
+                            <Progress value={project.progress} />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-sm">
+                            <div><span className="font-medium">{project.tasksCount}</span> tâches</div>
+                            <div><span className="font-medium">{project.milestonesCount}</span> jalons</div>
+                            <div><span className="font-medium">{project.invoicesCount}</span> factures</div>
+                          </div>
                           <div className="flex gap-2 pt-2 flex-wrap">
                             <Button
                               size="sm"
@@ -420,6 +461,24 @@ const Pipou = () => {
                                 </a>
                               </Button>
                             )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setMilestonesProject(project)}
+                              className="gap-2"
+                            >
+                              <Target className="w-4 h-4" />
+                              Jalons
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setInvoicesProject(project)}
+                              className="gap-2"
+                            >
+                              <Euro className="w-4 h-4" />
+                              Factures
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -692,6 +751,32 @@ const Pipou = () => {
           spaceId={selectedProject.id}
           spaceName={selectedProject.spaceName}
         />
+      )}
+      {milestonesProject && (
+        <Dialog open={true} onOpenChange={(open) => !open && setMilestonesProject(null)}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Jalons - {milestonesProject.spaceName}</DialogTitle>
+            </DialogHeader>
+            <MilestoneManager
+              projetId={milestonesProject.id}
+              onDataChange={() => refreshProjectData(milestonesProject.id)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+      {invoicesProject && (
+        <Dialog open={true} onOpenChange={(open) => !open && setInvoicesProject(null)}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Factures - {invoicesProject.spaceName}</DialogTitle>
+            </DialogHeader>
+            <NocoInvoiceManager
+              projetId={invoicesProject.id}
+              onDataChange={() => refreshProjectData(invoicesProject.id)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
