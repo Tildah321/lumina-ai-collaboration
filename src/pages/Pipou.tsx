@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Globe, Target, Euro } from 'lucide-react';
 import { usePlan } from '@/contexts/PlanContext';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +40,7 @@ interface Project {
 }
 
 const CONCURRENCY_LIMIT = 3;
+const PROSPECTS_PAGE_SIZE = 20;
 
 async function asyncPool<T, R>(
   limit: number,
@@ -179,6 +180,8 @@ const Pipou = () => {
   // Données mockées de prospection CRM
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [isLoadingProspects, setIsLoadingProspects] = useState(true);
+  const [prospectOffset, setProspectOffset] = useState(0);
+  const [hasMoreProspects, setHasMoreProspects] = useState(true);
   const [newProspect, setNewProspect] = useState({
     name: '',
     company: '',
@@ -191,52 +194,58 @@ const Pipou = () => {
   const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
   const [activeTab, setActiveTab] = useState('clients');
 
+  const loadProspects = useCallback(async () => {
+    setIsLoadingProspects(true);
+    try {
+      const response = await nocodbService.getProspects(
+        PROSPECTS_PAGE_SIZE,
+        prospectOffset
+      );
+      const list = (response.list || []).map((p: Record<string, unknown>) => ({
+        id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
+        name: (p as { name?: string }).name || '',
+        company:
+          (p as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
+          (p as { entreprise?: string }).entreprise ||
+          (p as { company?: string }).company ||
+          '',
+        email: (p as { email?: string }).email || '',
+        phone:
+          (p as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
+          (p as { telephone?: string }).telephone ||
+          (p as { numero?: string }).numero ||
+          (p as { phone?: string }).phone ||
+          (p as Record<string, string>)['t_l_phone'] ||
+          (p as Record<string, string>)['téléphone'] ||
+          '',
+        website:
+          (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
+          (p as { site?: string }).site ||
+          (p as { reseaux?: string }).reseaux ||
+          (p as { website?: string }).website ||
+          (p as Record<string, string>)['reseaux_site'] ||
+          (p as Record<string, string>)['site_web'] ||
+          '',
+        status: mapProspectStatus((p as { status?: string }).status || 'nouveau'),
+        lastContact:
+          (p as { lastContact?: string; dernier_contact?: string }).lastContact ||
+          (p as { dernier_contact?: string }).dernier_contact ||
+          ''
+      }));
+      setProspects(prev => [...prev, ...list]);
+      setProspectOffset(prev => prev + list.length);
+      setHasMoreProspects(list.length === PROSPECTS_PAGE_SIZE);
+    } catch (error) {
+      console.error('Erreur chargement prospects:', error);
+    } finally {
+      setIsLoadingProspects(false);
+    }
+  }, [prospectOffset]);
+
   useEffect(() => {
     if (activeTab !== 'prospection' || prospects.length > 0) return;
-    const loadProspects = async () => {
-      setIsLoadingProspects(true);
-      try {
-        const response = await nocodbService.getProspects(true);
-        const list = (response.list || []).map((p: Record<string, unknown>) => ({
-          id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
-          name: (p as { name?: string }).name || '',
-          company:
-            (p as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
-            (p as { entreprise?: string }).entreprise ||
-            (p as { company?: string }).company ||
-            '',
-          email: (p as { email?: string }).email || '',
-          phone:
-            (p as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
-            (p as { telephone?: string }).telephone ||
-            (p as { numero?: string }).numero ||
-            (p as { phone?: string }).phone ||
-            (p as Record<string, string>)['t_l_phone'] ||
-            (p as Record<string, string>)['téléphone'] ||
-            '',
-          website:
-            (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
-            (p as { site?: string }).site ||
-            (p as { reseaux?: string }).reseaux ||
-            (p as { website?: string }).website ||
-            (p as Record<string, string>)['reseaux_site'] ||
-            (p as Record<string, string>)['site_web'] ||
-            '',
-          status: mapProspectStatus((p as { status?: string }).status || 'nouveau'),
-          lastContact:
-            (p as { lastContact?: string; dernier_contact?: string }).lastContact ||
-            (p as { dernier_contact?: string }).dernier_contact ||
-            ''
-        }));
-        setProspects(list);
-      } catch (error) {
-        console.error('Erreur chargement prospects:', error);
-      } finally {
-        setIsLoadingProspects(false);
-      }
-    };
     loadProspects();
-  }, [activeTab, prospects.length]);
+  }, [activeTab, prospects.length, loadProspects]);
 
   const addProspect = async () => {
     if (!newProspect.name || !newProspect.company) return;
@@ -288,6 +297,7 @@ const Pipou = () => {
           payload.dernier_contact
       };
       setProspects(prev => [...prev, created]);
+      setProspectOffset(prev => prev + 1);
       setNewProspect({ name: '', company: '', email: '', phone: '', website: '' });
       setIsCreateProspectDialogOpen(false);
     } catch (error) {
@@ -334,6 +344,7 @@ const Pipou = () => {
 
     // Mise à jour optimiste
     setProspects(prev => prev.filter(p => p.id !== id));
+    setProspectOffset(prev => Math.max(0, prev - 1));
 
     try {
       await nocodbService.deleteProspect(id);
@@ -604,6 +615,13 @@ const Pipou = () => {
                           </CardContent>
                         </Card>
                       ))}
+                      {hasMoreProspects && (
+                        <div className="flex justify-center">
+                          <Button onClick={loadProspects} disabled={isLoadingProspects}>
+                            {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
+                          </Button>
+                        </div>
+                      )}
                     </TabsContent>
 
             <TabsContent value="kanban">
@@ -620,6 +638,13 @@ const Pipou = () => {
                   }
                 }}
               />
+              {hasMoreProspects && (
+                <div className="flex justify-center mt-4">
+                  <Button onClick={loadProspects} disabled={isLoadingProspects}>
+                    {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </TabsContent>
