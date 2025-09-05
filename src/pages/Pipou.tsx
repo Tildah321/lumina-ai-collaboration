@@ -22,6 +22,7 @@ const PROSPECT_COMPANY_COLUMN = 'cxi03jrd1enf3n2';
 const PROSPECT_PHONE_COLUMN = 'ch2fw3p077t9y6w';
 const PROSPECT_SITE_COLUMN = 'coo7e2wbo6zvvux';
 
+
 const FIELD_KEYS = {
   company: [PROSPECT_COMPANY_COLUMN, 'entreprise', 'Entreprise', 'company'],
   phone: [
@@ -33,6 +34,18 @@ const FIELD_KEYS = {
     'phone',
     't_l_phone'
   ],
+
+const normalizeKey = (key: string) =>
+  key
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+const FIELD_KEYS = {
+  company: [PROSPECT_COMPANY_COLUMN, 'entreprise', 'Entreprise', 'company'],
+  phone: [PROSPECT_PHONE_COLUMN, 'telephone', 'Téléphone', 'numero', 'phone'],
+
   website: [
     PROSPECT_SITE_COLUMN,
     'site',
@@ -46,6 +59,7 @@ const FIELD_KEYS = {
     'link',
     'links',
     'url'
+    'website'
   ]
 } as const;
 
@@ -67,6 +81,29 @@ const getFieldValue = (
     if (value && typeof value === 'object' && 'url' in value) {
       const url = (value as { url?: unknown }).url;
       if (typeof url === 'string') return url;
+  const normalized = Object.keys(record).reduce<Record<string, string>>((acc, k) => {
+    acc[normalizeKey(k)] = k;
+    return acc;
+  }, {});
+  for (const key of keys) {
+    const nk = normalizeKey(key);
+    if (normalized[nk]) {
+      const value = record[normalized[nk]];
+      if (typeof value === 'string') return value;
+      if (Array.isArray(value)) {
+        const first = value[0];
+        if (typeof first === 'string') return first;
+        if (first && typeof first === 'object' && 'url' in first) {
+          const url = (first as { url?: unknown }).url;
+          if (typeof url === 'string') return url;
+        }
+      }
+      if (value && typeof value === 'object' && 'url' in value) {
+        const url = (value as { url?: unknown }).url;
+        if (typeof url === 'string') return url;
+      }
+    if (normalized[nk] && typeof record[normalized[nk]] === 'string') {
+      return record[normalized[nk]] as string;
     }
   }
   return '';
