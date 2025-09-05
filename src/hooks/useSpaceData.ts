@@ -106,7 +106,7 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
 
     try {
       const { tasks: tasksResult, milestones: milestonesResult, invoices: invoicesResult } =
-        await nocodbService.getSpaceData(spaceId, isPublic, { onlyCurrentUser: true });
+        await nocodbService.getSpaceData(spaceId, isPublic, { onlyCurrentUser: !isPublic });
 
       const tasks = (tasksResult.list || []).map((task: any) => ({
         ...task,
