@@ -10,11 +10,12 @@ import MarginManager from '@/components/finances/MarginManager';
 
 interface StatisticsOverviewProps {
   spaceId: string;
+  isPublic?: boolean;
 }
 
-const StatisticsOverview = ({ spaceId }: StatisticsOverviewProps) => {
+const StatisticsOverview = ({ spaceId, isPublic = false }: StatisticsOverviewProps) => {
   const globalStats = useGlobalStats();
-  const spaceData = useSpaceData(spaceId);
+  const spaceData = useSpaceData(spaceId, isPublic);
   const marginStats = useMarginStats();
 
   // Utiliser les données appropriées (spécifiques à l'espace ou globales)
