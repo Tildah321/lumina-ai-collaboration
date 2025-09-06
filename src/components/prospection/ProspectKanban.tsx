@@ -5,7 +5,7 @@ import { mapProspectStatusToNoco } from '@/lib/prospectStatus';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Edit, Trash2 } from 'lucide-react';
+import { Mail, Phone, Edit, Trash2, Globe, Calendar } from 'lucide-react';
 
 interface ProspectKanbanProps {
   prospects: Prospect[];
@@ -41,6 +41,9 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
       console.error('Erreur mise à jour prospect:', error);
     }
   };
+
+  const ensureProtocol = (url: string) =>
+    url && (url.startsWith('http://') || url.startsWith('https://')) ? url : `https://${url}`;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -86,6 +89,26 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                             {p.phone}
                           </p>
                         )}
+                        {p.website && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Globe className="w-3 h-3" />
+                            <a
+                              href={ensureProtocol(p.website)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline underline-offset-2 hover:no-underline"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {p.website}
+                            </a>
+                          </p>
+                        )}
+                        {p.lastContact && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Calendar className="w-3 h-3" />
+                            Dernier contact: {new Date(p.lastContact).toLocaleDateString()}
+                          </p>
+                        )}
                       </div>
                       <div className="flex gap-1" onClick={e => e.stopPropagation()}>
                         <Button
@@ -111,7 +134,7 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                       </div>
                     </div>
 
-                    {(p.email || p.phone) && (
+                    {(p.email || p.phone || p.website) && (
                       <div className="flex gap-2 pt-2 flex-wrap" onClick={e => e.stopPropagation()}>
                         {p.email && (
                           <Button size="sm" className="gap-2" asChild>
@@ -126,6 +149,14 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                             <a href={`tel:${p.phone}`}>
                               <Phone className="w-4 h-4" />
                               Appeler
+                            </a>
+                          </Button>
+                        )}
+                        {p.website && (
+                          <Button size="sm" variant="outline" className="gap-2" asChild>
+                            <a href={ensureProtocol(p.website)} target="_blank" rel="noopener noreferrer">
+                              <Globe className="w-4 h-4" />
+                              Site
                             </a>
                           </Button>
                         )}
