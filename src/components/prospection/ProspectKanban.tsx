@@ -69,8 +69,23 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                 >
                   <CardContent className="p-4 space-y-3">
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-1">
                         <h4 className="font-medium">{p.name}</h4>
+                        {p.company && (
+                          <p className="text-sm text-muted-foreground">{p.company}</p>
+                        )}
+                        {p.email && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Mail className="w-3 h-3" />
+                            {p.email}
+                          </p>
+                        )}
+                        {p.phone && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Phone className="w-3 h-3" />
+                            {p.phone}
+                          </p>
+                        )}
                       </div>
                       <div className="flex gap-1" onClick={e => e.stopPropagation()}>
                         <Button
