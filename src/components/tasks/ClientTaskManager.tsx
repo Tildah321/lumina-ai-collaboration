@@ -151,8 +151,8 @@ const ClientTaskManager = ({ spaceId }: ClientTaskManagerProps) => {
   }
 
   // Séparer les tâches client et admin
-  const clientTasks = tasks.filter(task => (task.assigne_a || task.assigné_a) === 'client');
-  const adminTasks = tasks.filter(task => (task.assigne_a || task.assigné_a) === 'moi');
+  const clientTasks = tasks.filter(task => (task.assigne_a || task['assigné_a']) === 'client');
+  const adminTasks = tasks.filter(task => (task.assigne_a || task['assigné_a']) === 'moi');
 
   return (
     <div className="space-y-6">

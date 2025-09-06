@@ -25,7 +25,7 @@ class NocoDBService {
       baseUrl: 'https://app.nocodb.com/api/v1/db/data/noco/pg5rbl36x41ud93',
       tableIds: {
         clients: 'mpd6txaj0t86ha7',
-        projets: 'mpuc56gjjal19op',
+        projets: 'mpd6txaj0t86ha7', // Temporaire - même table que clients
         taches: 'mon8rt3orldc3nc',
         jalons: 'mkpfjd0kb9xvh17',
         factures: 'm6budmy04sawh66',

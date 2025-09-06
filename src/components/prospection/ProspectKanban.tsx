@@ -96,24 +96,26 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-2 flex-wrap" onClick={e => e.stopPropagation()}>
-                      {p.email && (
-                        <Button size="sm" className="gap-2" asChild>
-                          <a href={`mailto:${p.email}`}>
-                            <Mail className="w-4 h-4" />
-                            Contacter
-                          </a>
-                        </Button>
-                      )}
-                      {p.phone && (
-                        <Button size="sm" variant="secondary" className="gap-2" asChild>
-                          <a href={`tel:${p.phone}`}>
-                            <Phone className="w-4 h-4" />
-                            Appeler
-                          </a>
-                        </Button>
-                      )}
-                    </div>
+                    {(p.email || p.phone) && (
+                      <div className="flex gap-2 pt-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                        {p.email && (
+                          <Button size="sm" className="gap-2" asChild>
+                            <a href={`mailto:${p.email}`}>
+                              <Mail className="w-4 h-4" />
+                              Email
+                            </a>
+                          </Button>
+                        )}
+                        {p.phone && (
+                          <Button size="sm" variant="secondary" className="gap-2" asChild>
+                            <a href={`tel:${p.phone}`}>
+                              <Phone className="w-4 h-4" />
+                              Appeler
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}

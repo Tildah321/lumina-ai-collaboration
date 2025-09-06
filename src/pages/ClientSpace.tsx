@@ -710,13 +710,13 @@ const OptimizedTaskManager = ({ isClient }: { isClient: boolean }) => {
   console.log('🔍 Sample task structure:', tasks[0]);
   
   const clientTasks = tasks.filter(task => {
-    const assignedTo = task.assigne_a || task.assigné_a;
+    const assignedTo = task['assigne_a'] || task['assigné_a'];
     console.log('Client task filter - assigné_a:', assignedTo);
     return assignedTo === 'client';
   });
 
   const adminTasks = tasks.filter(task => {
-    const assignedTo = task.assigne_a || task.assigné_a;
+    const assignedTo = task['assigne_a'] || task['assigné_a'];
     console.log('Admin task filter - assigné_a:', assignedTo);
     return assignedTo !== 'client';
   });

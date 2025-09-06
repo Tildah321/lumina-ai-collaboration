@@ -487,9 +487,9 @@ const TaskManager = ({
                 </div>
                 
                 {/* TimeTracker pour les tâches en cours et assignées à moi (pour les non-clients) */}
-                {!isClient && task.assigné_a === 'moi' && task.statut === 'en cours' && (
+                {!isClient && (task.assigne_a || task['assigné_a']) === 'moi' && task.statut === 'en cours' && (
                   <div className="mt-4 pt-4 border-t">
-                    <TimeTracker task={task} onTimeUpdate={handleTimeUpdate} />
+                    <TimeTracker task={task} onTimeUpdate={handleTimeUpdate} onClose={() => {}} />
                   </div>
                 )}
               </CardContent>
