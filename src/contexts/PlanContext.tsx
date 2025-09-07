@@ -67,7 +67,20 @@ const PlanContext = createContext<PlanContextType | undefined>(undefined);
 export const usePlan = () => {
   const context = useContext(PlanContext);
   if (context === undefined) {
-    throw new Error('usePlan must be used within a PlanProvider');
+    // Si pas de contexte, retourner des valeurs par défaut pendant l'initialisation
+    return {
+      userPlan: null,
+      planLimits: PLAN_LIMITS.free,
+      loading: true,
+      canCreateSpace: false,
+      canAddItem: () => false,
+      canUseAIToken: false,
+      hasFeatureAccess: () => false,
+      useAIToken: async () => false,
+      refreshPlan: async () => {},
+      updateActiveSpacesCount: async () => {},
+      upgradeRequired: () => {}
+    };
   }
   return context;
 };
