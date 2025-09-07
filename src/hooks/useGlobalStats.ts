@@ -157,15 +157,17 @@ export const useGlobalStats = () => {
       }
     };
 
-    loadGlobalStats();
+    // Délai pour éviter les appels multiples au montage
+    const timeoutId = setTimeout(loadGlobalStats, 100);
     
-    // Actualiser toutes les 15 minutes pour minimiser les appels NocoDB
-    const interval = setInterval(loadGlobalStats, 900000);
+    // Actualiser toutes les 20 minutes pour minimiser encore plus les appels
+    const interval = setInterval(loadGlobalStats, 1200000);
 
     return () => {
+      clearTimeout(timeoutId);
       clearInterval(interval);
     };
-  }, [toast]);
+  }, []);
 
   return stats;
 };

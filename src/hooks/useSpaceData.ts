@@ -48,7 +48,7 @@ interface SpaceData {
 // Cache très agressif pour NocoDB gratuit
 const spaceDataCache = new Map<string, { data: SpaceData; timestamp: number }>();
 const loadingPromises = new Map<string, Promise<void>>();
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes - maximum pour éviter les appels
+const CACHE_TTL = 20 * 60 * 1000; // 20 minutes - maximum pour éviter les appels
 
 export const useSpaceData = (spaceId: string, isPublic = false) => {
   const { toast } = useToast();
@@ -68,7 +68,6 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
 
     const cached = spaceDataCache.get(spaceId);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL && !cached.data.isLoading) {
-      console.log('📦 Données trouvées dans le cache');
       setData(cached.data);
       return;
     }
@@ -82,13 +81,17 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
       return;
     }
 
-    const promise = loadSpaceData();
-    loadingPromises.set(spaceId, promise);
+    // Délai pour éviter les appels multiples
+    const timeoutId = setTimeout(() => {
+      const promise = loadSpaceData();
+      loadingPromises.set(spaceId, promise);
+    }, 50);
 
     return () => {
+      clearTimeout(timeoutId);
       loadingPromises.delete(spaceId);
     };
-  }, [spaceId, isPublic, toast]);
+  }, [spaceId]);
 
   const loadSpaceData = async () => {
     const newData: SpaceData = {
