@@ -74,9 +74,9 @@ class NocoDBService {
     }
   }
 
-  // Cache optimisé pour éviter les requêtes multiples
+  // Cache agressif pour NocoDB gratuit - minimiser les appels
   private static requestCache = new Map<string, { data: any; timestamp: number }>();
-  private static readonly CACHE_DURATION = 120000; // 2 minutes pour réduire les appels API
+  private static readonly CACHE_DURATION = 300000; // 5 minutes pour réduire drastiquement les appels
   private static ongoingRequests = new Map<string, Promise<any>>(); // Éviter les doublons
 
   private invalidateCache(endpoint: string) {
@@ -263,31 +263,28 @@ class NocoDBService {
     return this.makeRequest(`/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`);
   }
 
-  /**
-   * Fetches tasks, milestones and invoices for a space in parallel.
-   * This reduces the total transfer time between the application and NocoDB
-   * by avoiding sequential requests.
-   */
+  // Chargement séquentiel pour éviter de surcharger NocoDB gratuit
   async getSpaceData(
     projetId: string,
     isPublic = false,
     options: { onlyCurrentUser?: boolean } = {}
   ) {
-    const tasksPromise = isPublic
-      ? this.getTasksPublic(projetId)
-      : this.getTasks(projetId, options);
-    const milestonesPromise = isPublic
-      ? this.getMilestonesPublic(projetId)
-      : this.getMilestones(projetId);
-    const invoicesPromise = isPublic
-      ? this.getInvoicesPublic(projetId)
-      : this.getInvoices(projetId);
-
-    const [tasks, milestones, invoices] = await Promise.all([
-      tasksPromise,
-      milestonesPromise,
-      invoicesPromise,
-    ]);
+    // Chargement séquentiel avec délais pour éviter rate limiting
+    const tasks = isPublic
+      ? await this.getTasksPublic(projetId)
+      : await this.getTasks(projetId, options);
+    
+    await new Promise(resolve => setTimeout(resolve, 200)); // Petit délai
+    
+    const milestones = isPublic
+      ? await this.getMilestonesPublic(projetId)
+      : await this.getMilestones(projetId);
+    
+    await new Promise(resolve => setTimeout(resolve, 200)); // Petit délai
+    
+    const invoices = isPublic
+      ? await this.getInvoicesPublic(projetId)
+      : await this.getInvoices(projetId);
 
     return { tasks, milestones, invoices };
   }

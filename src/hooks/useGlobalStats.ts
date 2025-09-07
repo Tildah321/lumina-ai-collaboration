@@ -159,8 +159,8 @@ export const useGlobalStats = () => {
 
     loadGlobalStats();
     
-    // Actualiser toutes les 10 minutes pour réduire la charge API
-    const interval = setInterval(loadGlobalStats, 600000);
+    // Actualiser toutes les 15 minutes pour minimiser les appels NocoDB
+    const interval = setInterval(loadGlobalStats, 900000);
 
     return () => {
       clearInterval(interval);

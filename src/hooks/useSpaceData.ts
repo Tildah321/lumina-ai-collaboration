@@ -45,10 +45,10 @@ interface SpaceData {
   error: string | null;
 }
 
-// Cache global optimisé avec TTL plus long pour éviter trop de requêtes
+// Cache très agressif pour NocoDB gratuit
 const spaceDataCache = new Map<string, { data: SpaceData; timestamp: number }>();
 const loadingPromises = new Map<string, Promise<void>>();
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes pour réduire drastiquement les appels API
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes - maximum pour éviter les appels
 
 export const useSpaceData = (spaceId: string, isPublic = false) => {
   const { toast } = useToast();
@@ -91,8 +91,6 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
   }, [spaceId, isPublic, toast]);
 
   const loadSpaceData = async () => {
-    console.log('🚀 Chargement rapide des données pour l\'espace:', spaceId);
-
     const newData: SpaceData = {
       tasks: [],
       milestones: [],
@@ -101,7 +99,6 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
       error: null
     };
     
-    spaceDataCache.set(spaceId, { data: newData, timestamp: Date.now() });
     setData(newData);
 
     try {
@@ -134,12 +131,7 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
         error: null
       };
       
-      console.log('⚡ Chargement rapide terminé:', {
-        tasks: tasks.length,
-        milestones: milestones.length,
-        invoices: invoices.length,
-        duration: 'Parallèle'
-      });
+      // Logging minimal pour réduire le bruit
       
       spaceDataCache.set(spaceId, { data: finalData, timestamp: Date.now() });
       setData(finalData);
