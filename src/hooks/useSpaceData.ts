@@ -48,7 +48,7 @@ interface SpaceData {
 // Cache global optimisé avec TTL plus long pour éviter trop de requêtes
 const spaceDataCache = new Map<string, { data: SpaceData; timestamp: number }>();
 const loadingPromises = new Map<string, Promise<void>>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes pour éviter le rate limiting
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes pour réduire drastiquement les appels API
 
 export const useSpaceData = (spaceId: string, isPublic = false) => {
   const { toast } = useToast();

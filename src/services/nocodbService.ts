@@ -74,9 +74,10 @@ class NocoDBService {
     }
   }
 
-  // Cache pour éviter les requêtes multiples
+  // Cache optimisé pour éviter les requêtes multiples
   private static requestCache = new Map<string, { data: any; timestamp: number }>();
-  private static readonly CACHE_DURATION = 30000; // 30 secondes
+  private static readonly CACHE_DURATION = 120000; // 2 minutes pour réduire les appels API
+  private static ongoingRequests = new Map<string, Promise<any>>(); // Éviter les doublons
 
   private invalidateCache(endpoint: string) {
     const url = `${this.config.baseUrl}${endpoint}`;
@@ -97,17 +98,22 @@ class NocoDBService {
     retryCount = 0,
     useCache = true
   ) {
-    const maxRetries = 1; // Réduire drastiquement les tentatives
+    const maxRetries = 1;
     const url = `${this.config.baseUrl}${endpoint}`;
     const method = options.method || 'GET';
+    const cacheKey = `${method}:${url}`;
 
-    // Pour les GET, vérifier le cache d'abord
+    // Pour les GET, vérifier le cache d'abord et éviter les doublons
     if (method === 'GET' && useCache) {
-      const cacheKey = url;
       const cached = NocoDBService.requestCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < NocoDBService.CACHE_DURATION) {
-        console.log('💾 Using cached data for:', endpoint);
         return cached.data;
+      }
+      
+      // Si une requête est déjà en cours, attendre son résultat
+      const ongoingRequest = NocoDBService.ongoingRequests.get(cacheKey);
+      if (ongoingRequest) {
+        return await ongoingRequest;
       }
     }
     
@@ -116,10 +122,36 @@ class NocoDBService {
       await new Promise(resolve => setTimeout(resolve, 8000 * retryCount));
     }
     
-    console.log(`🔍 NocoDB Request (attempt ${retryCount + 1}/${maxRetries + 1}):`, {
-      url,
-      method
-    });
+    // Marquer la requête comme en cours pour éviter les doublons
+    let requestPromise: Promise<any>;
+    if (method === 'GET' && useCache) {
+      requestPromise = this.executeRequest(url, options, retryCount, maxRetries);
+      NocoDBService.ongoingRequests.set(cacheKey, requestPromise);
+    } else {
+      requestPromise = this.executeRequest(url, options, retryCount, maxRetries);
+    }
+
+    try {
+      const result = await requestPromise;
+      
+      // Mettre en cache les réponses GET réussies
+      if (method === 'GET' && useCache && result) {
+        NocoDBService.requestCache.set(cacheKey, {
+          data: result,
+          timestamp: Date.now()
+        });
+      }
+      
+      return result;
+    } finally {
+      // Nettoyer la requête en cours
+      if (method === 'GET' && useCache) {
+        NocoDBService.ongoingRequests.delete(cacheKey);
+      }
+    }
+  }
+
+  private async executeRequest(url: string, options: RequestInit, retryCount: number, maxRetries: number): Promise<any> {
     
     try {
       const response = await fetch(url, {
@@ -132,22 +164,13 @@ class NocoDBService {
         },
       });
 
-      console.log('📡 NocoDB Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url
-      });
-
-      // Gérer le throttling avec plus d'agressivité
+      // Gérer le throttling de manière optimisée
       if (response.status === 429) {
         if (retryCount < maxRetries) {
-          const delay = 15000 + (retryCount * 10000); // 15s, 25s
-          console.log(`⏳ Rate limited, retrying in ${Math.round(delay/1000)}s... (attempt ${retryCount + 1}/${maxRetries})`);
+          const delay = 10000 + (retryCount * 5000); // 10s, 15s
           await new Promise(resolve => setTimeout(resolve, delay));
-          return this.makeRequest(endpoint, options, retryCount + 1);
+          return this.executeRequest(url, options, retryCount + 1, maxRetries);
         } else {
-          console.error('❌ Max retries reached for rate limiting');
-          // Retourner des données vides plutôt que d'échouer
           return { list: [], pageInfo: { totalRows: 0 } };
         }
       }
@@ -162,28 +185,14 @@ class NocoDBService {
         throw new Error(`NocoDB API Error: ${response.status} ${response.statusText}`);
       }
 
-      const responseData = await response.json();
-      
-      // Mettre en cache les réponses GET réussies
-      if (method === 'GET' && useCache) {
-        NocoDBService.requestCache.set(url, {
-          data: responseData,
-          timestamp: Date.now()
-        });
-      }
-      
-      console.log('✅ NocoDB Data received');
-      return responseData;
+      return await response.json();
     } catch (error) {
       if (retryCount < maxRetries && (error as Error).message.includes('fetch')) {
-        const delay = 5000 + (retryCount * 5000);
-        console.log(`⏳ Network error, retrying in ${delay}ms...`);
+        const delay = 3000 + (retryCount * 2000);
         await new Promise(resolve => setTimeout(resolve, delay));
-        return this.makeRequest(endpoint, options, retryCount + 1);
+        return this.executeRequest(url, options, retryCount + 1, maxRetries);
       }
       
-      // En cas d'erreur finale, retourner des données vides pour éviter le crash
-      console.error('❌ Final error, returning empty data:', error);
       return { list: [], pageInfo: { totalRows: 0 } };
     }
   }

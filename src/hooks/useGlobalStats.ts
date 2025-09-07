@@ -159,8 +159,8 @@ export const useGlobalStats = () => {
 
     loadGlobalStats();
     
-    // Actualiser toutes les 5 minutes pour éviter le throttling
-    const interval = setInterval(loadGlobalStats, 300000);
+    // Actualiser toutes les 10 minutes pour réduire la charge API
+    const interval = setInterval(loadGlobalStats, 600000);
 
     return () => {
       clearInterval(interval);
