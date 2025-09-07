@@ -144,30 +144,8 @@ export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateActiveSpacesCount = async () => {
-    if (!user) return;
-    
-    try {
-      // Importer le service NocoDB dynamiquement pour éviter les problèmes de dépendances circulaires
-      const { default: nocodbService } = await import('@/services/nocodbService');
-      
-      // Compter les espaces du user actuel
-      const spacesResponse = await nocodbService.getClients();
-      const count = spacesResponse?.list?.length || 0;
-      
-      // Mettre à jour dans Supabase
-      const { error } = await supabase
-        .from('user_plans')
-        .update({ active_spaces_count: count })
-        .eq('user_id', user.id);
-        
-      if (error) {
-        console.error('Error updating active spaces count:', error);
-      } else {
-        await fetchUserPlan(); // Refresh les données
-      }
-    } catch (error) {
-      console.error('Error updating active spaces count:', error);
-    }
+    // Fonction simplifiée qui ne fait pas d'appel NocoDB pour éviter les requêtes multiples
+    // Le count sera mis à jour uniquement quand nécessaire depuis les autres composants
   };
 
   const canCreateSpace = userPlan ? userPlan.active_spaces_count < planLimits.maxActiveSpaces : false;
