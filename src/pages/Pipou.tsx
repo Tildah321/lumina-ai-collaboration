@@ -14,6 +14,7 @@ import { Prospect } from '@/types/prospect';
 import { mapProspectStatus, mapProspectStatusToNoco } from '@/lib/prospectStatus';
 import MilestoneManager from '@/components/milestones/MilestoneManager';
 import NocoInvoiceManager from '@/components/invoices/NocoInvoiceManager';
+import ProspectCreateSpaceDialog from '@/components/prospection/ProspectCreateSpaceDialog';
 
 type NocoRecord = Record<string, unknown>;
 
@@ -110,6 +111,7 @@ const Pipou = () => {
   const [isEditProspectDialogOpen, setIsEditProspectDialogOpen] = useState(false);
   const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
   const [activeTab, setActiveTab] = useState('clients');
+  const [spaceProspect, setSpaceProspect] = useState<Prospect | null>(null);
 
   const buildProspectPayload = (
     data: ProspectFormData & { status: string; lastContact?: string }
@@ -514,15 +516,7 @@ const Pipou = () => {
               <ProspectKanban
                 prospects={prospects}
                 setProspects={setProspects}
-                onEdit={(prospect) => {
-                  setEditingProspect(prospect);
-                  setIsEditProspectDialogOpen(true);
-                }}
-                onDelete={(id) => {
-                  if (confirm('Supprimer ce prospect ?')) {
-                    handleDeleteProspect(id);
-                  }
-                }}
+                onCreateSpace={(prospect) => setSpaceProspect(prospect)}
               />
               {hasMoreProspects && (
                 <div className="flex justify-center mt-4">
@@ -567,6 +561,16 @@ const Pipou = () => {
             />
           </DialogContent>
         </Dialog>
+      )}
+      {spaceProspect && (
+        <ProspectCreateSpaceDialog
+          prospect={spaceProspect}
+          open={true}
+          onOpenChange={open => {
+            if (!open) setSpaceProspect(null);
+          }}
+          onCreated={() => setSpaceProspect(null)}
+        />
       )}
       {selectedProject && (
         <ClientShareDialog
