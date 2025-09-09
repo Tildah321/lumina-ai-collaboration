@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Users, Eye, Link as LinkIcon, Edit, Trash2, LogOut, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ import ClientShareDialog from '@/components/client/ClientShareDialog';
 import nocodbService from '@/services/nocodbService';
 import { useGlobalStats } from '@/hooks/useGlobalStats';
 import GlobalStats from '@/components/overview/GlobalStats';
+import CreateSpaceDialog from '@/components/spaces/CreateSpaceDialog';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -30,26 +31,6 @@ const Dashboard = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedSpaceForShare, setSelectedSpaceForShare] = useState(null);
 
-  const [newSpace, setNewSpace] = useState({
-    name: '',
-    googleDriveLink: '',
-    paymentAmount: '',
-    paymentLink: '',
-    messageLink: '',
-    meetingLink: ''
-  });
-
-  useEffect(() => {
-    if (isCreateDialogOpen) {
-      const savedLinks = JSON.parse(localStorage.getItem('defaultLinks') || '{}');
-      setNewSpace(ns => ({
-        ...ns,
-        paymentLink: savedLinks.paymentLink || '',
-        messageLink: savedLinks.messageLink || '',
-        meetingLink: savedLinks.meetingLink || ''
-      }));
-    }
-  }, [isCreateDialogOpen]);
 
   // Charger seulement les espaces depuis NocoDB
   useEffect(() => {
@@ -57,7 +38,7 @@ const Dashboard = () => {
       try {
         const response = await nocodbService.getClients();
         console.log('🏢 Dashboard spaces loaded:', response);
-        const mappedSpaces = (response.list || []).map((space: any) => ({
+        const mappedSpaces = (response.list || []).map((space: Record<string, unknown>) => ({
           ...space,
           id: space.Id || space.id,
           name: space.description || space.name || '',
@@ -86,71 +67,6 @@ const Dashboard = () => {
   }, [toast]);
   
   // Statistiques globales
-
-
-  const handleCreateSpace = async () => {
-    if (!newSpace.name) return;
-    
-    if (!canCreateSpace) {
-      upgradeRequired();
-      return;
-    }
-    
-    try {
-      const spaceData = {
-        description: newSpace.name,
-        statut: 'Nouveau',
-        lien_portail: newSpace.googleDriveLink || null,
-        prix_payement: newSpace.paymentAmount ? parseFloat(newSpace.paymentAmount) : null,
-        lien_payement: newSpace.paymentLink || null,
-        lien_whatsapp: newSpace.messageLink || null,
-        cc9tztuoagcmq8l: newSpace.meetingLink || null,
-        lien_rdv: newSpace.meetingLink || null,
-        client_access_enabled: false,
-        client_link_token: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      const response = await nocodbService.createClient(spaceData);
-      const newSpaceWithId = {
-        ...response,
-        id: response.Id || response.id,
-        name: response.description || '',
-        googleDriveLink: response.lien_portail || '',
-        paymentLink: response.lien_payement || '',
-        messageLink: response.lien_whatsapp || '',
-        meetingLink: response.cc9tztuoagcmq8l || response.lien_rdv || '',
-        paymentAmount: (response.prix_payement ?? 0).toString(),
-        status: response.statut || 'Nouveau',
-        projectsCount: 0,
-        tasksCount: 0,
-        lastActivity: 'Maintenant'
-      };
-
-      setClientSpaces([...clientSpaces, newSpaceWithId]);
-      setNewSpace({
-        name: '',
-        googleDriveLink: '',
-        paymentAmount: '',
-        paymentLink: '',
-        messageLink: '',
-        meetingLink: ''
-      });
-      setIsCreateDialogOpen(false);
-      toast({
-        title: 'Espace créé',
-        description: "L'espace client a été créé avec succès"
-      });
-    } catch (error) {
-      console.error('Erreur lors de la création:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible de créer l'espace client",
-        variant: 'destructive'
-      });
-    }
-  };
 
   const handleEditSpace = async () => {
     if (!editingSpace) return;
@@ -255,99 +171,17 @@ const Dashboard = () => {
             Déconnexion
           </Button>
           
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="default" 
-                size="lg" 
-                className="gap-2"
-                disabled={!canCreateSpace}
-                onClick={!canCreateSpace ? upgradeRequired : undefined}
-              >
-                <Plus className="w-5 h-5" />
-                Nouvel espace client
-                {!canCreateSpace && <Crown className="w-4 h-4 ml-1" />}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Créer un nouvel espace client</DialogTitle>
-                <DialogDescription>
-                  Configurez un portail collaboratif personnalisé pour votre client
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="spaceName">Nom de l'espace *</Label>
-                  <Input
-                    id="spaceName"
-                    placeholder="Ex: Projet Site Web StartupTech"
-                    value={newSpace.name}
-                    onChange={(e) => setNewSpace({...newSpace, name: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="googleDrive">Lien Portail / Drive (optionnel)</Label>
-                  <Input
-                    id="googleDrive"
-                    placeholder="https://drive.google.com/..."
-                    value={newSpace.googleDriveLink}
-                    onChange={(e) => setNewSpace({...newSpace, googleDriveLink: e.target.value})}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentAmount">Montant (€)</Label>
-                    <Input
-                      id="paymentAmount"
-                      type="number"
-                      placeholder="1500"
-                      value={newSpace.paymentAmount}
-                      onChange={(e) => setNewSpace({...newSpace, paymentAmount: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentLink">Lien de paiement</Label>
-                    <Input
-                      id="paymentLink"
-                      placeholder="https://stripe.com/payment/..."
-                      value={newSpace.paymentLink}
-                      onChange={(e) => setNewSpace({...newSpace, paymentLink: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="messageLink">Lien Messages (optionnel)</Label>
-                  <Input
-                    id="messageLink"
-                    placeholder="https://slack.com/... ou https://discord.gg/..."
-                    value={newSpace.messageLink}
-                    onChange={(e) => setNewSpace({...newSpace, messageLink: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="meetingLink">Lien RDV (optionnel)</Label>
-                  <Input
-                    id="meetingLink"
-                    placeholder="https://calendly.com/..."
-                    value={newSpace.meetingLink}
-                    onChange={(e) => setNewSpace({...newSpace, meetingLink: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3">
-                <DialogTrigger asChild>
-                  <Button variant="outline">Annuler</Button>
-                </DialogTrigger>
-                <Button 
-                  onClick={handleCreateSpace}
-                  disabled={!newSpace.name}
-                >
-                  Créer l'espace
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button
+            variant="default"
+            size="lg"
+            className="gap-2"
+            disabled={!canCreateSpace}
+            onClick={!canCreateSpace ? upgradeRequired : () => setIsCreateDialogOpen(true)}
+          >
+            <Plus className="w-5 h-5" />
+            Nouvel espace client
+            {!canCreateSpace && <Crown className="w-4 h-4 ml-1" />}
+          </Button>
         </div>
       </div>
 
@@ -542,6 +376,12 @@ const Dashboard = () => {
           spaceName={selectedSpaceForShare.name}
         />
       )}
+
+      <CreateSpaceDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onCreated={(space) => setClientSpaces([...clientSpaces, space])}
+      />
     </div>
   );
 };

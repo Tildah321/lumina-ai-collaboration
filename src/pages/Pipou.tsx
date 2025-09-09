@@ -14,6 +14,7 @@ import { Prospect } from '@/types/prospect';
 import { mapProspectStatus, mapProspectStatusToNoco } from '@/lib/prospectStatus';
 import MilestoneManager from '@/components/milestones/MilestoneManager';
 import NocoInvoiceManager from '@/components/invoices/NocoInvoiceManager';
+import CreateSpaceDialog from '@/components/spaces/CreateSpaceDialog';
 
 type NocoRecord = Record<string, unknown>;
 
@@ -110,6 +111,16 @@ const Pipou = () => {
   const [isEditProspectDialogOpen, setIsEditProspectDialogOpen] = useState(false);
   const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
   const [activeTab, setActiveTab] = useState('clients');
+  interface SpaceInitialData {
+    name?: string;
+    googleDriveLink?: string;
+    paymentAmount?: string;
+    paymentLink?: string;
+    messageLink?: string;
+    meetingLink?: string;
+  }
+  const [spaceDialogOpen, setSpaceDialogOpen] = useState(false);
+  const [spaceInitial, setSpaceInitial] = useState<SpaceInitialData>({});
 
   const buildProspectPayload = (
     data: ProspectFormData & { status: string; lastContact?: string }
@@ -514,14 +525,9 @@ const Pipou = () => {
               <ProspectKanban
                 prospects={prospects}
                 setProspects={setProspects}
-                onEdit={(prospect) => {
-                  setEditingProspect(prospect);
-                  setIsEditProspectDialogOpen(true);
-                }}
-                onDelete={(id) => {
-                  if (confirm('Supprimer ce prospect ?')) {
-                    handleDeleteProspect(id);
-                  }
+                onCreateSpace={(prospect) => {
+                  setSpaceInitial({ name: prospect.company || prospect.name });
+                  setSpaceDialogOpen(true);
                 }}
               />
               {hasMoreProspects && (
@@ -568,6 +574,11 @@ const Pipou = () => {
           </DialogContent>
         </Dialog>
       )}
+      <CreateSpaceDialog
+        open={spaceDialogOpen}
+        onOpenChange={setSpaceDialogOpen}
+        initialValues={spaceInitial}
+      />
       {selectedProject && (
         <ClientShareDialog
           isOpen={shareDialogOpen}
