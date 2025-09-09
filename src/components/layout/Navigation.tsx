@@ -4,6 +4,7 @@ import { Bot, CheckSquare, Users, Edit3, Moon, Sun, LogOut, ChevronLeft, Chevron
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Logo } from '@/components/ui/logo';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlan } from '@/contexts/PlanContext';
@@ -62,14 +63,9 @@ const Navigation = () => {
       {/* Header */}
       <div className={cn('flex-shrink-0', collapsed && !isMobile ? 'p-3' : 'p-6')}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <Bot className="w-6 h-6 text-white" />
-          </div>
+          <Logo size="md" showText={!collapsed || isMobile} />
           {(!collapsed || isMobile) && (
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">Lumina</h1>
-              <p className="text-sm text-muted-foreground">Portail collaboratif IA</p>
-            </div>
+            <p className="text-sm text-muted-foreground">Portail collaboratif IA</p>
           )}
         </div>
       </div>
@@ -222,12 +218,7 @@ const Navigation = () => {
       <>
         {/* Mobile Header */}
         <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 h-14 flex items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">Lumina</h1>
-          </div>
+          <Logo size="sm" showText={true} />
           
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
