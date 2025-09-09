@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/logo';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { 
-  Bot, ArrowRight, CheckCircle, Sparkles, Users, BarChart3, MessageCircle, 
-  Clock, Shield, Zap, Target, Calendar, FileText, PieChart, Monitor, 
-  X, AlertTriangle, Smartphone, Mail, Instagram, FolderOpen,
+import {
+  Bot, ArrowRight, CheckCircle, Sparkles, Users, BarChart3, MessageCircle,
+  Clock, Shield, Zap, Target, Calendar, FileText, PieChart, Monitor,
+  X, AlertTriangle, Smartphone, Mail, Instagram, FolderOpen, Rocket, Dog, Bird,
   Globe, Star, Crown, Gift, Timer, UserCheck
 } from 'lucide-react';
 
@@ -58,8 +58,9 @@ export default function Index() {
       {/* Hero Section */}
       <section className="relative py-20 px-4 text-center">
         <div className={`container mx-auto max-w-4xl transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <Badge className="mb-6 bg-gradient-primary text-primary-foreground px-4 py-2 text-sm font-medium">
-            🚀 Beta Ouverte - Accès Anticipé
+          <Badge className="mb-6 bg-gradient-primary text-primary-foreground px-4 py-2 text-sm font-medium flex items-center gap-2">
+            <Rocket className="w-4 h-4" />
+            Beta Ouverte - Accès Anticipé
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent leading-tight">
@@ -72,11 +73,12 @@ export default function Index() {
           
           <div className="space-y-4">
             <Link to="/auth">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className={`pulse-glow glow-hover text-lg px-8 py-4 h-auto ${shakeButton ? 'shake' : ''}`}
               >
-                🚀 Rejoins la Beta (-50% à vie)
+                <Rocket className="mr-2 w-5 h-5" />
+                Rejoins la Beta (-50% à vie)
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
@@ -103,8 +105,8 @@ export default function Index() {
             {/* Tasky Card */}
             <Card className={`bento-card transition-all duration-500 animation-delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center text-3xl animate-bounce">
-                  🗂
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center animate-bounce">
+                  <FolderOpen className="w-8 h-8" />
                 </div>
                 <CardTitle className="text-xl font-bold">Tasky</CardTitle>
               </CardHeader>
@@ -118,8 +120,8 @@ export default function Index() {
             {/* Pipou Card */}
             <Card className={`bento-card transition-all duration-500 animation-delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center text-3xl animate-bounce animation-delay-200">
-                  🐶
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center animate-bounce animation-delay-200">
+                  <Dog className="w-8 h-8" />
                 </div>
                 <CardTitle className="text-xl font-bold">Pipou</CardTitle>
               </CardHeader>
@@ -133,8 +135,8 @@ export default function Index() {
             {/* Copyly Card */}
             <Card className={`bento-card transition-all duration-500 animation-delay-600 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center text-3xl animate-bounce animation-delay-400">
-                  🦉
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center animate-bounce animation-delay-400">
+                  <Bird className="w-8 h-8" />
                 </div>
                 <CardTitle className="text-xl font-bold">Copyly</CardTitle>
               </CardHeader>
@@ -165,8 +167,9 @@ export default function Index() {
             Early Adopter
           </Badge>
           
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Deviens Early Adopter Lumina 🚀
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 flex items-center justify-center gap-2">
+            Deviens Early Adopter Lumina
+            <Rocket className="w-6 h-6 text-primary" />
           </h2>
           
           <div className="bento-card max-w-2xl mx-auto mb-8">
@@ -205,7 +208,8 @@ export default function Index() {
           
           <Link to="/auth">
             <Button size="lg" className="glow-hover text-lg px-8 py-4 h-auto">
-              👉 Je veux ma place Early Adopter
+              <UserCheck className="mr-2 w-5 h-5" />
+              Je veux ma place Early Adopter
               <Gift className="ml-2 w-5 h-5" />
             </Button>
           </Link>
@@ -298,7 +302,8 @@ export default function Index() {
           <div className="text-center mt-12">
             <Link to="/auth">
               <Button size="lg" className="glow-hover text-lg px-8 py-4 h-auto">
-                🚀 Essaye Lumina en Beta (-50% à vie)
+                <Rocket className="mr-2 w-5 h-5" />
+                Essaye Lumina en Beta (-50% à vie)
                 <Sparkles className="ml-2 w-5 h-5" />
               </Button>
             </Link>
@@ -351,15 +356,14 @@ export default function Index() {
         <div className="container mx-auto max-w-4xl text-center">
           <div className="flex justify-center items-center gap-4 mb-8">
             <Logo size="sm" showText={true} />
-            <div className="text-4xl animate-bounce">
-              🐶
-            </div>
+            <Dog className="w-8 h-8 animate-bounce" />
           </div>
           
           <div className="mb-8">
             <Link to="/auth">
               <Button size="lg" className="glow-hover text-lg px-8 py-4 h-auto">
-                🚀 Rejoins les 15 early adopters maintenant
+                <Rocket className="mr-2 w-5 h-5" />
+                Rejoins les 15 early adopters maintenant
                 <Crown className="ml-2 w-5 h-5" />
               </Button>
             </Link>
