@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Logo } from '@/components/ui/logo';
 import { Bot, ArrowRight, CheckCircle, Sparkles, Users, BarChart3, MessageCircle, 
          Clock, Shield, Zap, Target, Calendar, FileText, PieChart, Monitor, 
          X, AlertTriangle, Smartphone, Mail, Instagram, FolderOpen,
@@ -116,14 +117,7 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow bg-black">
-              <img src="/lovable-uploads/cb6c54cf-a6f8-4ef1-aca0-b5011c552548.png" alt="Lumina Logo" className="w-6 h-6" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Lumina
-            </span>
-          </div>
+          <Logo size="md" showText={true} />
           <div className="flex gap-2">
             <Link to="/client-access">
               <Button variant="outline" size="sm">
