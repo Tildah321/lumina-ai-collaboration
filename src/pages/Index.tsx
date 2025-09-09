@@ -38,7 +38,7 @@ export default function Index() {
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Logo size="md" showText={true} />
+          <Logo size="md" showText={true} className="animate-none" />
           <div className="flex gap-2">
             <Link to="/client-access">
               <Button variant="outline" size="sm">
@@ -356,7 +356,7 @@ export default function Index() {
         <div className="container mx-auto max-w-4xl text-center">
           <div className="flex justify-center items-center gap-4 mb-8">
             <Logo size="sm" showText={true} />
-            <Dog className="w-8 h-8 animate-bounce" />
+            <Dog className="w-8 h-8" />
           </div>
           
           <div className="mb-8">
