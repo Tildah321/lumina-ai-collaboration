@@ -114,6 +114,7 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                     {(p.email || p.phone) && (
                       <div className="flex gap-2 pt-2 flex-wrap" onClick={e => e.stopPropagation()}>
                         <Button size="sm" className="gap-1 h-7 px-2 text-xs" asChild>
+                        <Button size="sm" className="gap-2" asChild>
                           <a href={p.email ? `mailto:${p.email}` : `tel:${p.phone}`}>
                             {p.email ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
                             Contacter
@@ -123,6 +124,7 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                           size="sm"
                           variant="secondary"
                           className="gap-1 h-7 px-2 text-xs"
+                          className="gap-2"
                           onClick={e => {
                             e.stopPropagation();
                             onCreateSpace(p);

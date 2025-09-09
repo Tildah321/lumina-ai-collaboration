@@ -15,6 +15,7 @@ import { mapProspectStatus, mapProspectStatusToNoco } from '@/lib/prospectStatus
 import MilestoneManager from '@/components/milestones/MilestoneManager';
 import NocoInvoiceManager from '@/components/invoices/NocoInvoiceManager';
 import CreateSpaceDialog from '@/components/spaces/CreateSpaceDialog';
+import ProspectCreateSpaceDialog from '@/components/prospection/ProspectCreateSpaceDialog';
 
 type NocoRecord = Record<string, unknown>;
 
@@ -121,6 +122,7 @@ const Pipou = () => {
   }
   const [spaceDialogOpen, setSpaceDialogOpen] = useState(false);
   const [spaceInitial, setSpaceInitial] = useState<SpaceInitialData>({});
+  const [spaceProspect, setSpaceProspect] = useState<Prospect | null>(null);
 
   const buildProspectPayload = (
     data: ProspectFormData & { status: string; lastContact?: string }
@@ -529,6 +531,7 @@ const Pipou = () => {
                   setSpaceInitial({ name: prospect.company || prospect.name });
                   setSpaceDialogOpen(true);
                 }}
+                onCreateSpace={(prospect) => setSpaceProspect(prospect)}
               />
               {hasMoreProspects && (
                 <div className="flex justify-center mt-4">
@@ -579,6 +582,16 @@ const Pipou = () => {
         onOpenChange={setSpaceDialogOpen}
         initialValues={spaceInitial}
       />
+      {spaceProspect && (
+        <ProspectCreateSpaceDialog
+          prospect={spaceProspect}
+          open={true}
+          onOpenChange={open => {
+            if (!open) setSpaceProspect(null);
+          }}
+          onCreated={() => setSpaceProspect(null)}
+        />
+      )}
       {selectedProject && (
         <ClientShareDialog
           isOpen={shareDialogOpen}
