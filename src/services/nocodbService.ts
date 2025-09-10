@@ -343,20 +343,49 @@ class NocoDBService {
     });
   }
 
-  // Prospects
+  // Prospects - Filtered by user
   async getProspects(
     limit = 50,
     offset = 0,
-    forceRefresh = false
+    forceRefresh = false,
+    options: { onlyCurrentUser?: boolean } = {}
   ) {
     const query = `/${this.config.tableIds.prospects}?limit=${limit}&offset=${offset}`;
-    return this.makeRequest(query, {}, 0, !forceRefresh);
+    const response = await this.makeRequest(query, {}, 0, !forceRefresh);
+    let list = response.list || [];
+
+    // Filter by current user if requested
+    if (options.onlyCurrentUser) {
+      const currentUserId = await this.getCurrentUserId();
+      if (currentUserId) {
+        list = list.filter((prospect: any) => {
+          const prospectUserId =
+            prospect.user_id ||
+            prospect.userId ||
+            prospect.supabase_user_id ||
+            prospect.owner_id;
+          // Only show prospects explicitly assigned to the current user
+          return prospectUserId === currentUserId;
+        });
+      }
+    }
+
+    return {
+      ...response,
+      list,
+      pageInfo: { ...response.pageInfo, totalRows: list.length }
+    };
   }
 
   async createProspect(data: any) {
+    const payload = { ...data };
+    const userId = await this.getCurrentUserId();
+    if (userId) {
+      (payload as any).supabase_user_id = userId;
+    }
     const response = await this.makeRequest(`/${this.config.tableIds.prospects}`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     this.invalidateCache(`/${this.config.tableIds.prospects}`);
     return response;

@@ -141,7 +141,9 @@ const Pipou = () => {
     try {
       const response = await nocodbService.getProspects(
         PROSPECTS_PAGE_SIZE,
-        prospectOffset
+        prospectOffset,
+        false,
+        { onlyCurrentUser: true }
       );
       const list = (response.list || []).map((p: Record<string, unknown>) => ({
         id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
