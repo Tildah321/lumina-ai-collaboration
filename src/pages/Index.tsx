@@ -5,23 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/logo';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import {
-  Bot, ArrowRight, CheckCircle, Sparkles, Users, BarChart3, MessageCircle,
-  Clock, Shield, Zap, Target, Calendar, FileText, PieChart, Monitor,
-  X, AlertTriangle, Smartphone, Mail, Instagram, FolderOpen, Rocket, Dog, Bird,
-  Globe, Star, Crown, Gift, Timer, UserCheck
-} from 'lucide-react';
-
+import { Bot, ArrowRight, CheckCircle, Sparkles, Users, BarChart3, MessageCircle, Clock, Shield, Zap, Target, Calendar, FileText, PieChart, Monitor, X, AlertTriangle, Smartphone, Mail, Instagram, FolderOpen, Rocket, Dog, Bird, Globe, Star, Crown, Gift, Timer, UserCheck } from 'lucide-react';
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
-  
-
   useEffect(() => {
     setIsVisible(true);
   }, []);
-
-  return (
-    <div className="min-h-screen bg-background text-foreground relative">
+  return <div className="min-h-screen bg-background text-foreground relative">
       {/* Floating Background Glows */}
       <div className="floating-glow floating-glow-1"></div>
       <div className="floating-glow floating-glow-2"></div>
@@ -65,10 +55,7 @@ export default function Index() {
           
           <div className="space-y-4">
             <Link to="/auth">
-              <Button
-                size="lg"
-                className="text-lg px-8 py-4 h-auto"
-              >
+              <Button size="lg" className="text-lg px-8 py-4 h-auto">
                 <Rocket className="mr-2 w-5 h-5" />
                 Rejoins la Beta (-50% à vie)
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -218,15 +205,37 @@ export default function Index() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { icon: Monitor, title: "Dashboard clair", desc: "Tâches, jalons, factures, revenus en un clin d'œil", delay: "200" },
-              { icon: FolderOpen, title: "Espaces clients", desc: "Docs, paiements, RDV, messages centralisés", delay: "400" },
-              { icon: Target, title: "Tasky", desc: "Organise et décompose tes projets en Kanban", delay: "600" },
-              { icon: BarChart3, title: "Pipou", desc: "Suis tes clients et ton pipeline commercial", delay: "800" },
-              { icon: FileText, title: "Copyly", desc: "Crée ton contenu marketing avec l'IA", delay: "1000" },
-              { icon: Shield, title: "Sécurisé", desc: "Données chiffrées et conformes RGPD", delay: "1200" }
-            ].map((feature, index) => (
-              <Card key={index} className={`bento-card transition-all duration-500 animation-delay-${feature.delay} ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            {[{
+            icon: Monitor,
+            title: "Dashboard clair",
+            desc: "Tâches, jalons, factures, revenus en un clin d'œil",
+            delay: "200"
+          }, {
+            icon: FolderOpen,
+            title: "Espaces clients",
+            desc: "Docs, paiements, RDV, messages centralisés",
+            delay: "400"
+          }, {
+            icon: Target,
+            title: "Tasky",
+            desc: "Organise et décompose tes projets en Kanban",
+            delay: "600"
+          }, {
+            icon: BarChart3,
+            title: "Pipou",
+            desc: "Suis tes clients et ton pipeline commercial",
+            delay: "800"
+          }, {
+            icon: FileText,
+            title: "Copyly",
+            desc: "Crée ton contenu marketing avec l'IA",
+            delay: "1000"
+          }, {
+            icon: Shield,
+            title: "Sécurisé",
+            desc: "Données chiffrées et conformes RGPD",
+            delay: "1200"
+          }].map((feature, index) => <Card key={index} className={`bento-card transition-all duration-500 animation-delay-${feature.delay} ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
                 <CardHeader className="text-center pb-4">
                   <feature.icon className="w-10 h-10 mx-auto mb-4 text-primary" />
                   <CardTitle className="text-lg font-semibold">{feature.title}</CardTitle>
@@ -234,8 +243,7 @@ export default function Index() {
                 <CardContent className="text-center">
                   <p className="text-muted-foreground">{feature.desc}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -348,7 +356,7 @@ export default function Index() {
         <div className="container mx-auto max-w-4xl text-center">
           <div className="flex justify-center items-center gap-4 mb-8">
             <Logo size="sm" showText={true} />
-            <Dog className="w-8 h-8" />
+            
           </div>
           
           <div className="mb-8">
@@ -373,6 +381,5 @@ export default function Index() {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 }
