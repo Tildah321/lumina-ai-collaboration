@@ -487,10 +487,9 @@ class NocoDBService {
           task.userId ||
           task.supabase_user_id ||
           task.owner_id;
-        // Include tasks without a specific owner to ensure they are visible
-        // to all users. Only filter out tasks explicitly assigned to a
-        // different user.
-        return !taskUserId || taskUserId === currentUserId;
+        // Only show tasks explicitly assigned to the current user
+        // or tasks that were created by the current user
+        return taskUserId === currentUserId;
       });
     }
 
@@ -575,9 +574,9 @@ class NocoDBService {
           task.userId ||
           task.supabase_user_id ||
           task.owner_id;
-        // Keep tasks without explicit owner visible to all users while
-        // restricting tasks assigned to another user.
-        return !taskUserId || taskUserId === currentUserId;
+        // Only show tasks explicitly assigned to the current user
+        // or tasks that were created by the current user
+        return taskUserId === currentUserId;
       });
     }
 
