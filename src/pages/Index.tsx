@@ -14,22 +14,14 @@ import {
 
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
-  const [shakeButton, setShakeButton] = useState(false);
+  
 
   useEffect(() => {
     setIsVisible(true);
-    
-    // Shake animation after 4 seconds
-    const timer = setTimeout(() => {
-      setShakeButton(true);
-      setTimeout(() => setShakeButton(false), 500);
-    }, 4000);
-
-    return () => clearTimeout(timer);
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden relative">
+    <div className="min-h-screen bg-background text-foreground relative">
       {/* Floating Background Glows */}
       <div className="floating-glow floating-glow-1"></div>
       <div className="floating-glow floating-glow-2"></div>
@@ -75,7 +67,7 @@ export default function Index() {
             <Link to="/auth">
               <Button
                 size="lg"
-                className={`pulse-glow glow-hover text-lg px-8 py-4 h-auto ${shakeButton ? 'shake' : ''}`}
+                className="text-lg px-8 py-4 h-auto"
               >
                 <Rocket className="mr-2 w-5 h-5" />
                 Rejoins la Beta (-50% à vie)
