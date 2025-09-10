@@ -43,13 +43,7 @@ const Pipou = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
   const navigate = useNavigate();
 
-  // Vérifier l'accès aux assistants IA
-  useEffect(() => {
-    if (!loading && !hasFeatureAccess('hasAIAssistants')) {
-      upgradeRequired();
-      navigate('/dashboard');
-    }
-  }, [hasFeatureAccess, upgradeRequired, navigate, loading]);
+  // Accès autorisé pour tous les utilisateurs
   // Projets chargés depuis NocoDB
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
