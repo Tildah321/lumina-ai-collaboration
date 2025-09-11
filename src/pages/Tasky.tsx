@@ -34,6 +34,7 @@ const Tasky = () => {
   // Projets et sélection
   const [projects, setProjects] = useState<any[]>([]);
   const [taskScope, setTaskScope] = useState<'client' | 'internal'>('client');
+  const [userFilter, setUserFilter] = useState<'all' | 'mine'>('all');
   const [tasks, setTasks] = useState<any[]>([]);
   const [refreshTick, setRefreshTick] = useState(0);
   const [timerTaskId, setTimerTaskId] = useState<string | null>(null);
@@ -194,10 +195,10 @@ const Tasky = () => {
       try {
         let list: any[] = [];
         if (taskScope === 'internal') {
-          const res = await nocodbService.getInternalTasks({ onlyCurrentUser: false });
+          const res = await nocodbService.getInternalTasks({ onlyCurrentUser: userFilter === 'mine' });
           list = res.list || [];
         } else {
-          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: false });
+          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: userFilter === 'mine' });
           list = (res.list || []).map((t: any) => ({ ...t, isInternal: false }));
         }
 
@@ -260,7 +261,7 @@ const Tasky = () => {
     };
 
     loadTasksFromNoco();
-  }, [taskScope, refreshTick, projects]);
+  }, [taskScope, refreshTick, projects, userFilter]);
 
   // Colonnes basées sur les statuts simplifiés
   const columns = [
@@ -424,6 +425,21 @@ const Tasky = () => {
             <ToggleGroupItem value="internal" className="gap-2 px-3">
               <Building className="w-4 h-4" />
               Interne
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <ToggleGroup
+            type="single"
+            value={userFilter}
+            onValueChange={value => value && setUserFilter(value as 'all' | 'mine')}
+            variant="outline"
+            className="bg-muted rounded-lg p-1"
+          >
+            <ToggleGroupItem value="all" className="gap-2 px-3">
+              Toutes
+            </ToggleGroupItem>
+            <ToggleGroupItem value="mine" className="gap-2 px-3">
+              Mes tâches
             </ToggleGroupItem>
           </ToggleGroup>
 

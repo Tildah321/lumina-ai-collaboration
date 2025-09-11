@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Target, Euro } from 'lucide-react';
+import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Target, Euro, Plus } from 'lucide-react';
 import { usePlan } from '@/contexts/PlanContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import nocodbService from '@/services/nocodbService';
 import ClientShareDialog from '@/components/client/ClientShareDialog';
@@ -44,6 +45,7 @@ const Pipou = () => {
   const navigate = useNavigate();
 
   // Accès autorisé pour tous les utilisateurs
+  const [prospectFilter, setProspectFilter] = useState<'all' | 'mine'>('all');
   // Projets chargés depuis NocoDB
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
@@ -137,7 +139,7 @@ const Pipou = () => {
         PROSPECTS_PAGE_SIZE,
         prospectOffset,
         false,
-        { onlyCurrentUser: true }
+        { onlyCurrentUser: prospectFilter === 'mine' }
       );
       const list = (response.list || []).map((p: Record<string, unknown>) => ({
         id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
@@ -424,6 +426,28 @@ const Pipou = () => {
                 </TabsContent>
 
         <TabsContent value="prospection" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ToggleGroup
+                type="single"
+                value={prospectFilter}
+                onValueChange={value => value && setProspectFilter(value as 'all' | 'mine')}
+                variant="outline"
+                className="bg-muted rounded-lg p-1"
+              >
+                <ToggleGroupItem value="all" className="gap-2 px-3">
+                  Tous
+                </ToggleGroupItem>
+                <ToggleGroupItem value="mine" className="gap-2 px-3">
+                  Mes prospects
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <Button onClick={() => setIsCreateProspectDialogOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Nouveau prospect
+            </Button>
+          </div>
           <Tabs defaultValue="list" className="space-y-4">
                     <TabsList className="w-fit">
                       <TabsTrigger value="list">Liste</TabsTrigger>
