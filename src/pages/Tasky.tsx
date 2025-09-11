@@ -34,7 +34,7 @@ const Tasky = () => {
   // Projets et sélection
   const [projects, setProjects] = useState<any[]>([]);
   const [taskScope, setTaskScope] = useState<'client' | 'internal'>('client');
-  const [userFilter, setUserFilter] = useState<'all' | 'mine'>('all');
+  const [userFilter, setUserFilter] = useState<'all' | 'mine'>('mine');
   const [tasks, setTasks] = useState<any[]>([]);
   const [refreshTick, setRefreshTick] = useState(0);
   const [timerTaskId, setTimerTaskId] = useState<string | null>(null);

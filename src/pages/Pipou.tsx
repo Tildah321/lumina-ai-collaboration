@@ -45,7 +45,7 @@ const Pipou = () => {
   const navigate = useNavigate();
 
   // Accès autorisé pour tous les utilisateurs
-  const [prospectFilter, setProspectFilter] = useState<'all' | 'mine'>('all');
+  const [prospectFilter, setProspectFilter] = useState<'all' | 'mine'>('mine');
   // Projets chargés depuis NocoDB
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
