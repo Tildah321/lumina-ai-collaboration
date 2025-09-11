@@ -358,15 +358,27 @@ class NocoDBService {
     if (options.onlyCurrentUser) {
       const currentUserId = await this.getCurrentUserId();
       if (currentUserId) {
-        list = list.filter((prospect: any) => {
+        const byOwner = list.filter((prospect: any) => {
           const prospectUserId =
             prospect.user_id ||
             prospect.userId ||
             prospect.supabase_user_id ||
             prospect.owner_id;
-          // Only show prospects explicitly assigned to the current user
           return prospectUserId === currentUserId;
         });
+        if (byOwner.length > 0) {
+          list = byOwner;
+        } else {
+          const withoutOwner = list.filter((prospect: any) => {
+            const prospectUserId =
+              prospect.user_id ||
+              prospect.userId ||
+              prospect.supabase_user_id ||
+              prospect.owner_id;
+            return !prospectUserId;
+          });
+          list = withoutOwner.length > 0 ? withoutOwner : list;
+        }
       }
     }
 
@@ -510,16 +522,28 @@ class NocoDBService {
     }
 
     if (options.onlyCurrentUser && currentUserId) {
-      list = list.filter((task: any) => {
+      const byOwner = list.filter((task: any) => {
         const taskUserId =
           task.user_id ||
           task.userId ||
           task.supabase_user_id ||
           task.owner_id;
-        // Only show tasks explicitly assigned to the current user
-        // or tasks that were created by the current user
         return taskUserId === currentUserId;
       });
+
+      if (byOwner.length > 0) {
+        list = byOwner;
+      } else {
+        // Fallback pour données historiques sans supabase_user_id
+        const toKey = (v: any) => (typeof v === 'string' ? v.toLowerCase().trim() : '');
+        const heuristic = list.filter((task: any) => {
+          const assignee = toKey(
+            task.assigne_a || task['assigné_a'] || task.responsable || task.responsible || ''
+          );
+          return assignee === 'moi' || assignee === 'nous';
+        });
+        list = heuristic.length > 0 ? heuristic : list;
+      }
     }
 
     return {
@@ -597,16 +621,28 @@ class NocoDBService {
     let list = response.list || [];
 
     if (options.onlyCurrentUser && currentUserId) {
-      list = list.filter((task: any) => {
+      const byOwner = list.filter((task: any) => {
         const taskUserId =
           task.user_id ||
           task.userId ||
           task.supabase_user_id ||
           task.owner_id;
-        // Only show tasks explicitly assigned to the current user
-        // or tasks that were created by the current user
         return taskUserId === currentUserId;
       });
+
+      if (byOwner.length > 0) {
+        list = byOwner;
+      } else {
+        // Fallback pour données historiques sans supabase_user_id
+        const toKey = (v: any) => (typeof v === 'string' ? v.toLowerCase().trim() : '');
+        const heuristic = list.filter((task: any) => {
+          const assignee = toKey(
+            task.assigne_a || task['assigné_a'] || task.responsable || task.responsible || ''
+          );
+          return assignee === 'moi' || assignee === 'nous';
+        });
+        list = heuristic.length > 0 ? heuristic : list;
+      }
     }
 
     list = list.map((t: any) => ({ ...t, isInternal: true }));
