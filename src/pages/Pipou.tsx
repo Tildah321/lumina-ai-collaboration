@@ -45,7 +45,7 @@ const Pipou = () => {
   const navigate = useNavigate();
 
   // Accès autorisé pour tous les utilisateurs
-  const [prospectFilter, setProspectFilter] = useState<'all' | 'mine'>('mine');
+  
   // Projets chargés depuis NocoDB
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
@@ -139,7 +139,7 @@ const Pipou = () => {
         PROSPECTS_PAGE_SIZE,
         prospectOffset,
         false,
-        { onlyCurrentUser: prospectFilter === 'mine' }
+        { onlyCurrentUser: true }
       );
       const list = (response.list || []).map((p: Record<string, unknown>) => ({
         id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
@@ -428,20 +428,6 @@ const Pipou = () => {
         <TabsContent value="prospection" className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <ToggleGroup
-                type="single"
-                value={prospectFilter}
-                onValueChange={value => value && setProspectFilter(value as 'all' | 'mine')}
-                variant="outline"
-                className="bg-muted rounded-lg p-1"
-              >
-                <ToggleGroupItem value="all" className="gap-2 px-3">
-                  Tous
-                </ToggleGroupItem>
-                <ToggleGroupItem value="mine" className="gap-2 px-3">
-                  Mes prospects
-                </ToggleGroupItem>
-              </ToggleGroup>
             </div>
             <Button onClick={() => setIsCreateProspectDialogOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" />
