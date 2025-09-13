@@ -408,7 +408,6 @@ class NocoDBService {
           const prospectUserId =
             prospect.supabase_user_id ||
             prospect.user_id ||
-            prospect.userId ||
             prospect.owner_id;
           return prospectUserId === currentUserId;
         });
@@ -565,7 +564,6 @@ class NocoDBService {
           const taskUserId =
             task.supabase_user_id ||
             task.user_id ||
-            task.userId ||
             task.owner_id;
           return taskUserId === currentUserId;
         });
@@ -655,7 +653,6 @@ class NocoDBService {
           const taskUserId =
             task.supabase_user_id ||
             task.user_id ||
-            task.userId ||
             task.owner_id;
           return taskUserId === currentUserId;
         });
