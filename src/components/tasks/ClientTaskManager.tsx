@@ -32,7 +32,18 @@ const ClientTaskManager = ({ spaceId }: ClientTaskManagerProps) => {
     const loadTasks = async () => {
       try {
         const response = await nocodbService.getTasksPublic(spaceId);
-        setTasks(response?.list || []);
+        const tasks = (response?.list || []).map((t: Record<string, unknown>) => ({
+          ...t,
+          assigne_a:
+            (t['assigne_a'] as string | undefined) ||
+            (t['assigné_a'] as string | undefined) ||
+            'moi',
+          priorite:
+            (t['priorite'] as string | undefined) ||
+            (t['priorité'] as string | undefined) ||
+            'moyenne'
+        })) as Task[];
+        setTasks(tasks);
       } catch (error) {
         console.error('Erreur lors du chargement des tâches:', error);
         toast({
@@ -151,8 +162,8 @@ const ClientTaskManager = ({ spaceId }: ClientTaskManagerProps) => {
   }
 
   // Séparer les tâches client et admin
-  const clientTasks = tasks.filter(task => (task.assigne_a || task['assigné_a']) === 'client');
-  const adminTasks = tasks.filter(task => (task.assigne_a || task['assigné_a']) === 'moi');
+  const clientTasks = tasks.filter(task => task.assigne_a === 'client');
+  const adminTasks = tasks.filter(task => task.assigne_a === 'moi');
 
   return (
     <div className="space-y-6">
