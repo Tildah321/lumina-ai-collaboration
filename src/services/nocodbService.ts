@@ -396,25 +396,16 @@ class NocoDBService {
     forceRefresh = false,
     options: { onlyCurrentUser?: boolean } = {}
   ) {
-    const query = `/${this.config.tableIds.prospects}?limit=${limit}&offset=${offset}`;
-    const response = await this.makeRequest(query, {}, 0, !forceRefresh);
-    let list = response.list || [];
-
-    // Filter by current user if requested
+    let query = `/${this.config.tableIds.prospects}?limit=${limit}&offset=${offset}`;
     if (options.onlyCurrentUser) {
       const currentUserId = await this.getCurrentUserId();
-      if (currentUserId) {
-        list = list.filter((prospect: any) => {
-          const prospectUserId =
-            prospect.supabase_user_id ||
-            prospect.user_id ||
-            prospect.owner_id;
-          return prospectUserId === currentUserId;
-        });
-      } else {
-        list = [];
+      if (!currentUserId) {
+        return { list: [], pageInfo: { totalRows: 0 } };
       }
+      query += `&where=(supabase_user_id,eq,${currentUserId})`;
     }
+    const response = await this.makeRequest(query, {}, 0, !forceRefresh);
+    const list = response.list || [];
 
     return {
       ...response,
@@ -645,29 +636,17 @@ class NocoDBService {
 
   // Tâches internes
   async getInternalTasks(options: { onlyCurrentUser?: boolean } = {}) {
-    const currentUserId = options.onlyCurrentUser
-      ? await this.getCurrentUserId()
-      : null;
-
-    const response = await this.makeRequest(
-      `/${this.config.tableIds.tachesInternes}`
-    );
-    let list = response.list || [];
-
+    let endpoint = `/${this.config.tableIds.tachesInternes}`;
     if (options.onlyCurrentUser) {
-      if (currentUserId) {
-        list = list.filter((task: any) => {
-          const taskUserId =
-            task.supabase_user_id ||
-            task.user_id ||
-            task.owner_id;
-          return taskUserId === currentUserId;
-        });
-      } else {
-        list = [];
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) {
+        return { list: [], pageInfo: { totalRows: 0 } };
       }
+      endpoint += `?where=(supabase_user_id,eq,${currentUserId})`;
     }
 
+    const response = await this.makeRequest(endpoint);
+    let list = response.list || [];
     list = list.map((t: any) => ({ ...t, isInternal: true }));
 
     return {
