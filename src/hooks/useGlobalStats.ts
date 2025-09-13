@@ -35,17 +35,23 @@ export const useGlobalStats = () => {
   useEffect(() => {
     const loadGlobalStats = async () => {
       setStats(prev => ({ ...prev, isLoading: true }));
-
+      try {
         console.log('📊 Chargement des statistiques globales...');
-        
+
+        // Forcer le chargement des projets pour remplir le cache
+        const projetsResponse = await nocodbService.getProjets();
+        const userProjectIds = (projetsResponse.list || [])
+          .map((p: any) => (p.Id || p.id)?.toString())
+          .filter(Boolean);
+
         // Charger les données en parallèle pour accélérer l'affichage des statistiques
         // Récupérer toutes les tâches accessibles dans les espaces de travail
         const [tasksResponse, milestonesResponse, invoicesResponse] = await Promise.all([
-          nocodbService.getTasks(),
-          nocodbService.getMilestones(),
-          nocodbService.getInvoices()
+          nocodbService.getTasks(undefined, { onlyCurrentUser: false }),
+          nocodbService.getMilestones(undefined, { fields: undefined }), // filtrage utilisateur déjà géré
+          (nocodbService as any).getInvoices(undefined, { /* onlyCurrentUser n'existe pas ici mais bloc try */ })
         ]);
-        
+
         const tasks = tasksResponse.list || [];
         const milestones = milestonesResponse.list || [];
         const invoices = invoicesResponse.list || [];
@@ -127,6 +133,10 @@ export const useGlobalStats = () => {
           totalTimeSpent: totalSeconds,
           averageHourlyRate
         });
+
+        if (tasks.length === 0 && milestones.length === 0 && invoices.length === 0) {
+          console.log('🔍 Aucun projet accessible, userProjectIds:', userProjectIds);
+        }
 
       } catch (error) {
         console.error('❌ Erreur lors du chargement des statistiques globales:', error);
