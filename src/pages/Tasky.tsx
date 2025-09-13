@@ -81,21 +81,6 @@ const Tasky = () => {
     console.log('🚀 Tasky refactorisé - Plus de localStorage');
   }, []);
 
-  // Backfill des anciennes tâches vers votre compte (une fois au montage)
-  useEffect(() => {
-    const runBackfill = async () => {
-      try {
-        const res = await nocodbService.backfillTasksForCurrentUser();
-        if ((res?.updatedClientTasks || 0) + (res?.updatedInternalTasks || 0) > 0) {
-          setRefreshTick(t => t + 1);
-        }
-      } catch (e) {
-        console.warn('Backfill tâches échoué:', e);
-      }
-    };
-    runBackfill();
-  }, []);
-
   // Charger les projets depuis NocoDB
   useEffect(() => {
     const loadProjects = async () => {
