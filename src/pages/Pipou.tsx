@@ -138,7 +138,7 @@ const Pipou = () => {
   const loadProspects = useCallback(
     async (forceRefresh = false) => {
       setIsLoadingProspects(true);
-
+      try {
         const response = await nocodbService.getProspects(
           PROSPECTS_PAGE_SIZE,
           forceRefresh ? 0 : prospectOffset,
