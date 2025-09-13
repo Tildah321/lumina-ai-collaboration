@@ -47,7 +47,7 @@ class NocoDBService {
     if (!userId) return [];
 
     // 1) Read existing mappings
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from('noco_space_owners')
       .select('space_id')
       .eq('user_id', userId);
@@ -425,11 +425,14 @@ class NocoDBService {
   }
 
   async createProspect(data: any) {
-    const payload = { ...data };
     const userId = await this.getCurrentUserId();
-    if (userId) {
-      (payload as any).supabase_user_id = userId;
+    if (!userId) {
+      console.warn('User ID required to create prospect');
+      throw new Error('Missing user ID');
     }
+    const payload = { ...data };
+    (payload as any).supabase_user_id = userId;
+    (payload as any).c06e1av5n7l80 = userId;
     const response = await this.makeRequest(`/${this.config.tableIds.prospects}`, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -674,11 +677,14 @@ class NocoDBService {
   }
 
   async createInternalTask(data: any) {
-    const payload = { ...data };
     const userId = await this.getCurrentUserId();
-    if (userId) {
-      (payload as any).supabase_user_id = userId;
+    if (!userId) {
+      console.warn('User ID required to create internal task');
+      throw new Error('Missing user ID');
     }
+    const payload = { ...data };
+    (payload as any).supabase_user_id = userId;
+    (payload as any).c3bte4bwnnls4h = userId;
     const response = await this.makeRequest(`/${this.config.tableIds.tachesInternes}`, {
       method: 'POST',
       body: JSON.stringify(payload),
