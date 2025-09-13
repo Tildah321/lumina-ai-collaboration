@@ -309,30 +309,55 @@ class NocoDBService {
     return this.makeRequest(`/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`);
   }
 
-  // Chargement séquentiel pour éviter de surcharger NocoDB gratuit
+  // Chargement en parallèle avec gestion du rate limit NocoDB
   async getSpaceData(
     projetId: string,
     isPublic = false,
-    options: { onlyCurrentUser?: boolean } = {}
+    options: { onlyCurrentUser?: boolean } = {},
   ) {
-    // Chargement séquentiel avec délais pour éviter rate limiting
-    const tasks = isPublic
-      ? await this.getTasksPublic(projetId)
-      : await this.getTasks(projetId, options);
-    
-    await new Promise(resolve => setTimeout(resolve, 200)); // Petit délai
-    
-    const milestones = isPublic
-      ? await this.getMilestonesPublic(projetId)
-      : await this.getMilestones(projetId);
-    
-    await new Promise(resolve => setTimeout(resolve, 200)); // Petit délai
-    
-    const invoices = isPublic
-      ? await this.getInvoicesPublic(projetId)
-      : await this.getInvoices(projetId);
+    const fetchAll = () =>
+      Promise.all([
+        (isPublic
+          ? this.getTasksPublic(projetId)
+          : this.getTasks(projetId, options)
+        ).catch(error => ({ error })),
+        (isPublic
+          ? this.getMilestonesPublic(projetId)
+          : this.getMilestones(projetId)
+        ).catch(error => ({ error })),
+        (isPublic
+          ? this.getInvoicesPublic(projetId)
+          : this.getInvoices(projetId)
+        ).catch(error => ({ error })),
+      ]);
 
-    return { tasks, milestones, invoices };
+    // légère temporisation globale
+    await this.delay(100);
+    let [tasks, milestones, invoices] = await fetchAll();
+
+    const isRateLimit = (res: any) =>
+      res?.error && typeof res.error.message === 'string' && res.error.message.includes('Too many requests');
+
+    if (isRateLimit(tasks) || isRateLimit(milestones) || isRateLimit(invoices)) {
+      await this.delay(500);
+      [tasks, milestones, invoices] = await fetchAll();
+    }
+
+    const errors: string[] = [];
+    if ((tasks as any).error) {
+      errors.push('tasks');
+      tasks = { list: [], pageInfo: { totalRows: 0 } } as any;
+    }
+    if ((milestones as any).error) {
+      errors.push('milestones');
+      milestones = { list: [], pageInfo: { totalRows: 0 } } as any;
+    }
+    if ((invoices as any).error) {
+      errors.push('invoices');
+      invoices = { list: [], pageInfo: { totalRows: 0 } } as any;
+    }
+
+    return { tasks, milestones, invoices, errors };
   }
 
   // Public update methods for client portal
@@ -401,6 +426,17 @@ class NocoDBService {
       const currentUserId = await this.getCurrentUserId();
       if (!currentUserId) {
         return { list: [], pageInfo: { totalRows: 0 } };
+      if (currentUserId) {
+        list = list.filter((prospect: any) => {
+          const prospectUserId =
+            prospect.supabase_user_id ||
+            prospect.c06e1av5n7l80 ||
+            prospect.user_id ||
+            prospect.owner_id;
+          return prospectUserId === currentUserId;
+        });
+      } else {
+        list = [];
       }
       query += `&where=(supabase_user_id,eq,${currentUserId})`;
     }
@@ -515,7 +551,8 @@ class NocoDBService {
   // Tâches - Filtered by user's projects
   async getTasks(
     projetId?: string,
-    options: { onlyCurrentUser?: boolean } = {}
+    options: { onlyCurrentUser?: boolean } = {},
+    forceRefresh = false
   ) {
     // Optionally filter by current Supabase user
     const currentUserId = options.onlyCurrentUser
@@ -538,7 +575,7 @@ class NocoDBService {
       ? `/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`
       : `/${this.config.tableIds.taches}`;
 
-    const response = await this.makeRequest(endpoint);
+    const response = await this.makeRequest(endpoint, {}, 0, !forceRefresh);
     let list = response.list || [];
 
     if (projetId) {
@@ -634,13 +671,40 @@ class NocoDBService {
     return response;
   }
 
-  // Tâches internes
   async getInternalTasks(options: { onlyCurrentUser?: boolean } = {}) {
     let endpoint = `/${this.config.tableIds.tachesInternes}`;
     if (options.onlyCurrentUser) {
       const currentUserId = await this.getCurrentUserId();
       if (!currentUserId) {
         return { list: [], pageInfo: { totalRows: 0 } };
+  async getInternalTasks(
+    options: { onlyCurrentUser?: boolean } = {},
+    forceRefresh = false
+  ) {
+    const currentUserId = options.onlyCurrentUser
+      ? await this.getCurrentUserId()
+      : null;
+
+    const response = await this.makeRequest(
+      `/${this.config.tableIds.tachesInternes}`,
+      {},
+      0,
+      !forceRefresh
+    );
+    let list = response.list || [];
+
+    if (options.onlyCurrentUser) {
+      if (currentUserId) {
+        list = list.filter((task: any) => {
+          const taskUserId =
+            task.supabase_user_id ||
+            task.c3bte4bwnnls4h ||
+            task.user_id ||
+            task.owner_id;
+          return taskUserId === currentUserId;
+        });
+      } else {
+        list = [];
       }
       endpoint += `?where=(supabase_user_id,eq,${currentUserId})`;
     }
@@ -701,7 +765,12 @@ class NocoDBService {
     const prospects = prospectsRes.list || [];
 
     const toUpdate = prospects.filter((p: any) => {
-      const owner = p.supabase_user_id || p.user_id || p.userId || p.owner_id;
+      const owner =
+        p.supabase_user_id ||
+        p.c06e1av5n7l80 ||
+        p.user_id ||
+        p.userId ||
+        p.owner_id;
       if (owner) return false;
       const resp = (
         p.responsable || p.responsible || ''
@@ -733,7 +802,12 @@ class NocoDBService {
     const clientTasks = (clientTasksRes.list || []);
 
     const toUpdateClient = clientTasks.filter((t: any) => {
-      const owner = t.supabase_user_id || t.user_id || t.userId || t.owner_id;
+      const owner =
+        t.supabase_user_id ||
+        t.c3bte4bwnnls4h ||
+        t.user_id ||
+        t.userId ||
+        t.owner_id;
       if (owner) return false;
       const resp = (
         t.assigne_a || t['assigné_a'] || t.responsable || t.responsible || ''
@@ -749,7 +823,7 @@ class NocoDBService {
     await this.updateInBatches(toUpdateClient, 10, async (t: any) => {
       const id = (t.Id || t.id)?.toString();
       if (!id) return;
-      await this.updateTask(id, { supabase_user_id: userId });
+      await this.updateTask(id, { supabase_user_id: userId, c3bte4bwnnls4h: userId });
       const pid = t.projet_id?.toString();
       if (pid) {
         mappedSpaceIds.add(pid);
@@ -762,7 +836,12 @@ class NocoDBService {
     const internalTasks = (internalTasksRes.list || []);
 
     const toUpdateInternal = internalTasks.filter((t: any) => {
-      const owner = t.supabase_user_id || t.user_id || t.userId || t.owner_id;
+      const owner =
+        t.supabase_user_id ||
+        t.c3bte4bwnnls4h ||
+        t.user_id ||
+        t.userId ||
+        t.owner_id;
       if (owner) return false;
       const resp = (
         t.assigne_a || t['assigné_a'] || t.responsable || t.responsible || ''
@@ -776,7 +855,7 @@ class NocoDBService {
     await this.updateInBatches(toUpdateInternal, 10, async (t: any) => {
       const id = (t.Id || t.id)?.toString();
       if (!id) return;
-      await this.updateInternalTask(id, { supabase_user_id: userId });
+      await this.updateInternalTask(id, { supabase_user_id: userId, c3bte4bwnnls4h: userId });
     });
 
     return {
