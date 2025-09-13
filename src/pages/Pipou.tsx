@@ -135,6 +135,10 @@ const Pipou = () => {
   const loadProspects = useCallback(async () => {
     setIsLoadingProspects(true);
     try {
+      await Promise.all([
+        nocodbService.backfillTasksForCurrentUser(),
+        nocodbService.backfillProspectsForCurrentUser?.()
+      ]);
       const response = await nocodbService.getProspects(
         PROSPECTS_PAGE_SIZE,
         prospectOffset,
