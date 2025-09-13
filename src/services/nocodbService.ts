@@ -707,6 +707,37 @@ class NocoDBService {
     return response;
   }
 
+  // Backfill: attribuer les anciens prospects au compte courant
+  async backfillProspectsForCurrentUser() {
+    const userId = await this.getCurrentUserId();
+    if (!userId) {
+      return { updatedProspects: 0 };
+    }
+
+    const prospectsRes = await this.makeRequest(`/${this.config.tableIds.prospects}?limit=1000`);
+    const prospects = prospectsRes.list || [];
+
+    const toUpdate = prospects.filter((p: any) => {
+      const owner = p.supabase_user_id || p.user_id || p.userId || p.owner_id;
+      if (owner) return false;
+      const resp = (
+        p.responsable || p.responsible || ''
+      )
+        .toString()
+        .trim()
+        .toLowerCase();
+      return resp === 'moi' || resp === 'nous';
+    });
+
+    await this.updateInBatches(toUpdate, 10, async (p: any) => {
+      const id = (p.Id || p.id)?.toString();
+      if (!id) return;
+      await this.updateProspect(id, { supabase_user_id: userId, c06e1av5n7l80: userId });
+    });
+
+    return { updatedProspects: toUpdate.length };
+  }
+
   // Backfill: attribuer les anciennes tâches au compte courant et mapper les espaces
   async backfillTasksForCurrentUser() {
     const userId = await this.getCurrentUserId();
