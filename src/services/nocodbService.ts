@@ -295,18 +295,39 @@ class NocoDBService {
       !forceRefresh
     );
   }
-  
+
+  private async fetchAllPublicRecords(endpoint: string) {
+    const limit = 1000;
+    let offset = 0;
+    let allItems: any[] = [];
+    let pageInfo: any = {};
+
+    while (true) {
+      const res = await this.makeRequest(`${endpoint}&limit=${limit}&offset=${offset}`);
+      const list = res.list || [];
+      allItems = allItems.concat(list);
+      pageInfo = res.pageInfo || pageInfo;
+
+      if (!res.pageInfo || list.length < limit || allItems.length >= (res.pageInfo.totalRows || 0)) {
+        break;
+      }
+      offset += limit;
+    }
+
+    return { list: allItems, pageInfo: { ...pageInfo, totalRows: allItems.length } };
+  }
+
   // Public endpoints for client-portal (no Supabase ownership filtering)
   async getTasksPublic(projetId: string) {
-    return this.makeRequest(`/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`);
+    return this.fetchAllPublicRecords(`/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`);
   }
-  
+
   async getMilestonesPublic(projetId: string) {
-    return this.makeRequest(`/${this.config.tableIds.jalons}?where=(projet_id,eq,${projetId})`);
+    return this.fetchAllPublicRecords(`/${this.config.tableIds.jalons}?where=(projet_id,eq,${projetId})`);
   }
-  
+
   async getInvoicesPublic(projetId: string) {
-    return this.makeRequest(`/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`);
+    return this.fetchAllPublicRecords(`/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`);
   }
 
   // Chargement en parallèle avec gestion du rate limit NocoDB
@@ -315,21 +336,21 @@ class NocoDBService {
     isPublic = false,
     options: { onlyCurrentUser?: boolean } = {},
   ) {
-    const fetchAll = () =>
-      Promise.all([
-        (isPublic
-          ? this.getTasksPublic(projetId)
-          : this.getTasks(projetId, options)
-        ).catch(error => ({ error })),
-        (isPublic
-          ? this.getMilestonesPublic(projetId)
-          : this.getMilestones(projetId)
-        ).catch(error => ({ error })),
-        (isPublic
-          ? this.getInvoicesPublic(projetId)
-          : this.getInvoices(projetId)
-        ).catch(error => ({ error })),
+    const fetchAll = () => {
+      if (isPublic) {
+        return Promise.all([
+          this.getTasksPublic(projetId).catch(error => ({ error })),
+          this.getMilestonesPublic(projetId).catch(error => ({ error })),
+          this.getInvoicesPublic(projetId).catch(error => ({ error })),
+        ]);
+      }
+
+      return Promise.all([
+        this.getTasks(projetId, options).catch(error => ({ error })),
+        this.getMilestones(projetId).catch(error => ({ error })),
+        this.getInvoices(projetId).catch(error => ({ error })),
       ]);
+    };
 
     // légère temporisation globale
     await this.delay(100);
