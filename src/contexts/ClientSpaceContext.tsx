@@ -99,7 +99,8 @@ export const ClientSpaceProvider: React.FC<{
           milestones: milestonesResponse,
           invoices: invoicesResponse,
         } = await nocodbService.getSpaceData(spaceId, isClient, {
-          onlyCurrentUser: !isClient,
+          // Inclure toutes les tâches du projet, sans filtrer par utilisateur
+          onlyCurrentUser: false,
         });
 
         // Normaliser les données - inclure TOUTES les tâches (admin et client)
