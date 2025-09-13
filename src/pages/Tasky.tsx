@@ -218,37 +218,25 @@ const Tasky = () => {
         }
 
         if (taskScope === 'client') {
-
           list = list.filter((t: any) => {
-            const responsible = (
+            const responsibleRaw =
               t.responsable ||
               t.responsible ||
               t.assigne_a ||
               t['assigné_a'] ||
-              ''
-            )
-              .toString()
-              .trim()
-              .toLowerCase();
-            return responsible !== 'client';
+              '';
+            const responsible = responsibleRaw.toString().trim().toLowerCase();
+            return (
+              responsible !== 'client' &&
+              !responsible.includes('client') &&
+              (t.responsable || t.responsible) !== 'Client'
+            );
           });
-
-
-          list = list.filter((t: any) => {
-            const responsible = (t.responsable || t.responsible || '')
-              .toString()
-              .trim()
-              .toLowerCase();
-            return !responsible.includes('client');
-          });
-
-          list = list.filter(
-            (t: any) => (t.responsable || t.responsible) !== 'Client'
-          );
-
-
         }
 
+        const projectMap = new Map(
+          projects.map(p => [p.id.toString(), getProjectName(p)])
+        );
         const tasksWithNames = list.map((t: any) => ({
           ...t,
           id: t.Id || t.id,
@@ -260,13 +248,7 @@ const Tasky = () => {
           isInternal: t.isInternal,
           _spaceName: t.isInternal
             ? 'Interne'
-            : projects.find(p => p.id?.toString() === t.projet_id?.toString())
-                ? getProjectName(
-                    projects.find(
-                      p => p.id?.toString() === t.projet_id?.toString()
-                    )
-                  )
-                : '',
+            : projectMap.get(t.projet_id?.toString()) ?? '',
         }));
         setTasks(tasksWithNames);
       } catch (error) {
