@@ -125,7 +125,19 @@ class NocoDBService {
   private invalidateProjectCache() {
     this.cachedProjectIds = null;
   }
-  
+
+  private async delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private async updateInBatches<T>(items: T[], batchSize: number, updater: (item: T) => Promise<any>) {
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      await Promise.allSettled(batch.map(updater));
+      // Petit délai pour éviter le rate limit NocoDB gratuit
+      await this.delay(400);
+    }
+  }
   private async makeRequest(
     endpoint: string,
     options: RequestInit = {},
@@ -690,6 +702,71 @@ class NocoDBService {
     });
     this.invalidateCache(`/${this.config.tableIds.tachesInternes}`);
     return response;
+  }
+
+  // Backfill: attribuer les anciennes tâches au compte courant et mapper les espaces
+  async backfillTasksForCurrentUser() {
+    const userId = await this.getCurrentUserId();
+    if (!userId) {
+      return { updatedClientTasks: 0, updatedInternalTasks: 0, mappedSpaces: 0 };
+    }
+
+    // 1) Tâches client
+    const clientTasksRes = await this.makeRequest(`/${this.config.tableIds.taches}?limit=1000`);
+    const clientTasks = (clientTasksRes.list || []);
+
+    const toUpdateClient = clientTasks.filter((t: any) => {
+      const owner = t.supabase_user_id || t.user_id || t.userId || t.owner_id;
+      if (owner) return false;
+      const resp = (
+        t.assigne_a || t['assigné_a'] || t.responsable || t.responsible || ''
+      )
+        .toString()
+        .trim()
+        .toLowerCase();
+      // Considérer seulement les tâches marquées pour l'utilisateur (moi/nous)
+      return resp === 'moi' || resp === 'nous';
+    });
+
+    const mappedSpaceIds = new Set<string>();
+    await this.updateInBatches(toUpdateClient, 10, async (t: any) => {
+      const id = (t.Id || t.id)?.toString();
+      if (!id) return;
+      await this.updateTask(id, { supabase_user_id: userId });
+      const pid = t.projet_id?.toString();
+      if (pid) {
+        mappedSpaceIds.add(pid);
+        await this.registerSpaceOwnership(pid);
+      }
+    });
+
+    // 2) Tâches internes
+    const internalTasksRes = await this.makeRequest(`/${this.config.tableIds.tachesInternes}?limit=1000`);
+    const internalTasks = (internalTasksRes.list || []);
+
+    const toUpdateInternal = internalTasks.filter((t: any) => {
+      const owner = t.supabase_user_id || t.user_id || t.userId || t.owner_id;
+      if (owner) return false;
+      const resp = (
+        t.assigne_a || t['assigné_a'] || t.responsable || t.responsible || ''
+      )
+        .toString()
+        .trim()
+        .toLowerCase();
+      return resp === 'moi' || resp === 'nous';
+    });
+
+    await this.updateInBatches(toUpdateInternal, 10, async (t: any) => {
+      const id = (t.Id || t.id)?.toString();
+      if (!id) return;
+      await this.updateInternalTask(id, { supabase_user_id: userId });
+    });
+
+    return {
+      updatedClientTasks: toUpdateClient.length,
+      updatedInternalTasks: toUpdateInternal.length,
+      mappedSpaces: mappedSpaceIds.size,
+    };
   }
 
   // Jalons - Filtered by user's spaces
