@@ -603,10 +603,7 @@ class NocoDBService {
     }
 
     // If user has no accessible projects and no specific project requested,
-    // return empty only when not filtering for the current user
-    if (!projetId && userProjectIds.length === 0 && !options.onlyCurrentUser) {
-      return { list: [], pageInfo: { totalRows: 0 } };
-    }
+    // still retrieve tasks and filter only if we actually have project ids
 
     const projetIdStr = projetId?.toString();
     const endpoint = projetIdStr
