@@ -478,13 +478,18 @@ const Tasky = () => {
         )}
         {viewMode === 'kanban' ? (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
-              {columns.map((column) => (
+            {tasks.length === 0 ? (
+              <p className="col-span-full text-center text-sm text-muted-foreground">
+                Aucune tâche trouvée.
+              </p>
+            ) : (
+              columns.map((column) => (
                 <div
-                key={column.id}
-                className={`${column.color} rounded-lg p-4`}
-                onDragOver={handleDragOver}
-                onDrop={e => handleDrop(e, column.id)}
-              >
+                  key={column.id}
+                  className={`${column.color} rounded-lg p-4`}
+                  onDragOver={handleDragOver}
+                  onDrop={e => handleDrop(e, column.id)}
+                >
                   <h3 className="font-semibold mb-4 flex items-center justify-between">
                     {column.title}
                     <Badge variant="secondary" className="ml-2">
@@ -560,8 +565,9 @@ const Tasky = () => {
                       ))}
                   </div>
                 </div>
-              ))}
-        </div>
+              ))
+            )}
+          </div>
       ) : (
         <Card className="glass-glow">
               <CardHeader>
@@ -569,59 +575,65 @@ const Tasky = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {tasks.map((task) => (
-                    <div key={task.id} className="space-y-2">
-                      <div
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                      >
-                        <div>
-                          <h4 className="font-medium">{task.titre}</h4>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {!task.isInternal && task._spaceName && (
-                            <Badge variant="outline">{task._spaceName}</Badge>
-                          )}
-                          {!task.isInternal && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
-                              className="gap-2"
-                            >
-                              <Clock className="w-4 h-4" />
-                              Timer
-                            </Button>
-                          )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleTaskDeconstruct(task)}
-                              disabled={isClientTask(task)}
-                            >
-                              Déconstruire la tâche
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditTask(task)}
-                              className="p-2"
-                            >
-                              <Edit className="w-4 h-4" />
-                              <span className="sr-only">Editer</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteTask(task)}
-                              className="p-2 text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              <span className="sr-only">Supprimer</span>
-                            </Button>
+                  {tasks.length === 0 ? (
+                    <p className="text-center text-sm text-muted-foreground">
+                      Aucune tâche trouvée.
+                    </p>
+                  ) : (
+                    tasks.map((task) => (
+                      <div key={task.id} className="space-y-2">
+                        <div
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                        >
+                          <div>
+                            <h4 className="font-medium">{task.titre}</h4>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {!task.isInternal && task._spaceName && (
+                              <Badge variant="outline">{task._spaceName}</Badge>
+                            )}
+                            {!task.isInternal && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
+                                className="gap-2"
+                              >
+                                <Clock className="w-4 h-4" />
+                                Timer
+                              </Button>
+                            )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleTaskDeconstruct(task)}
+                                disabled={isClientTask(task)}
+                              >
+                                Déconstruire la tâche
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditTask(task)}
+                                className="p-2"
+                              >
+                                <Edit className="w-4 h-4" />
+                                <span className="sr-only">Editer</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteTask(task)}
+                                className="p-2 text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="sr-only">Supprimer</span>
+                              </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                   </div>
                 </CardContent>
           </Card>

@@ -441,74 +441,80 @@ const Pipou = () => {
                     </TabsList>
 
                     <TabsContent value="list" className="grid gap-4">
-                      {prospects.map((prospect) => (
-                        <Card key={prospect.id} className="glass-glow hover:shadow-glow transition-all duration-300">
-                          <CardHeader>
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <CardTitle className="text-lg">{prospect.name}</CardTitle>
+                      {prospects.length === 0 ? (
+                        <p className="text-center text-sm text-muted-foreground">
+                          Aucun prospect trouvé.
+                        </p>
+                      ) : (
+                        prospects.map((prospect) => (
+                          <Card key={prospect.id} className="glass-glow hover:shadow-glow transition-all duration-300">
+                            <CardHeader>
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <CardTitle className="text-lg">{prospect.name}</CardTitle>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {prospect.status && (
+                                    <span className="text-sm text-muted-foreground">
+                                      {prospect.status}
+                                    </span>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setEditingProspect(prospect);
+                                      setIsEditProspectDialogOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      if (confirm('Supprimer ce prospect ?')) {
+                                        handleDeleteProspect(prospect.id);
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4 text-sm">
+                              <div className="flex justify-between">
+                                <span>Email</span>
+                                <span className="font-medium">{prospect.email}</span>
                               </div>
-                              <div className="flex items-center gap-2">
-                                {prospect.status && (
-                                  <span className="text-sm text-muted-foreground">
-                                    {prospect.status}
-                                  </span>
+                              <div className="flex justify-between">
+                                <span>Téléphone</span>
+                                <span className="font-medium">{prospect.phone}</span>
+                              </div>
+                              <div className="flex gap-2 pt-2 flex-wrap">
+                                {prospect.email && (
+                                  <Button size="sm" className="gap-2" asChild>
+                                    <a href={`mailto:${prospect.email}`}>
+                                      <Mail className="w-4 h-4" />
+                                      Contacter
+                                    </a>
+                                  </Button>
                                 )}
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    setEditingProspect(prospect);
-                                    setIsEditProspectDialogOpen(true);
-                                  }}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    if (confirm('Supprimer ce prospect ?')) {
-                                      handleDeleteProspect(prospect.id);
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                {prospect.phone && (
+                                  <Button size="sm" variant="secondary" className="gap-2" asChild>
+                                    <a href={`tel:${prospect.phone}`}>
+                                      <Phone className="w-4 h-4" />
+                                      Appeler
+                                    </a>
+                                  </Button>
+                                )}
                               </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4 text-sm">
-                            <div className="flex justify-between">
-                              <span>Email</span>
-                              <span className="font-medium">{prospect.email}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Téléphone</span>
-                              <span className="font-medium">{prospect.phone}</span>
-                            </div>
-                            <div className="flex gap-2 pt-2 flex-wrap">
-                              {prospect.email && (
-                                <Button size="sm" className="gap-2" asChild>
-                                  <a href={`mailto:${prospect.email}`}>
-                                    <Mail className="w-4 h-4" />
-                                    Contacter
-                                  </a>
-                                </Button>
-                              )}
-                              {prospect.phone && (
-                                <Button size="sm" variant="secondary" className="gap-2" asChild>
-                                  <a href={`tel:${prospect.phone}`}>
-                                    <Phone className="w-4 h-4" />
-                                    Appeler
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
 
-                          </CardContent>
-                        </Card>
-                      ))}
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
                       {hasMoreProspects && (
                         <div className="flex justify-center">
                           <Button onClick={loadProspects} disabled={isLoadingProspects}>
@@ -519,17 +525,25 @@ const Pipou = () => {
                     </TabsContent>
 
             <TabsContent value="kanban">
-              <ProspectKanban
-                prospects={prospects}
-                setProspects={setProspects}
-                onCreateSpace={(prospect) => setSpaceProspect(prospect)}
-              />
-              {hasMoreProspects && (
-                <div className="flex justify-center mt-4">
-                  <Button onClick={loadProspects} disabled={isLoadingProspects}>
-                    {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
-                  </Button>
-                </div>
+              {prospects.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground">
+                  Aucun prospect trouvé.
+                </p>
+              ) : (
+                <>
+                  <ProspectKanban
+                    prospects={prospects}
+                    setProspects={setProspects}
+                    onCreateSpace={(prospect) => setSpaceProspect(prospect)}
+                  />
+                  {hasMoreProspects && (
+                    <div className="flex justify-center mt-4">
+                      <Button onClick={loadProspects} disabled={isLoadingProspects}>
+                        {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </TabsContent>
           </Tabs>
