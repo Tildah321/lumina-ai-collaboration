@@ -537,8 +537,9 @@ class NocoDBService {
       .map((p: any) => (p.Id || p.id)?.toString())
       .filter(Boolean);
 
-    // If user has no accessible projects and no specific project requested, return empty
-    if (!projetId && userProjectIds.length === 0) {
+    // If user has no accessible projects and no specific project requested,
+    // return empty only when not filtering for the current user
+    if (!projetId && userProjectIds.length === 0 && !options.onlyCurrentUser) {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
