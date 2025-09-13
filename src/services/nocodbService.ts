@@ -407,6 +407,7 @@ class NocoDBService {
         list = list.filter((prospect: any) => {
           const prospectUserId =
             prospect.supabase_user_id ||
+            prospect.c06e1av5n7l80 ||
             prospect.user_id ||
             prospect.owner_id;
           return prospectUserId === currentUserId;
@@ -659,6 +660,7 @@ class NocoDBService {
         list = list.filter((task: any) => {
           const taskUserId =
             task.supabase_user_id ||
+            task.c3bte4bwnnls4h ||
             task.user_id ||
             task.owner_id;
           return taskUserId === currentUserId;
@@ -722,7 +724,12 @@ class NocoDBService {
     const prospects = prospectsRes.list || [];
 
     const toUpdate = prospects.filter((p: any) => {
-      const owner = p.supabase_user_id || p.user_id || p.userId || p.owner_id;
+      const owner =
+        p.supabase_user_id ||
+        p.c06e1av5n7l80 ||
+        p.user_id ||
+        p.userId ||
+        p.owner_id;
       if (owner) return false;
       const resp = (
         p.responsable || p.responsible || ''
@@ -754,7 +761,12 @@ class NocoDBService {
     const clientTasks = (clientTasksRes.list || []);
 
     const toUpdateClient = clientTasks.filter((t: any) => {
-      const owner = t.supabase_user_id || t.user_id || t.userId || t.owner_id;
+      const owner =
+        t.supabase_user_id ||
+        t.c3bte4bwnnls4h ||
+        t.user_id ||
+        t.userId ||
+        t.owner_id;
       if (owner) return false;
       const resp = (
         t.assigne_a || t['assigné_a'] || t.responsable || t.responsible || ''
@@ -770,7 +782,7 @@ class NocoDBService {
     await this.updateInBatches(toUpdateClient, 10, async (t: any) => {
       const id = (t.Id || t.id)?.toString();
       if (!id) return;
-      await this.updateTask(id, { supabase_user_id: userId });
+      await this.updateTask(id, { supabase_user_id: userId, c3bte4bwnnls4h: userId });
       const pid = t.projet_id?.toString();
       if (pid) {
         mappedSpaceIds.add(pid);
@@ -783,7 +795,12 @@ class NocoDBService {
     const internalTasks = (internalTasksRes.list || []);
 
     const toUpdateInternal = internalTasks.filter((t: any) => {
-      const owner = t.supabase_user_id || t.user_id || t.userId || t.owner_id;
+      const owner =
+        t.supabase_user_id ||
+        t.c3bte4bwnnls4h ||
+        t.user_id ||
+        t.userId ||
+        t.owner_id;
       if (owner) return false;
       const resp = (
         t.assigne_a || t['assigné_a'] || t.responsable || t.responsible || ''
@@ -797,7 +814,7 @@ class NocoDBService {
     await this.updateInBatches(toUpdateInternal, 10, async (t: any) => {
       const id = (t.Id || t.id)?.toString();
       if (!id) return;
-      await this.updateInternalTask(id, { supabase_user_id: userId });
+      await this.updateInternalTask(id, { supabase_user_id: userId, c3bte4bwnnls4h: userId });
     });
 
     return {
