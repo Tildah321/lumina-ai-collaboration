@@ -990,14 +990,14 @@ class NocoDBService {
     const invoicesWhere = `(projet_id,in,${ids})`;
 
     const [tasksRes, milestonesRes, invoicesRes] = await Promise.all([
-      this.makeRequest(
-        `/${this.config.tableIds.taches}?where=${tasksWhere}&fields=projet_id&limit=1000`
+      this.fetchAllRecords(
+        `/${this.config.tableIds.taches}?where=${tasksWhere}&fields=projet_id`
       ),
-      this.makeRequest(
-        `/${this.config.tableIds.jalons}?where=${milestonesWhere}&fields=projet_id,terminé,termine&limit=1000`
+      this.fetchAllRecords(
+        `/${this.config.tableIds.jalons}?where=${milestonesWhere}&fields=projet_id,terminé,termine`
       ),
-      this.makeRequest(
-        `/${this.config.tableIds.factures}?where=${invoicesWhere}&fields=projet_id&limit=1000`
+      this.fetchAllRecords(
+        `/${this.config.tableIds.factures}?where=${invoicesWhere}&fields=projet_id`
       )
     ]);
 
@@ -1006,14 +1006,14 @@ class NocoDBService {
       stats[id] = { tasksCount: 0, milestonesCount: 0, invoicesCount: 0, doneMilestones: 0 };
     });
 
-    (tasksRes.list || []).forEach((task: any) => {
+    for (const task of tasksRes.list || []) {
       const pid = task.projet_id?.toString();
       if (pid && stats[pid]) {
         stats[pid].tasksCount++;
       }
-    });
+    }
 
-    (milestonesRes.list || []).forEach((milestone: any) => {
+    for (const milestone of milestonesRes.list || []) {
       const pid = milestone.projet_id?.toString();
       if (pid && stats[pid]) {
         stats[pid].milestonesCount++;
@@ -1022,14 +1022,14 @@ class NocoDBService {
           stats[pid].doneMilestones++;
         }
       }
-    });
+    }
 
-    (invoicesRes.list || []).forEach((invoice: any) => {
+    for (const invoice of invoicesRes.list || []) {
       const pid = invoice.projet_id?.toString();
       if (pid && stats[pid]) {
         stats[pid].invoicesCount++;
       }
-    });
+    }
 
     return stats;
   }
