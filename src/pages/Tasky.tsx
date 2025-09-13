@@ -208,14 +208,22 @@ const Tasky = () => {
   useEffect(() => {
     const loadTasksFromNoco = async () => {
       try {
-        let list: any[] = [];
-        if (taskScope === 'internal') {
-          const res = await nocodbService.getInternalTasks({ onlyCurrentUser: true });
-          list = res.list || [];
-        } else {
-          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: true });
-          list = (res.list || []).map((t: any) => ({ ...t, isInternal: false }));
-        }
+          let list: any[] = [];
+          const forceRefresh = refreshTick > 0;
+          if (taskScope === 'internal') {
+            const res = await nocodbService.getInternalTasks(
+              { onlyCurrentUser: true },
+              forceRefresh
+            );
+            list = res.list || [];
+          } else {
+            const res = await nocodbService.getTasks(
+              undefined,
+              { onlyCurrentUser: true },
+              forceRefresh
+            );
+            list = (res.list || []).map((t: any) => ({ ...t, isInternal: false }));
+          }
 
         if (taskScope === 'client') {
 

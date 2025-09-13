@@ -153,12 +153,12 @@ const Pipou = () => {
         await anyService.backfillProspectsForCurrentUser();
       }
 
-      const response = await nocodbService.getProspects(
-        PROSPECTS_PAGE_SIZE,
-        prospectOffset,
-        false,
-        { onlyCurrentUser: true }
-      );
+        const response = await nocodbService.getProspects(
+          PROSPECTS_PAGE_SIZE,
+          prospectOffset,
+          true,
+          { onlyCurrentUser: true }
+        );
       const list = (response.list || []).map((p: Record<string, unknown>) => ({
         id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
         name: (p as { name?: string }).name || '',

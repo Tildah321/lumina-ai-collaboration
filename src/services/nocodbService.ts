@@ -524,7 +524,8 @@ class NocoDBService {
   // Tâches - Filtered by user's projects
   async getTasks(
     projetId?: string,
-    options: { onlyCurrentUser?: boolean } = {}
+    options: { onlyCurrentUser?: boolean } = {},
+    forceRefresh = false
   ) {
     // Optionally filter by current Supabase user
     const currentUserId = options.onlyCurrentUser
@@ -547,7 +548,7 @@ class NocoDBService {
       ? `/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`
       : `/${this.config.tableIds.taches}`;
 
-    const response = await this.makeRequest(endpoint);
+    const response = await this.makeRequest(endpoint, {}, 0, !forceRefresh);
     let list = response.list || [];
 
     if (projetId) {
@@ -644,13 +645,19 @@ class NocoDBService {
   }
 
   // Tâches internes
-  async getInternalTasks(options: { onlyCurrentUser?: boolean } = {}) {
+  async getInternalTasks(
+    options: { onlyCurrentUser?: boolean } = {},
+    forceRefresh = false
+  ) {
     const currentUserId = options.onlyCurrentUser
       ? await this.getCurrentUserId()
       : null;
 
     const response = await this.makeRequest(
-      `/${this.config.tableIds.tachesInternes}`
+      `/${this.config.tableIds.tachesInternes}`,
+      {},
+      0,
+      !forceRefresh
     );
     let list = response.list || [];
 
