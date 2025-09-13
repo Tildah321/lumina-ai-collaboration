@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import nocodbService from '@/services/nocodbService';
 import { useToast } from '@/hooks/use-toast';
@@ -105,7 +106,7 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
     setData(newData);
 
     try {
-      const { tasks: tasksResult, milestones: milestonesResult, invoices: invoicesResult } =
+      const { tasks: tasksResult, milestones: milestonesResult, invoices: invoicesResult, errors: fetchErrors = [] } =
         await nocodbService.getSpaceData(spaceId, isPublic, { onlyCurrentUser: false });
 
       const tasks = (tasksResult.list || []).map((task: any) => ({
@@ -131,11 +132,19 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
         milestones,
         invoices,
         isLoading: false,
-        error: null
+        error: fetchErrors.length ? `Erreur lors du chargement de: ${fetchErrors.join(', ')}` : null
       };
-      
+
+      if (fetchErrors.length) {
+        toast({
+          title: 'Erreur de chargement',
+          description: `Impossible de charger: ${fetchErrors.join(', ')}`,
+          variant: 'destructive'
+        });
+      }
+
       // Logging minimal pour réduire le bruit
-      
+
       spaceDataCache.set(spaceId, { data: finalData, timestamp: Date.now() });
       setData(finalData);
       

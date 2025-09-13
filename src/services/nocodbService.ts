@@ -309,30 +309,55 @@ class NocoDBService {
     return this.makeRequest(`/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`);
   }
 
-  // Chargement séquentiel pour éviter de surcharger NocoDB gratuit
+  // Chargement en parallèle avec gestion du rate limit NocoDB
   async getSpaceData(
     projetId: string,
     isPublic = false,
-    options: { onlyCurrentUser?: boolean } = {}
+    options: { onlyCurrentUser?: boolean } = {},
   ) {
-    // Chargement séquentiel avec délais pour éviter rate limiting
-    const tasks = isPublic
-      ? await this.getTasksPublic(projetId)
-      : await this.getTasks(projetId, options);
-    
-    await new Promise(resolve => setTimeout(resolve, 200)); // Petit délai
-    
-    const milestones = isPublic
-      ? await this.getMilestonesPublic(projetId)
-      : await this.getMilestones(projetId);
-    
-    await new Promise(resolve => setTimeout(resolve, 200)); // Petit délai
-    
-    const invoices = isPublic
-      ? await this.getInvoicesPublic(projetId)
-      : await this.getInvoices(projetId);
+    const fetchAll = () =>
+      Promise.all([
+        (isPublic
+          ? this.getTasksPublic(projetId)
+          : this.getTasks(projetId, options)
+        ).catch(error => ({ error })),
+        (isPublic
+          ? this.getMilestonesPublic(projetId)
+          : this.getMilestones(projetId)
+        ).catch(error => ({ error })),
+        (isPublic
+          ? this.getInvoicesPublic(projetId)
+          : this.getInvoices(projetId)
+        ).catch(error => ({ error })),
+      ]);
 
-    return { tasks, milestones, invoices };
+    // légère temporisation globale
+    await this.delay(100);
+    let [tasks, milestones, invoices] = await fetchAll();
+
+    const isRateLimit = (res: any) =>
+      res?.error && typeof res.error.message === 'string' && res.error.message.includes('Too many requests');
+
+    if (isRateLimit(tasks) || isRateLimit(milestones) || isRateLimit(invoices)) {
+      await this.delay(500);
+      [tasks, milestones, invoices] = await fetchAll();
+    }
+
+    const errors: string[] = [];
+    if ((tasks as any).error) {
+      errors.push('tasks');
+      tasks = { list: [], pageInfo: { totalRows: 0 } } as any;
+    }
+    if ((milestones as any).error) {
+      errors.push('milestones');
+      milestones = { list: [], pageInfo: { totalRows: 0 } } as any;
+    }
+    if ((invoices as any).error) {
+      errors.push('invoices');
+      invoices = { list: [], pageInfo: { totalRows: 0 } } as any;
+    }
+
+    return { tasks, milestones, invoices, errors };
   }
 
   // Public update methods for client portal
