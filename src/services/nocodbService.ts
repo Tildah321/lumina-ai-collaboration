@@ -543,9 +543,16 @@ class NocoDBService {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
-    const endpoint = projetId
-      ? `/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`
-      : `/${this.config.tableIds.taches}`;
+    let where = "";
+    if (projetId) {
+      where = `(projet_id,eq,${projetId})`;
+    }
+    if (options.onlyCurrentUser && currentUserId) {
+      where += where
+        ? `~and(supabase_user_id,eq,${currentUserId})`
+        : `(supabase_user_id,eq,${currentUserId})`;
+    }
+    const endpoint = `/${this.config.tableIds.taches}` + (where ? `?where=${where}` : "");
 
     const response = await this.makeRequest(endpoint);
     let list = response.list || [];
