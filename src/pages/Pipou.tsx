@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Target, Euro, Plus } from 'lucide-react';
 import { usePlan } from '@/contexts/PlanContext';
 import { useNavigate } from 'react-router-dom';
@@ -111,6 +111,7 @@ const Pipou = () => {
   const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
   const [activeTab, setActiveTab] = useState('clients');
   const [spaceProspect, setSpaceProspect] = useState<Prospect | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const buildProspectPayload = (
     data: ProspectFormData & { status: string; lastContact?: string }
@@ -201,6 +202,20 @@ const Pipou = () => {
     if (activeTab !== 'prospection' || prospects.length > 0) return;
     loadProspects();
   }, [activeTab, prospects.length, loadProspects]);
+
+  useEffect(() => {
+    if (activeTab !== 'prospection' || !hasMoreProspects) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && !isLoadingProspects) {
+        loadProspects();
+      }
+    });
+    const current = loadMoreRef.current;
+    if (current) observer.observe(current);
+    return () => {
+      if (current) observer.unobserve(current);
+    };
+  }, [activeTab, hasMoreProspects, isLoadingProspects, loadProspects]);
 
   const addProspect = async (data: ProspectFormData) => {
     if (!data.name || !data.company) return;
@@ -523,11 +538,9 @@ const Pipou = () => {
                           </Card>
                         ))
                       )}
-                      {hasMoreProspects && (
-                        <div className="flex justify-center">
-                          <Button onClick={loadProspects} disabled={isLoadingProspects}>
-                            {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
-                          </Button>
+                      {isLoadingProspects && (
+                        <div className="flex justify-center p-4">
+                          <div className="animate-spin h-6 w-6 border-b-2 border-primary rounded-full" />
                         </div>
                       )}
                     </TabsContent>
@@ -544,17 +557,16 @@ const Pipou = () => {
                     setProspects={setProspects}
                     onCreateSpace={(prospect) => setSpaceProspect(prospect)}
                   />
-                  {hasMoreProspects && (
-                    <div className="flex justify-center mt-4">
-                      <Button onClick={loadProspects} disabled={isLoadingProspects}>
-                        {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
-                      </Button>
+                  {isLoadingProspects && (
+                    <div className="flex justify-center p-4">
+                      <div className="animate-spin h-6 w-6 border-b-2 border-primary rounded-full" />
                     </div>
                   )}
                 </>
               )}
-            </TabsContent>
+          </TabsContent>
           </Tabs>
+        <div ref={loadMoreRef} />
         </TabsContent>
       </Tabs>
       <Dialog open={isCreateProspectDialogOpen} onOpenChange={setIsCreateProspectDialogOpen}>
