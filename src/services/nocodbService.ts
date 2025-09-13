@@ -610,11 +610,14 @@ class NocoDBService {
   }
 
   async createTask(data: any) {
-    const payload = { ...data };
     const userId = await this.getCurrentUserId();
-    if (userId) {
-      (payload as any).supabase_user_id = userId;
+    if (!userId) {
+      console.warn('User ID required to create task');
+      throw new Error('Missing user ID');
     }
+    const payload = { ...data };
+    (payload as any).supabase_user_id = userId;
+    (payload as any).c3bte4bwnnls4h = userId;
     const response = await this.makeRequest(`/${this.config.tableIds.taches}`, {
       method: 'POST',
       body: JSON.stringify(payload),
