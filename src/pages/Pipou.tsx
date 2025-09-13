@@ -66,10 +66,10 @@ const Pipou = () => {
     runBackfill();
   }, []);
 
-  useEffect(() => {
-    const loadProjects = async () => {
+  const loadProjects = useCallback(
+    async (forceRefresh = false) => {
       try {
-        const clientsRes = await nocodbService.getClients();
+        const clientsRes = await nocodbService.getClients(forceRefresh);
         const clients = (clientsRes.list || []) as NocoRecord[];
 
         const projectsData = clients.map(c => {
@@ -105,10 +105,13 @@ const Pipou = () => {
       } finally {
         setIsLoadingProjects(false);
       }
-    };
+    },
+    []
+  );
 
+  useEffect(() => {
     loadProjects();
-  }, []);
+  }, [loadProjects]);
 
   // Données mockées de prospection CRM
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -144,65 +147,73 @@ const Pipou = () => {
       data.lastContact || new Date().toISOString().split('T')[0]
   });
 
-  const loadProspects = useCallback(async () => {
-    setIsLoadingProspects(true);
-    try {
-      await nocodbService.backfillTasksForCurrentUser();
-      const anyService = nocodbService as any;
-      if (typeof anyService.backfillProspectsForCurrentUser === 'function') {
-        await anyService.backfillProspectsForCurrentUser();
-      }
+  const loadProspects = useCallback(
+    async (forceRefresh = false) => {
+      setIsLoadingProspects(true);
+      try {
+        await nocodbService.backfillTasksForCurrentUser();
+        const anyService = nocodbService as any;
+        if (typeof anyService.backfillProspectsForCurrentUser === 'function') {
+          await anyService.backfillProspectsForCurrentUser();
+        }
 
-      const response = await nocodbService.getProspects(
-        PROSPECTS_PAGE_SIZE,
-        prospectOffset,
-        false,
-        { onlyCurrentUser: true }
-      );
-      const list = (response.list || []).map((p: Record<string, unknown>) => ({
-        id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
-        name: (p as { name?: string }).name || '',
-        company:
-          (p as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
-          (p as { entreprise?: string }).entreprise ||
-          (p as { company?: string }).company ||
-          (p as Record<string, string>)['Entreprise'] ||
-          '',
-        email: (p as { email?: string }).email || '',
-        phone:
-          (p as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
-          (p as { telephone?: string }).telephone ||
-          (p as { numero?: string }).numero ||
-          (p as { phone?: string }).phone ||
-          (p as Record<string, string>)['t_l_phone'] ||
-          (p as Record<string, string>)['téléphone'] ||
-          (p as Record<string, string>)['Téléphone'] ||
-          (p as Record<string, string>)['Telephone'] ||
-          '',
-        website:
-          (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
-          (p as { site?: string }).site ||
-          (p as { reseaux?: string }).reseaux ||
-          (p as { website?: string }).website ||
-          (p as Record<string, string>)['reseaux_site'] ||
-          (p as Record<string, string>)['site_web'] ||
-          (p as Record<string, string>)['Réseaux / Site'] ||
-          '',
-        status: mapProspectStatus((p as { status?: string }).status || 'nouveau'),
-        lastContact:
-          (p as { lastContact?: string; dernier_contact?: string }).lastContact ||
-          (p as { dernier_contact?: string }).dernier_contact ||
-          ''
-      }));
-      setProspects(prev => [...prev, ...list]);
-      setProspectOffset(prev => prev + list.length);
-      setHasMoreProspects(list.length === PROSPECTS_PAGE_SIZE);
-    } catch (error) {
-      console.error('Erreur chargement prospects:', error);
-    } finally {
-      setIsLoadingProspects(false);
-    }
-  }, [prospectOffset]);
+        const response = await nocodbService.getProspects(
+          PROSPECTS_PAGE_SIZE,
+          forceRefresh ? 0 : prospectOffset,
+          forceRefresh,
+          { onlyCurrentUser: true }
+        );
+        const list = (response.list || []).map((p: Record<string, unknown>) => ({
+          id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
+          name: (p as { name?: string }).name || '',
+          company:
+            (p as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
+            (p as { entreprise?: string }).entreprise ||
+            (p as { company?: string }).company ||
+            (p as Record<string, string>)['Entreprise'] ||
+            '',
+          email: (p as { email?: string }).email || '',
+          phone:
+            (p as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
+            (p as { telephone?: string }).telephone ||
+            (p as { numero?: string }).numero ||
+            (p as { phone?: string }).phone ||
+            (p as Record<string, string>)['t_l_phone'] ||
+            (p as Record<string, string>)['téléphone'] ||
+            (p as Record<string, string>)['Téléphone'] ||
+            (p as Record<string, string>)['Telephone'] ||
+            '',
+          website:
+            (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
+            (p as { site?: string }).site ||
+            (p as { reseaux?: string }).reseaux ||
+            (p as { website?: string }).website ||
+            (p as Record<string, string>)['reseaux_site'] ||
+            (p as Record<string, string>)['site_web'] ||
+            (p as Record<string, string>)['Réseaux / Site'] ||
+            '',
+          status: mapProspectStatus((p as { status?: string }).status || 'nouveau'),
+          lastContact:
+            (p as { lastContact?: string; dernier_contact?: string }).lastContact ||
+            (p as { dernier_contact?: string }).dernier_contact ||
+            ''
+        }));
+        if (forceRefresh) {
+          setProspects(list);
+          setProspectOffset(list.length);
+        } else {
+          setProspects(prev => [...prev, ...list]);
+          setProspectOffset(prev => prev + list.length);
+        }
+        setHasMoreProspects(list.length === PROSPECTS_PAGE_SIZE);
+      } catch (error) {
+        console.error('Erreur chargement prospects:', error);
+      } finally {
+        setIsLoadingProspects(false);
+      }
+    },
+    [prospectOffset]
+  );
 
   useEffect(() => {
     if (activeTab !== 'prospection' || prospects.length > 0) return;
@@ -252,6 +263,7 @@ const Pipou = () => {
       setProspects(prev => [...prev, created]);
       setProspectOffset(prev => prev + 1);
       setIsCreateProspectDialogOpen(false);
+      loadProspects(true);
     } catch (error) {
       console.error('Erreur création prospect:', error);
     }
@@ -280,6 +292,7 @@ const Pipou = () => {
           lastContact: data.lastContact
         })
       );
+      loadProspects(true);
     } catch (error) {
       console.error('Erreur mise à jour prospect:', error);
       if (previous) {
