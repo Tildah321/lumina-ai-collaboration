@@ -39,10 +39,7 @@ export const useGlobalStats = () => {
       try {
         // S'assurer que toutes les tâches de l'utilisateur courant sont correctement assignées
         await nocodbService.backfillTasksForCurrentUser();
-        const anyService = nocodbService as any;
-        if (typeof anyService.backfillProspectsForCurrentUser === 'function') {
-          await anyService.backfillProspectsForCurrentUser();
-        }
+        await nocodbService.backfillProspectsForCurrentUser();
 
         console.log('📊 Chargement des statistiques globales...');
         
