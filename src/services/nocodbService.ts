@@ -301,14 +301,15 @@ class NocoDBService {
     );
   }
 
-  private async fetchAllPublicRecords(endpoint: string) {
+  private async fetchAllRecords(endpoint: string) {
     const limit = 1000;
     let offset = 0;
     let allItems: any[] = [];
     let pageInfo: any = {};
 
     while (true) {
-      const res = await this.makeRequest(`${endpoint}&limit=${limit}&offset=${offset}`);
+      const separator = endpoint.includes('?') ? '&' : '?';
+      const res = await this.makeRequest(`${endpoint}${separator}limit=${limit}&offset=${offset}`);
       const list = res.list || [];
       allItems = allItems.concat(list);
       pageInfo = res.pageInfo || pageInfo;
@@ -324,15 +325,15 @@ class NocoDBService {
 
   // Public endpoints for client-portal (no Supabase ownership filtering)
   async getTasksPublic(projetId: string) {
-    return this.fetchAllPublicRecords(`/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`);
+    return this.fetchAllRecords(`/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`);
   }
 
   async getMilestonesPublic(projetId: string) {
-    return this.fetchAllPublicRecords(`/${this.config.tableIds.jalons}?where=(projet_id,eq,${projetId})`);
+    return this.fetchAllRecords(`/${this.config.tableIds.jalons}?where=(projet_id,eq,${projetId})`);
   }
 
   async getInvoicesPublic(projetId: string) {
-    return this.fetchAllPublicRecords(`/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`);
+    return this.fetchAllRecords(`/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`);
   }
 
   // Chargement en parallèle avec gestion du rate limit NocoDB
@@ -517,7 +518,7 @@ class NocoDBService {
       ? `/${this.config.tableIds.projets}?where=(client_id,eq,${clientIdStr})`
       : `/${this.config.tableIds.projets}`;
 
-    const response = await this.makeRequest(endpoint);
+    const response = await this.fetchAllRecords(endpoint);
 
     if (clientIdStr) {
       // If user has some space restrictions and doesn't own this one, return empty
@@ -605,7 +606,7 @@ class NocoDBService {
       ? `/${this.config.tableIds.taches}?where=(projet_id,eq,${projetIdStr})`
       : `/${this.config.tableIds.taches}`;
 
-    const response = await this.makeRequest(endpoint);
+    const response = await this.fetchAllRecords(endpoint);
     let list = response.list || [];
 
     if (projetIdStr) {
@@ -663,7 +664,7 @@ class NocoDBService {
       where += `~and(supabase_user_id,eq,${currentUserId})`;
     }
     const endpoint = `/${this.config.tableIds.taches}?where=${where}&fields=Id&limit=1`;
-    const response = await this.makeRequest(endpoint);
+    const response = await this.fetchAllRecords(endpoint);
     return response.pageInfo?.totalRows ?? (response.list || []).length;
   }
 
@@ -882,7 +883,7 @@ class NocoDBService {
       ? `/${this.config.tableIds.jalons}?where=(projet_id,eq,${projetId})${fieldsParam}`
       : `/${this.config.tableIds.jalons}${fieldsParam ? `?${fieldsParam.slice(1)}` : ''}`;
 
-    const response = await this.makeRequest(endpoint);
+    const response = await this.fetchAllRecords(endpoint);
 
     if (!projetId) {
       // Filter milestones by user's owned spaces
@@ -928,11 +929,11 @@ class NocoDBService {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
-    const endpoint = projetId 
+    const endpoint = projetId
       ? `/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`
       : `/${this.config.tableIds.factures}`;
-    
-    const response = await this.makeRequest(endpoint);
+
+    const response = await this.fetchAllRecords(endpoint);
 
     if (!projetId) {
       // Filter invoices by user's owned spaces
