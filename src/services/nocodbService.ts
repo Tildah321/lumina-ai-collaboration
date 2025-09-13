@@ -872,9 +872,14 @@ class NocoDBService {
   // Jalons - Filtered by user's spaces
   async getMilestones(projetId?: string, options: { fields?: string } = {}) {
     const userSpaceIds = await this.getUserSpaceIds();
+    const projectIds =
+      this.cachedProjectIds ??
+      (await this.getProjets()).list
+        .map((p: any) => (p.Id || p.id)?.toString())
+        .filter(Boolean);
 
-    if (projetId && !userSpaceIds.includes(projetId)) {
-      // User doesn't own this space, return empty
+    if (projetId && !projectIds.includes(projetId)) {
+      // User doesn't own this project, return empty
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
@@ -887,7 +892,7 @@ class NocoDBService {
 
     if (!projetId) {
       // Filter milestones by user's owned spaces
-      const filteredList = (response.list || []).filter((milestone: any) => 
+      const filteredList = (response.list || []).filter((milestone: any) =>
         userSpaceIds.includes(milestone.projet_id?.toString())
       );
       return {
@@ -923,9 +928,14 @@ class NocoDBService {
   // Factures - Filtered by user's spaces
   async getInvoices(projetId?: string) {
     const userSpaceIds = await this.getUserSpaceIds();
-    
-    if (projetId && !userSpaceIds.includes(projetId)) {
-      // User doesn't own this space, return empty
+    const projectIds =
+      this.cachedProjectIds ??
+      (await this.getProjets()).list
+        .map((p: any) => (p.Id || p.id)?.toString())
+        .filter(Boolean);
+
+    if (projetId && !projectIds.includes(projetId)) {
+      // User doesn't own this project, return empty
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
@@ -937,7 +947,7 @@ class NocoDBService {
 
     if (!projetId) {
       // Filter invoices by user's owned spaces
-      const filteredList = (response.list || []).filter((invoice: any) => 
+      const filteredList = (response.list || []).filter((invoice: any) =>
         userSpaceIds.includes(invoice.projet_id?.toString())
       );
       return {
