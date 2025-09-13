@@ -57,7 +57,10 @@ class NocoDBService {
       return [];
     }
 
-    let spaceIds = (data?.map(item => item.space_id) || []).filter(Boolean);
+    let spaceIds: string[] =
+      (data?.map(item => item.space_id?.toString()) || []).filter(
+        Boolean,
+      ) as string[];
 
     // 2) If none, infer from existing tasks owned by the user and persist mappings
     if (spaceIds.length === 0) {
@@ -82,7 +85,9 @@ class NocoDBService {
             .select('space_id')
             .eq('user_id', userId);
           if (!recheck.error) {
-            spaceIds = (recheck.data || []).map(r => r.space_id);
+            spaceIds = (recheck.data || [])
+              .map(r => r.space_id?.toString())
+              .filter(Boolean) as string[];
           }
         }
       } catch (e) {
@@ -507,15 +512,16 @@ class NocoDBService {
   async getProjets(clientId?: string) {
     const userSpaceIds = await this.getUserSpaceIds();
 
-    const endpoint = clientId
-      ? `/${this.config.tableIds.projets}?where=(client_id,eq,${clientId})`
+    const clientIdStr = clientId?.toString();
+    const endpoint = clientIdStr
+      ? `/${this.config.tableIds.projets}?where=(client_id,eq,${clientIdStr})`
       : `/${this.config.tableIds.projets}`;
 
     const response = await this.makeRequest(endpoint);
 
-    if (clientId) {
+    if (clientIdStr) {
       // If user has some space restrictions and doesn't own this one, return empty
-      if (userSpaceIds.length > 0 && !userSpaceIds.includes(clientId)) {
+      if (userSpaceIds.length > 0 && !userSpaceIds.includes(clientIdStr)) {
         return { list: [], pageInfo: { totalRows: 0 } };
       }
       return response;
@@ -594,16 +600,17 @@ class NocoDBService {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
-    const endpoint = projetId
-      ? `/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`
+    const projetIdStr = projetId?.toString();
+    const endpoint = projetIdStr
+      ? `/${this.config.tableIds.taches}?where=(projet_id,eq,${projetIdStr})`
       : `/${this.config.tableIds.taches}`;
 
     const response = await this.makeRequest(endpoint);
     let list = response.list || [];
 
-    if (projetId) {
+    if (projetIdStr) {
       // Respect user project restrictions only if some are defined
-      if (userProjectIds.length > 0 && !userProjectIds.includes(projetId)) {
+      if (userProjectIds.length > 0 && !userProjectIds.includes(projetIdStr)) {
         return { list: [], pageInfo: { totalRows: 0 } };
       }
     } else if (userProjectIds.length > 0) {
