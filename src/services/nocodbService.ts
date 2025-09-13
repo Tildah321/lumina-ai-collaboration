@@ -46,7 +46,8 @@ class NocoDBService {
     const userId = await this.getCurrentUserId();
     if (!userId) return [];
 
-    const { data, error } = await supabase
+    // 1) Read existing mappings
+    let { data, error } = await supabase
       .from('noco_space_owners')
       .select('space_id')
       .eq('user_id', userId);
@@ -56,7 +57,40 @@ class NocoDBService {
       return [];
     }
 
-    return data?.map(item => item.space_id) || [];
+    let spaceIds = (data?.map(item => item.space_id) || []).filter(Boolean);
+
+    // 2) If none, infer from existing tasks owned by the user and persist mappings
+    if (spaceIds.length === 0) {
+      try {
+        const ownedTasks = await this.makeRequest(
+          `/${this.config.tableIds.taches}?where=(supabase_user_id,eq,${userId})&fields=projet_id&limit=1000`
+        );
+        const inferredIds: string[] = Array.from(
+          new Set(
+            (ownedTasks.list || [])
+              .map((t: any) => t.projet_id?.toString())
+              .filter((id: any) => !!id)
+          )
+        );
+
+        if (inferredIds.length > 0) {
+          // Persist inferred ownership
+          await Promise.all(inferredIds.map(id => this.registerSpaceOwnership(id)));
+          // Re-read mappings
+          const recheck = await supabase
+            .from('noco_space_owners')
+            .select('space_id')
+            .eq('user_id', userId);
+          if (!recheck.error) {
+            spaceIds = (recheck.data || []).map(r => r.space_id);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not infer user spaces from tasks:', e);
+      }
+    }
+
+    return spaceIds;
   }
 
   // Register space ownership for current user
