@@ -203,8 +203,8 @@ export const ClientSpaceProvider: React.FC<{
 
   const updateTaskInCache = (taskId: string, updates: Partial<Task>) => {
     setData(prev => {
-      const updatedTasks = prev.tasks.map(task => 
-        task.Id === taskId ? { ...task, ...updates } : task
+      const updatedTasks = prev.tasks.map(task =>
+        task.Id === taskId || task.id === taskId ? { ...task, ...updates } : task
       );
       
       const updatedData = { ...prev, tasks: updatedTasks };
