@@ -556,11 +556,16 @@ class NocoDBService {
       ? await this.getCurrentUserId()
       : null;
 
-    // Récupère les projets accessibles à l'utilisateur
-    const projetsResponse = await this.getProjets();
-    const userProjectIds = (projetsResponse.list || [])
-      .map((p: any) => (p.Id || p.id)?.toString())
-      .filter(Boolean);
+    // Récupère les projets accessibles à l'utilisateur en utilisant le cache si disponible
+    let userProjectIds: string[] = [];
+    if (this.cachedProjectIds !== null) {
+      userProjectIds = this.cachedProjectIds;
+    } else {
+      const projetsResponse = await this.getProjets();
+      userProjectIds = (projetsResponse.list || [])
+        .map((p: any) => (p.Id || p.id)?.toString())
+        .filter(Boolean);
+    }
 
     // If user has no accessible projects and no specific project requested,
     // return empty only when not filtering for the current user
