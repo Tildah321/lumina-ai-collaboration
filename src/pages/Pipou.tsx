@@ -54,18 +54,6 @@ const Pipou = () => {
   const [milestonesProject, setMilestonesProject] = useState<Project | null>(null);
   const [invoicesProject, setInvoicesProject] = useState<Project | null>(null);
 
-  // Backfill des anciens prospects vers le compte courant
-  useEffect(() => {
-    const runBackfill = async () => {
-      try {
-        await nocodbService.backfillProspectsForCurrentUser();
-      } catch (e) {
-        console.warn('Backfill prospects échoué:', e);
-      }
-    };
-    runBackfill();
-  }, []);
-
   const loadProjects = useCallback(
     async (forceRefresh = false) => {
       try {
@@ -150,9 +138,6 @@ const Pipou = () => {
   const loadProspects = useCallback(
     async (forceRefresh = false) => {
       setIsLoadingProspects(true);
-      try {
-        await nocodbService.backfillTasksForCurrentUser();
-        await nocodbService.backfillProspectsForCurrentUser();
 
         const response = await nocodbService.getProspects(
           PROSPECTS_PAGE_SIZE,

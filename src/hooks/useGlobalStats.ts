@@ -36,11 +36,6 @@ export const useGlobalStats = () => {
     const loadGlobalStats = async () => {
       setStats(prev => ({ ...prev, isLoading: true }));
 
-      try {
-        // S'assurer que toutes les tâches de l'utilisateur courant sont correctement assignées
-        await nocodbService.backfillTasksForCurrentUser();
-        await nocodbService.backfillProspectsForCurrentUser();
-
         console.log('📊 Chargement des statistiques globales...');
         
         // Charger les données en parallèle pour accélérer l'affichage des statistiques
