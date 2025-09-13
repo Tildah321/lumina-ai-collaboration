@@ -139,6 +139,7 @@ const Pipou = () => {
     async (forceRefresh = false) => {
       setIsLoadingProspects(true);
 
+      try {
         const response = await nocodbService.getProspects(
           PROSPECTS_PAGE_SIZE,
           forceRefresh ? 0 : prospectOffset,
@@ -338,6 +339,12 @@ const Pipou = () => {
               Prospection
             </TabsTrigger>
           </TabsList>
+          {activeTab === 'prospection' && (
+            <Button onClick={() => setIsCreateProspectDialogOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Nouveau prospect
+            </Button>
+          )}
         </div>
 
         <TabsContent value="clients" className="space-y-4">
@@ -434,14 +441,6 @@ const Pipou = () => {
                 </TabsContent>
 
         <TabsContent value="prospection" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-            </div>
-            <Button onClick={() => setIsCreateProspectDialogOpen(true)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Nouveau prospect
-            </Button>
-          </div>
           <Tabs defaultValue="list" className="space-y-4">
                     <TabsList className="w-fit">
                       <TabsTrigger value="list">Liste</TabsTrigger>
