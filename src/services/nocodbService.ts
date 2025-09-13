@@ -307,9 +307,16 @@ class NocoDBService {
     let allItems: any[] = [];
     let pageInfo: any = {};
 
+    // Build URL using URL & URLSearchParams and remove any existing limit/offset
+    const url = new URL(this.config.baseUrl + endpoint);
+    url.searchParams.delete('limit');
+    url.searchParams.delete('offset');
+
     while (true) {
-      const separator = endpoint.includes('?') ? '&' : '?';
-      const res = await this.makeRequest(`${endpoint}${separator}limit=${limit}&offset=${offset}`);
+      url.searchParams.set('limit', limit.toString());
+      url.searchParams.set('offset', offset.toString());
+      const relative = url.href.replace(this.config.baseUrl, '');
+      const res = await this.makeRequest(relative);
       const list = res.list || [];
       allItems = allItems.concat(list);
       pageInfo = res.pageInfo || pageInfo;
@@ -663,7 +670,7 @@ class NocoDBService {
     if (options.onlyCurrentUser && currentUserId) {
       where += `~and(supabase_user_id,eq,${currentUserId})`;
     }
-    const endpoint = `/${this.config.tableIds.taches}?where=${where}&fields=Id&limit=1`;
+    const endpoint = `/${this.config.tableIds.taches}?where=${where}&fields=Id`;
     const response = await this.fetchAllRecords(endpoint);
     return response.pageInfo?.totalRows ?? (response.list || []).length;
   }
