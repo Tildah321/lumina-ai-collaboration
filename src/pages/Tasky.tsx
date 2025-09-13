@@ -210,7 +210,7 @@ const Tasky = () => {
       try {
         let list: any[] = [];
         if (taskScope === 'internal') {
-          const res = await nocodbService.getInternalTasks({ onlyCurrentUser: true });
+          const res = await nocodbService.getInternalTasks(false, { onlyCurrentUser: true });
           list = res.list || [];
         } else {
           const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: true });

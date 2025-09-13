@@ -110,7 +110,7 @@ class NocoDBService {
 
   // Cache agressif pour NocoDB gratuit - minimiser les appels
   private static requestCache = new Map<string, { data: any; timestamp: number }>();
-  private static readonly CACHE_DURATION = 300000; // 5 minutes pour réduire drastiquement les appels
+  private static readonly CACHE_DURATION = 60000; // 1 minute pour limiter la latence des données
   private static ongoingRequests = new Map<string, Promise<any>>(); // Éviter les doublons
 
   private invalidateCache(endpoint: string) {
@@ -674,13 +674,16 @@ class NocoDBService {
   }
 
   // Tâches internes
-  async getInternalTasks(options: { onlyCurrentUser?: boolean } = {}) {
+  async getInternalTasks(forceRefresh = false, options: { onlyCurrentUser?: boolean } = {}) {
     const currentUserId = options.onlyCurrentUser
       ? await this.getCurrentUserId()
       : null;
 
     const response = await this.makeRequest(
-      `/${this.config.tableIds.tachesInternes}`
+      `/${this.config.tableIds.tachesInternes}`,
+      {},
+      0,
+      !forceRefresh
     );
     let list = response.list || [];
 
