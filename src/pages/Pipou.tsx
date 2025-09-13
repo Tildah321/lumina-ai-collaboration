@@ -343,11 +343,6 @@ const Pipou = () => {
               Prospection
             </TabsTrigger>
           </TabsList>
-          {activeTab === 'prospection' && (
-            <Button onClick={() => setIsCreateProspectDialogOpen(true)}>
-              Créer un prospect
-            </Button>
-          )}
         </div>
 
         <TabsContent value="clients" className="space-y-4">
