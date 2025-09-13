@@ -358,27 +358,16 @@ class NocoDBService {
     if (options.onlyCurrentUser) {
       const currentUserId = await this.getCurrentUserId();
       if (currentUserId) {
-        const byOwner = list.filter((prospect: any) => {
+        list = list.filter((prospect: any) => {
           const prospectUserId =
+            prospect.supabase_user_id ||
             prospect.user_id ||
             prospect.userId ||
-            prospect.supabase_user_id ||
             prospect.owner_id;
           return prospectUserId === currentUserId;
         });
-        if (byOwner.length > 0) {
-          list = byOwner;
-        } else {
-          const withoutOwner = list.filter((prospect: any) => {
-            const prospectUserId =
-              prospect.user_id ||
-              prospect.userId ||
-              prospect.supabase_user_id ||
-              prospect.owner_id;
-            return !prospectUserId;
-          });
-          list = withoutOwner.length > 0 ? withoutOwner : list;
-        }
+      } else {
+        list = [];
       }
     }
 
@@ -438,12 +427,10 @@ class NocoDBService {
       return response;
     }
 
-    // If user has no registered spaces, return everything
+    // If user has no registered spaces, return empty to avoid data leak
     if (userSpaceIds.length === 0) {
-      this.cachedProjectIds = (response.list || [])
-        .map((p: any) => (p.Id || p.id)?.toString())
-        .filter(Boolean);
-      return response;
+      this.cachedProjectIds = [];
+      return { list: [], pageInfo: { totalRows: 0 } };
     }
 
     // Filter projects by user's owned clients
@@ -502,6 +489,11 @@ class NocoDBService {
       .map((p: any) => (p.Id || p.id)?.toString())
       .filter(Boolean);
 
+    // If user has no accessible projects and no specific project requested, return empty
+    if (!projetId && userProjectIds.length === 0) {
+      return { list: [], pageInfo: { totalRows: 0 } };
+    }
+
     const endpoint = projetId
       ? `/${this.config.tableIds.taches}?where=(projet_id,eq,${projetId})`
       : `/${this.config.tableIds.taches}`;
@@ -521,28 +513,19 @@ class NocoDBService {
       );
     }
 
-    if (options.onlyCurrentUser && currentUserId) {
-      const byOwner = list.filter((task: any) => {
-        const taskUserId =
-          task.user_id ||
-          task.userId ||
-          task.supabase_user_id ||
-          task.owner_id;
-        return taskUserId === currentUserId;
-      });
-
-      if (byOwner.length > 0) {
-        list = byOwner;
-      } else {
-        // Fallback pour données historiques sans supabase_user_id
-        const toKey = (v: any) => (typeof v === 'string' ? v.toLowerCase().trim() : '');
-        const heuristic = list.filter((task: any) => {
-          const assignee = toKey(
-            task.assigne_a || task['assigné_a'] || task.responsable || task.responsible || ''
-          );
-          return assignee === 'moi' || assignee === 'nous';
+    if (options.onlyCurrentUser) {
+      if (currentUserId) {
+        list = list.filter((task: any) => {
+          const taskUserId =
+            task.supabase_user_id ||
+            task.user_id ||
+            task.userId ||
+            task.owner_id;
+          return taskUserId === currentUserId;
         });
-        list = heuristic.length > 0 ? heuristic : list;
+      } else {
+        // No authenticated user => no tasks exposed
+        list = [];
       }
     }
 
@@ -620,28 +603,18 @@ class NocoDBService {
     );
     let list = response.list || [];
 
-    if (options.onlyCurrentUser && currentUserId) {
-      const byOwner = list.filter((task: any) => {
-        const taskUserId =
-          task.user_id ||
-          task.userId ||
-          task.supabase_user_id ||
-          task.owner_id;
-        return taskUserId === currentUserId;
-      });
-
-      if (byOwner.length > 0) {
-        list = byOwner;
-      } else {
-        // Fallback pour données historiques sans supabase_user_id
-        const toKey = (v: any) => (typeof v === 'string' ? v.toLowerCase().trim() : '');
-        const heuristic = list.filter((task: any) => {
-          const assignee = toKey(
-            task.assigne_a || task['assigné_a'] || task.responsable || task.responsible || ''
-          );
-          return assignee === 'moi' || assignee === 'nous';
+    if (options.onlyCurrentUser) {
+      if (currentUserId) {
+        list = list.filter((task: any) => {
+          const taskUserId =
+            task.supabase_user_id ||
+            task.user_id ||
+            task.userId ||
+            task.owner_id;
+          return taskUserId === currentUserId;
         });
-        list = heuristic.length > 0 ? heuristic : list;
+      } else {
+        list = [];
       }
     }
 
