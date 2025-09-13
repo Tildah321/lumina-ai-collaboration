@@ -938,7 +938,7 @@ class NocoDBService {
         .map((p: any) => (p.Id || p.id)?.toString())
         .filter(Boolean);
 
-    if (projetId && !projectIds.includes(projetId)) {
+    if (projetId && projectIds.length > 0 && !projectIds.includes(projetId)) {
       // User doesn't own this project, return empty
       return { list: [], pageInfo: { totalRows: 0 } };
     }
@@ -950,15 +950,18 @@ class NocoDBService {
     const response = await this.fetchAllRecords(endpoint);
 
     if (!projetId) {
-      // Filter invoices by user's owned spaces
-      const filteredList = (response.list || []).filter((invoice: any) =>
-        userSpaceIds.includes(invoice.projet_id?.toString())
-      );
-      return {
-        ...response,
-        list: filteredList,
-        pageInfo: { ...response.pageInfo, totalRows: filteredList.length }
-      };
+      if (userSpaceIds.length > 0) {
+        // Filter invoices by user's owned spaces
+        const filteredList = (response.list || []).filter((invoice: any) =>
+          userSpaceIds.includes(invoice.projet_id?.toString())
+        );
+        return {
+          ...response,
+          list: filteredList,
+          pageInfo: { ...response.pageInfo, totalRows: filteredList.length }
+        };
+      }
+      return response;
     }
 
     return response;
