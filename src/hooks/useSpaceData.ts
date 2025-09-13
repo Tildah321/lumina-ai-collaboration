@@ -203,10 +203,9 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
   const updateTaskInCache = (taskId: string, updates: Partial<Task>) => {
     const cached = spaceDataCache.get(spaceId);
     if (cached) {
-      const updatedTasks = cached.data.tasks.map(task => {
-        const idMatch = (task.Id || task.id) === taskId;
-        return idMatch ? { ...task, ...updates } : task;
-      });
+      const updatedTasks = cached.data.tasks.map(task =>
+        task.Id === taskId || task.id === taskId ? { ...task, ...updates } : task
+      );
       const updatedData = { ...cached.data, tasks: updatedTasks };
       spaceDataCache.set(spaceId, { data: updatedData, timestamp: Date.now() });
       setData(updatedData);
