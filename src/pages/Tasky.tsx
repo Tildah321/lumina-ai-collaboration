@@ -203,20 +203,8 @@ const Tasky = () => {
         }
 
         if (taskScope === 'client') {
-          list = list.filter((t: any) => {
-            const responsibleRaw =
-              t.responsable ||
-              t.responsible ||
-              t.assigne_a ||
-              t['assigné_a'] ||
-              '';
-            const responsible = responsibleRaw.toString().trim().toLowerCase();
-            return (
-              responsible !== 'client' &&
-              !responsible.includes('client') &&
-              (t.responsable || t.responsible) !== 'Client'
-            );
-          });
+          // Ne pas filtrer - afficher toutes les tâches pour le scope client
+          // L'ancien filtre excluait par erreur les tâches assignées aux clients
         }
 
         const projectMap = new Map(

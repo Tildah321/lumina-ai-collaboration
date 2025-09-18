@@ -109,7 +109,7 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
       const { tasks: tasksResult, milestones: milestonesResult, invoices: invoicesResult, errors: fetchErrors = [] } =
         await nocodbService.getSpaceData(spaceId, isPublic, { onlyCurrentUser: false });
 
-      const tasks = (tasksResult.list || []).map((task: any) => ({
+      const tasks = (tasksResult && 'list' in tasksResult ? tasksResult.list || [] : []).map((task: any) => ({
         ...task,
         id: task.Id || task.id,
         assigné_a: task.assigne_a || task.assigné_a,
@@ -117,12 +117,12 @@ export const useSpaceData = (spaceId: string, isPublic = false) => {
         time_spent: task.time_spent || 0
       }));
 
-      const milestones = (milestonesResult.list || []).map((milestone: any) => ({
+      const milestones = (milestonesResult && 'list' in milestonesResult ? milestonesResult.list || [] : []).map((milestone: any) => ({
         ...milestone,
         id: milestone.Id || milestone.id
       }));
 
-      const invoices = (invoicesResult.list || []).map((invoice: any) => ({
+      const invoices = (invoicesResult && 'list' in invoicesResult ? invoicesResult.list || [] : []).map((invoice: any) => ({
         ...invoice,
         id: invoice.Id || invoice.id
       }));

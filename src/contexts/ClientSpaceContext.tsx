@@ -104,7 +104,7 @@ export const ClientSpaceProvider: React.FC<{
         });
 
         // Normaliser les données - inclure TOUTES les tâches (admin et client)
-        const tasks = (tasksResponse?.list || []).map((task: any) => {
+        const tasks = (tasksResponse && 'list' in tasksResponse ? tasksResponse.list || [] : []).map((task: any) => {
           const assigneA = task.assigne_a || task.assigné_a || 'moi';
           return {
             ...task,
@@ -116,12 +116,12 @@ export const ClientSpaceProvider: React.FC<{
           };
         });
 
-        const milestones = (milestonesResponse?.list || []).map((milestone: any) => ({
+        const milestones = (milestonesResponse && 'list' in milestonesResponse ? milestonesResponse.list || [] : []).map((milestone: any) => ({
           ...milestone,
           id: milestone.Id || milestone.id
         }));
 
-        const invoices = (invoicesResponse?.list || []).map((invoice: any) => ({
+        const invoices = (invoicesResponse && 'list' in invoicesResponse ? invoicesResponse.list || [] : []).map((invoice: any) => ({
           ...invoice,
           id: invoice.Id || invoice.id
         }));

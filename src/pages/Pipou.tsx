@@ -524,7 +524,7 @@ const Pipou = () => {
                       )}
                       {hasMoreProspects && (
                         <div className="flex justify-center">
-                          <Button onClick={loadProspects} disabled={isLoadingProspects}>
+                          <Button onClick={() => loadProspects()} disabled={isLoadingProspects}>
                             {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
                           </Button>
                         </div>
@@ -545,7 +545,7 @@ const Pipou = () => {
                   />
                   {hasMoreProspects && (
                     <div className="flex justify-center mt-4">
-                      <Button onClick={loadProspects} disabled={isLoadingProspects}>
+                      <Button onClick={() => loadProspects()} disabled={isLoadingProspects}>
                         {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
                       </Button>
                     </div>
