@@ -198,13 +198,9 @@ const Tasky = () => {
           const res = await nocodbService.getInternalTasks(false, { onlyCurrentUser: true });
           list = res.list || [];
         } else {
-          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: true });
+          // Récupérer toutes les tâches des espaces de l'utilisateur selon noco_space_owners
+          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: false });
           list = (res.list || []).map((t: any) => ({ ...t, isInternal: false }));
-        }
-
-        if (taskScope === 'client') {
-          // Ne pas filtrer - afficher toutes les tâches pour le scope client
-          // L'ancien filtre excluait par erreur les tâches assignées aux clients
         }
 
         const projectMap = new Map(
