@@ -581,16 +581,15 @@ class NocoDBService {
     return response;
   }
 
-  // Tâches - Filtered by user's projects and user ID
+  // Tâches - Filtered by user's projects
   async getTasks(
     projetId?: string,
     options: { onlyCurrentUser?: boolean } = {}
   ) {
-    // Always get current user ID for security
-    const currentUserId = await this.getCurrentUserId();
-    if (!currentUserId) {
-      return { list: [], pageInfo: { totalRows: 0 } };
-    }
+    // Get current user ID for onlyCurrentUser option
+    const currentUserId = options.onlyCurrentUser
+      ? await this.getCurrentUserId()
+      : null;
 
     // Récupère les projets accessibles à l'utilisateur en utilisant le cache si disponible
     let userProjectIds: string[] = [];
@@ -626,20 +625,15 @@ class NocoDBService {
       );
     }
 
-    // Always filter by current user for security when onlyCurrentUser is true
-    if (options.onlyCurrentUser) {
-      if (currentUserId) {
-        list = list.filter((task: any) => {
-          const taskUserId =
-            task.supabase_user_id ||
-            task.user_id ||
-            task.owner_id;
-          return taskUserId === currentUserId;
-        });
-      } else {
-        // No authenticated user => no tasks exposed
-        list = [];
-      }
+    // Only filter by current user when explicitly requested
+    if (options.onlyCurrentUser && currentUserId) {
+      list = list.filter((task: any) => {
+        const taskUserId =
+          task.supabase_user_id ||
+          task.user_id ||
+          task.owner_id;
+        return taskUserId === currentUserId;
+      });
     }
 
     return {
