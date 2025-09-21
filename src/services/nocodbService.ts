@@ -122,8 +122,8 @@ class NocoDBService {
 
   // Secure request method using edge function
   private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
       throw new Error('Authentication required');
     }
 
@@ -131,7 +131,7 @@ class NocoDBService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.supabaseKey}`,
+        'Authorization': `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
         method: options.method || 'GET',
