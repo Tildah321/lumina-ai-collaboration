@@ -35,7 +35,7 @@ const InviteAcceptPage = () => {
           .select('*')
           .eq('invitation_token', token)
           .eq('status', 'pending')
-          .single();
+          .maybeSingle();
 
         if (error || !data) {
           setInvitationValid(false);
