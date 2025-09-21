@@ -24,14 +24,17 @@ serve(async (req) => {
 
     // Initialize Supabase client to verify JWT
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify the JWT token
+    // Verify the JWT token using service role key
     const jwt = authHeader.replace('Bearer ', '');
+    
+    // Use supabase.auth.getUser() with service role to verify JWT
     const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
     
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return new Response(
         JSON.stringify({ error: 'Invalid authentication' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
