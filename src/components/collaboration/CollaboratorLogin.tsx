@@ -38,16 +38,6 @@ const CollaboratorLogin = () => {
       return;
     }
 
-    // Input validation for security
-    if (loginForm.name.trim().length < 2 || loginForm.password.trim().length < 6) {
-      toast({
-        title: "Erreur",
-        description: "Nom minimum 2 caractères, mot de passe minimum 6 caractères",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsLoggingIn(true);
     try {
       const { data, error } = await supabase.rpc('verify_collaborator_credentials', {
@@ -61,17 +51,11 @@ const CollaboratorLogin = () => {
       const result = data as { success: boolean; error?: string; collaborator?: any };
       
       if (result.success && result.collaborator) {
-        // Create secure session token instead of storing sensitive data
-        const sessionToken = btoa(JSON.stringify({
-          collaboratorId: result.collaborator.id,
-          name: result.collaborator.name,
-          role: result.collaborator.role,
-          loginTime: new Date().toISOString(),
-          expires: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString() // 8 hours
+        // Stocker les informations du collaborateur dans localStorage
+        localStorage.setItem('collaborator_session', JSON.stringify({
+          ...result.collaborator,
+          loginTime: new Date().toISOString()
         }));
-        
-        // Store only session token, not sensitive data
-        sessionStorage.setItem('collaborator_session', sessionToken);
 
         toast({
           title: "Connexion réussie",

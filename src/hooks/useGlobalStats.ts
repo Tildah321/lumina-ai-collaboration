@@ -48,8 +48,8 @@ export const useGlobalStats = () => {
         // Récupérer toutes les tâches accessibles dans les espaces de travail
         const [tasksResponse, milestonesResponse, invoicesResponse] = await Promise.all([
           nocodbService.getTasks(undefined, { onlyCurrentUser: false }),
-          nocodbService.getMilestones(undefined, ['Id', 'nom', 'statut', 'projet_id']),
-          nocodbService.getInvoices(undefined)
+          nocodbService.getMilestones(undefined, { fields: undefined }), // filtrage utilisateur déjà géré
+          (nocodbService as any).getInvoices(undefined, { /* onlyCurrentUser n'existe pas ici mais bloc try */ })
         ]);
 
         const tasks = tasksResponse.list || [];

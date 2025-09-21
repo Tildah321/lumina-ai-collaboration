@@ -18,9 +18,8 @@ interface Collaborator {
   name?: string;
   role: 'admin' | 'collaborateur';
   status: 'pending' | 'accepted' | 'declined';
-  invited_by: string;
+  invitation_token?: string;
   created_at: string;
-  updated_at: string;
 }
 
 interface SpaceAccess {
@@ -48,12 +47,12 @@ const CollaboratorManager = () => {
     collaborator: null
   });
 
-  // Charger les collaborateurs (seulement les données non sensibles)
+  // Charger les collaborateurs
   const loadCollaborators = async () => {
     try {
       const { data, error } = await supabase
         .from('collaborators')
-        .select('id, email, name, role, status, invited_by, created_at, updated_at')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -75,7 +74,7 @@ const CollaboratorManager = () => {
         .from('space_collaborators')
         .select(`
           *,
-          collaborator:collaborators(id, email, name, role, status, invited_by, created_at, updated_at)
+          collaborator:collaborators(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -119,12 +118,6 @@ const CollaboratorManager = () => {
         return;
       }
       
-      // First hash the password
-      const { data: hashedPassword, error: hashError } = await supabase
-        .rpc('hash_password', { password: newInvite.password.trim() });
-      
-      if (hashError) throw hashError;
-
       const { data, error } = await supabase
         .from('collaborators')
         .insert({
@@ -133,9 +126,9 @@ const CollaboratorManager = () => {
           invitation_token: invitationToken,
           status: 'pending',
           invited_by: user.id,
-          password_hash: hashedPassword
+          password_hash: btoa(newInvite.password.trim()) // Simple base64 encoding pour matcher la DB
         })
-        .select('id, email, name, role, status, invited_by, created_at, updated_at')
+        .select()
         .single();
 
       if (error) throw error;
@@ -451,7 +444,7 @@ const CollaboratorManager = () => {
                     </div>
                   )}
                   
-                  {collaborator.status === 'pending' && (
+                  {collaborator.status === 'pending' && collaborator.invitation_token && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Link className="w-4 h-4" />
                       <span>Lien d'invitation en attente</span>

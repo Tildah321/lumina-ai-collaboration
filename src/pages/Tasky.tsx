@@ -195,7 +195,7 @@ const Tasky = () => {
       try {
         let list: any[] = [];
         if (taskScope === 'internal') {
-          const res = await nocodbService.getInternalTasks();
+          const res = await nocodbService.getInternalTasks(false, { onlyCurrentUser: true });
           list = res.list || [];
         } else {
           // Récupérer toutes les tâches des espaces de l'utilisateur selon noco_space_owners

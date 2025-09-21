@@ -154,36 +154,6 @@ export type Database = {
         Args: { token: string; user_name: string; user_password: string }
         Returns: Json
       }
-      get_collaborator_safe_info: {
-        Args: { p_collaborator_id?: string; p_email?: string }
-        Returns: {
-          created_at: string
-          email: string
-          id: string
-          invited_by: string
-          name: string
-          role: string
-          status: string
-          updated_at: string
-        }[]
-      }
-      get_my_collaborator_info: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          created_at: string
-          email: string
-          id: string
-          invited_by: string
-          name: string
-          role: string
-          status: string
-          updated_at: string
-        }[]
-      }
-      hash_password: {
-        Args: { password: string }
-        Returns: string
-      }
       reset_daily_ai_tokens: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -199,10 +169,6 @@ export type Database = {
       verify_collaborator_credentials: {
         Args: { p_invitation_token: string; p_name: string; p_password: string }
         Returns: Json
-      }
-      verify_password: {
-        Args: { hash: string; password: string }
-        Returns: boolean
       }
     }
     Enums: {
