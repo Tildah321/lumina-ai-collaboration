@@ -22,6 +22,7 @@ export type Database = {
           invitation_token: string | null
           invited_by: string
           name: string | null
+          password_hash: string | null
           role: string
           status: string
           updated_at: string
@@ -33,6 +34,7 @@ export type Database = {
           invitation_token?: string | null
           invited_by: string
           name?: string | null
+          password_hash?: string | null
           role?: string
           status?: string
           updated_at?: string
@@ -44,6 +46,7 @@ export type Database = {
           invitation_token?: string | null
           invited_by?: string
           name?: string | null
+          password_hash?: string | null
           role?: string
           status?: string
           updated_at?: string
@@ -148,12 +151,24 @@ export type Database = {
     }
     Functions: {
       accept_invitation: {
-        Args: { token: string; user_email: string; user_name?: string }
+        Args: { token: string; user_name: string; user_password: string }
         Returns: Json
       }
       reset_daily_ai_tokens: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      update_collaborator_password: {
+        Args: {
+          collaborator_id: string
+          new_password: string
+          requester_id: string
+        }
+        Returns: Json
+      }
+      verify_collaborator_credentials: {
+        Args: { p_invitation_token: string; p_name: string; p_password: string }
+        Returns: Json
       }
     }
     Enums: {

@@ -20,6 +20,7 @@ import Upgrade from "./pages/Upgrade";
 import Profile from "./pages/Profile";
 import Collaboration from "./pages/Collaboration";
 import InviteAcceptPage from "./components/collaboration/InviteAcceptPage";
+import CollaboratorLogin from "./components/collaboration/CollaboratorLogin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,10 +60,10 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/client-access" element={<ClientAccess />} />
-
+              <Route path="/client-view/:id" element={<ClientView />} />
             {/* Shared client spaces */}
             <Route path="/client/:token" element={<ClientByToken />} />
-            <Route path="/client-view/:id" element={<ClientView />} />
+            <Route path="/invite-setup/:token" element={<InviteAcceptPage />} />
 
             {/* Protected App Routes */}
             <Route path="/dashboard" element={
@@ -106,7 +107,7 @@ const App = () => (
                 <Collaboration />
               </ProtectedRoute>
             } />
-            <Route path="/invite/:token" element={<InviteAcceptPage />} />
+            <Route path="/invite/:token" element={<CollaboratorLogin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

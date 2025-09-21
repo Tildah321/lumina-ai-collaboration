@@ -4,19 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserCheck, Loader2, AlertTriangle } from 'lucide-react';
+import { LogIn, Loader2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const InviteAcceptPage = () => {
+const CollaboratorLogin = () => {
   const { token } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [isAccepting, setIsAccepting] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [invitationValid, setInvitationValid] = useState(false);
-  const [collaboratorInfo, setCollaboratorInfo] = useState<any>(null);
-  const [acceptForm, setAcceptForm] = useState({
+  const [loginForm, setLoginForm] = useState({
     name: '',
     password: ''
   });
@@ -34,18 +33,13 @@ const InviteAcceptPage = () => {
           .from('collaborators')
           .select('*')
           .eq('invitation_token', token)
-          .eq('status', 'pending')
+          .eq('status', 'accepted')
           .maybeSingle();
 
         if (error || !data) {
           setInvitationValid(false);
         } else {
           setInvitationValid(true);
-          setCollaboratorInfo(data);
-          // Pré-remplir le nom si disponible
-          if (data.name) {
-            setAcceptForm(prev => ({ ...prev, name: data.name }));
-          }
         }
       } catch (error) {
         console.error('Erreur lors de la vérification de l\'invitation:', error);
@@ -58,9 +52,9 @@ const InviteAcceptPage = () => {
     checkInvitation();
   }, [token]);
 
-  // Accepter l'invitation
-  const handleAcceptInvitation = async () => {
-    if (!acceptForm.name.trim() || !acceptForm.password.trim()) {
+  // Connexion collaborateur
+  const handleLogin = async () => {
+    if (!loginForm.name.trim() || !loginForm.password.trim()) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs",
@@ -69,40 +63,44 @@ const InviteAcceptPage = () => {
       return;
     }
 
-    setIsAccepting(true);
+    setIsLoggingIn(true);
     try {
-      const { data, error } = await supabase.rpc('accept_invitation', {
-        token,
-        user_name: acceptForm.name.trim(),
-        user_password: acceptForm.password.trim()
+      const { data, error } = await supabase.rpc('verify_collaborator_credentials', {
+        p_invitation_token: token,
+        p_name: loginForm.name.trim(),
+        p_password: loginForm.password.trim()
       });
 
       if (error) throw error;
 
-      const result = data as { success: boolean; error?: string };
+      const result = data as { success: boolean; error?: string; collaborator?: any };
       
-      if (result.success) {
+      if (result.success && result.collaborator) {
+        // Stocker les informations du collaborateur dans localStorage
+        localStorage.setItem('collaborator_session', JSON.stringify({
+          ...result.collaborator,
+          loginTime: new Date().toISOString()
+        }));
+
         toast({
-          title: "Invitation acceptée",
-          description: "Vous faites maintenant partie de l'équipe ! Utilisez le lien avec vos identifiants pour vous connecter."
+          title: "Connexion réussie",
+          description: `Bienvenue ${result.collaborator.name} !`
         });
         
-        // Rediriger vers le lien de connexion après un délai
-        setTimeout(() => {
-          navigate(`/invite/${token}`);
-        }, 2000);
+        // Rediriger vers le dashboard collaborateur
+        navigate('/collaboration-dashboard');
       } else {
-        throw new Error(result.error || 'Erreur inconnue');
+        throw new Error(result.error || 'Identifiants incorrects');
       }
     } catch (error: any) {
-      console.error('Erreur lors de l\'acceptation:', error);
+      console.error('Erreur lors de la connexion:', error);
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible d'accepter l'invitation",
+        title: "Erreur de connexion",
+        description: error.message || "Identifiants incorrects",
         variant: "destructive"
       });
     } finally {
-      setIsAccepting(false);
+      setIsLoggingIn(false);
     }
   };
 
@@ -117,17 +115,17 @@ const InviteAcceptPage = () => {
     );
   }
 
-  if (!invitationValid || !collaboratorInfo) {
+  if (!invitationValid) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-            <CardTitle>Invitation invalide</CardTitle>
+            <CardTitle>Accès non configuré</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-muted-foreground">
-              Cette invitation n'est plus valide ou a déjà été utilisée.
+              Cette invitation n'a pas encore été configurée ou le lien n'est plus valide.
             </p>
             <Button onClick={() => navigate('/')} variant="outline">
               Retour à l'accueil
@@ -142,26 +140,21 @@ const InviteAcceptPage = () => {
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <UserCheck className="w-12 h-12 text-primary mx-auto mb-4" />
-          <CardTitle>Configurer vos identifiants</CardTitle>
+          <LogIn className="w-12 h-12 text-primary mx-auto mb-4" />
+          <CardTitle>Connexion Collaborateur</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Vous êtes invité à rejoindre l'équipe en tant que{' '}
-            <span className="font-medium">{collaboratorInfo.role}</span>.
-            Choisissez vos identifiants de connexion.
+            Connectez-vous avec vos identifiants pour accéder aux espaces partagés
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Votre nom *</Label>
+            <Label htmlFor="name">Nom *</Label>
             <Input
               id="name"
-              value={acceptForm.name}
-              onChange={(e) => setAcceptForm({ ...acceptForm, name: e.target.value })}
-              placeholder="Martin Dupont"
+              value={loginForm.name}
+              onChange={(e) => setLoginForm({ ...loginForm, name: e.target.value })}
+              placeholder="Votre nom"
             />
-            <p className="text-xs text-muted-foreground">
-              Ce nom sera utilisé pour vous identifier
-            </p>
           </div>
           
           <div className="space-y-2">
@@ -169,36 +162,33 @@ const InviteAcceptPage = () => {
             <Input
               id="password"
               type="password"
-              value={acceptForm.password}
-              onChange={(e) => setAcceptForm({ ...acceptForm, password: e.target.value })}
+              value={loginForm.password}
+              onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
               placeholder="Votre mot de passe"
             />
-            <p className="text-xs text-muted-foreground">
-              Ce mot de passe sera utilisé pour vous connecter via le lien d'invitation
-            </p>
           </div>
           
           <div className="space-y-3 pt-2">
             <Button 
-              onClick={handleAcceptInvitation}
-              disabled={isAccepting || !acceptForm.name.trim() || !acceptForm.password.trim()}
+              onClick={handleLogin}
+              disabled={isLoggingIn || !loginForm.name.trim() || !loginForm.password.trim()}
               className="w-full"
             >
-              {isAccepting ? (
+              {isLoggingIn ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Configuration en cours...
+                  Connexion en cours...
                 </>
               ) : (
                 <>
-                  <UserCheck className="w-4 h-4 mr-2" />
-                  Configurer mes identifiants
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Se connecter
                 </>
               )}
             </Button>
             
             <p className="text-xs text-muted-foreground text-center">
-              Après configuration, vous pourrez utiliser ce lien avec vos identifiants pour accéder aux espaces partagés.
+              Utilisez les identifiants fournis lors de votre invitation
             </p>
           </div>
         </CardContent>
@@ -207,4 +197,4 @@ const InviteAcceptPage = () => {
   );
 };
 
-export default InviteAcceptPage;
+export default CollaboratorLogin;

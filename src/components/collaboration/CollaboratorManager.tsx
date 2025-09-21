@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, UserPlus, Trash2, Settings, Link, CheckCircle, Clock, XCircle, Copy, Share2, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import CollaboratorManageDialog from './CollaboratorManageDialog';
 
 interface Collaborator {
   id: string;
@@ -37,9 +38,14 @@ const CollaboratorManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [newInvite, setNewInvite] = useState({
     name: '',
-    role: 'collaborateur' as Collaborator['role']
+    role: 'collaborateur' as Collaborator['role'],
+    password: ''
   });
   const [generatedLink, setGeneratedLink] = useState<string>('');
+  const [manageDialog, setManageDialog] = useState<{ isOpen: boolean; collaborator: Collaborator | null }>({
+    isOpen: false,
+    collaborator: null
+  });
 
   // Charger les collaborateurs
   const loadCollaborators = async () => {
@@ -90,10 +96,10 @@ const CollaboratorManager = () => {
 
   // Générer un lien d'invitation
   const handleGenerateInviteLink = async () => {
-    if (!newInvite.name.trim()) {
+    if (!newInvite.name.trim() || !newInvite.password.trim()) {
       toast({
         title: "Erreur",
-        description: "Le nom est requis",
+        description: "Le nom et le mot de passe sont requis",
         variant: "destructive"
       });
       return;
@@ -119,7 +125,8 @@ const CollaboratorManager = () => {
           role: newInvite.role,
           invitation_token: invitationToken,
           status: 'pending',
-          invited_by: user.id
+          invited_by: user.id,
+          password_hash: btoa(newInvite.password.trim()) // Simple base64 encoding pour matcher la DB
         })
         .select()
         .single();
@@ -127,7 +134,8 @@ const CollaboratorManager = () => {
       if (error) throw error;
 
       const inviteLink = `${window.location.origin}/invite/${invitationToken}`;
-      setGeneratedLink(inviteLink);
+      const inviteMessage = `Lien: ${inviteLink}\nNom: ${newInvite.name}\nMot de passe: ${newInvite.password}`;
+      setGeneratedLink(inviteMessage);
       setCollaborators([data as Collaborator, ...collaborators]);
 
       toast({
@@ -163,11 +171,11 @@ const CollaboratorManager = () => {
 
   // Partager via différentes plateformes
   const handleShare = (platform: string) => {
-    const message = `Rejoingnez notre équipe ! Utilisez ce lien pour accepter votre invitation : ${generatedLink}`;
+    const message = `Rejoignez notre équipe !\n${generatedLink}`;
     
     const shareUrls = {
       whatsapp: `https://wa.me/?text=${encodeURIComponent(message)}`,
-      telegram: `https://t.me/share/url?url=${encodeURIComponent(generatedLink)}&text=${encodeURIComponent('Rejoignez notre équipe !')}`,
+      telegram: `https://t.me/share/url?text=${encodeURIComponent(message)}`,
       email: `mailto:?subject=${encodeURIComponent('Invitation à rejoindre notre équipe')}&body=${encodeURIComponent(message)}`,
       sms: `sms:?body=${encodeURIComponent(message)}`
     };
@@ -269,6 +277,20 @@ const CollaboratorManager = () => {
                   </div>
                   
                   <div className="space-y-2">
+                    <Label htmlFor="password">Mot de passe pour ce collaborateur *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={newInvite.password}
+                      onChange={(e) => setNewInvite({ ...newInvite, password: e.target.value })}
+                      placeholder="Mot de passe temporaire"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ce mot de passe sera utilisé par le collaborateur pour se connecter avec son nom.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
                     <Label>Rôle</Label>
                     <Select value={newInvite.role} onValueChange={(value: Collaborator['role']) => setNewInvite({ ...newInvite, role: value })}>
                       <SelectTrigger>
@@ -287,7 +309,19 @@ const CollaboratorManager = () => {
               ) : (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Lien d'invitation généré</Label>
+                    <Label>Informations de connexion</Label>
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm font-medium">Nom: {newInvite.name}</p>
+                      <p className="text-sm font-medium">Mot de passe: {newInvite.password}</p>
+                      <div className="mt-2 p-2 bg-background rounded border">
+                        <p className="text-xs text-muted-foreground">Lien d'invitation:</p>
+                        <p className="text-xs font-mono break-all">{generatedLink.split('\n')[0].replace('Lien: ', '')}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Message complet à partager</Label>
                     <div className="flex gap-2">
                       <Input
                         value={generatedLink}
@@ -353,12 +387,12 @@ const CollaboratorManager = () => {
               <Button variant="outline" onClick={() => {
                 setIsInviteDialogOpen(false);
                 setGeneratedLink('');
-                setNewInvite({ name: '', role: 'collaborateur' });
+                setNewInvite({ name: '', role: 'collaborateur', password: '' });
               }}>
                 {generatedLink ? 'Fermer' : 'Annuler'}
               </Button>
               {!generatedLink && (
-                <Button onClick={handleGenerateInviteLink} disabled={!newInvite.name.trim()}>
+                <Button onClick={handleGenerateInviteLink} disabled={!newInvite.name.trim() || !newInvite.password.trim()}>
                   <Link className="w-4 h-4 mr-2" />
                   Générer le lien
                 </Button>
@@ -431,7 +465,11 @@ const CollaboratorManager = () => {
                 </div>
                 
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" disabled>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setManageDialog({ isOpen: true, collaborator })}
+                  >
                     <Settings className="w-3 h-3 mr-1" />
                     Gérer
                   </Button>
@@ -464,6 +502,15 @@ const CollaboratorManager = () => {
           ))
         )}
       </div>
+      
+      {manageDialog.collaborator && (
+        <CollaboratorManageDialog
+          collaborator={manageDialog.collaborator}
+          isOpen={manageDialog.isOpen}
+          onClose={() => setManageDialog({ isOpen: false, collaborator: null })}
+          onUpdate={loadCollaborators}
+        />
+      )}
     </div>
   );
 };
