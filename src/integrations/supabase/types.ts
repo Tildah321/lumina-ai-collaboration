@@ -17,7 +17,7 @@ export type Database = {
       collaborators: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           id: string
           invitation_token: string | null
           invited_by: string
@@ -28,7 +28,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           id?: string
           invitation_token?: string | null
           invited_by: string
@@ -39,7 +39,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           id?: string
           invitation_token?: string | null
           invited_by?: string
@@ -147,6 +147,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: {
+        Args: { token: string; user_email: string; user_name?: string }
+        Returns: Json
+      }
       reset_daily_ai_tokens: {
         Args: Record<PropertyKey, never>
         Returns: undefined

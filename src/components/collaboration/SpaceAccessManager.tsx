@@ -57,11 +57,28 @@ const SpaceAccessManager = ({ spaceId, spaceName }: SpaceAccessManagerProps) => 
   // Charger les collaborateurs acceptés
   const loadCollaborators = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Récupérer le rôle de l'utilisateur actuel
+      const { data: currentUserRole } = await supabase
+        .from('collaborators')
+        .select('role')
+        .eq('email', user.email)
+        .eq('status', 'accepted')
+        .single();
+
+      let query = supabase
         .from('collaborators')
         .select('*')
-        .eq('status', 'accepted')
-        .order('email');
+        .eq('status', 'accepted');
+
+      // Si l'utilisateur n'est pas admin, ne charger que les collaborateurs (pas les autres admins)
+      if (currentUserRole?.role !== 'admin') {
+        query = query.eq('role', 'collaborateur');
+      }
+
+      const { data, error } = await query.order('name');
 
       if (error) throw error;
       setCollaborators((data || []) as Collaborator[]);

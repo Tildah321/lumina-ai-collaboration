@@ -19,6 +19,7 @@ import Copyly from "./pages/Copyly";
 import Upgrade from "./pages/Upgrade";
 import Profile from "./pages/Profile";
 import Collaboration from "./pages/Collaboration";
+import InviteAcceptPage from "./components/collaboration/InviteAcceptPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -105,6 +106,7 @@ const App = () => (
                 <Collaboration />
               </ProtectedRoute>
             } />
+            <Route path="/invite/:token" element={<InviteAcceptPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -7,13 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, UserPlus, Trash2, Settings, Mail, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Plus, UserPlus, Trash2, Settings, Link, CheckCircle, Clock, XCircle, Copy, Share2, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Collaborator {
   id: string;
-  email: string;
+  email?: string;
   name?: string;
   role: 'admin' | 'collaborateur';
   status: 'pending' | 'accepted' | 'declined';
@@ -36,10 +36,10 @@ const CollaboratorManager = () => {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [newInvite, setNewInvite] = useState({
-    email: '',
     name: '',
     role: 'collaborateur' as Collaborator['role']
   });
+  const [generatedLink, setGeneratedLink] = useState<string>('');
 
   // Charger les collaborateurs
   const loadCollaborators = async () => {
@@ -88,12 +88,12 @@ const CollaboratorManager = () => {
     loadData();
   }, []);
 
-  // Inviter un collaborateur
-  const handleInviteCollaborator = async () => {
-    if (!newInvite.email.trim()) {
+  // Générer un lien d'invitation
+  const handleGenerateInviteLink = async () => {
+    if (!newInvite.name.trim()) {
       toast({
         title: "Erreur",
-        description: "L'email est requis",
+        description: "Le nom est requis",
         variant: "destructive"
       });
       return;
@@ -115,8 +115,7 @@ const CollaboratorManager = () => {
       const { data, error } = await supabase
         .from('collaborators')
         .insert({
-          email: newInvite.email.trim(),
-          name: newInvite.name.trim() || null,
+          name: newInvite.name.trim(),
           role: newInvite.role,
           invitation_token: invitationToken,
           status: 'pending',
@@ -127,26 +126,54 @@ const CollaboratorManager = () => {
 
       if (error) throw error;
 
+      const inviteLink = `${window.location.origin}/invite/${invitationToken}`;
+      setGeneratedLink(inviteLink);
       setCollaborators([data as Collaborator, ...collaborators]);
-      setNewInvite({ email: '', name: '', role: 'collaborateur' });
-      setIsInviteDialogOpen(false);
 
       toast({
-        title: "Invitation envoyée",
-        description: `Une invitation a été envoyée à ${newInvite.email}`
+        title: "Lien d'invitation généré",
+        description: "Le lien d'invitation a été créé avec succès"
       });
-
-      // Ici on pourrait envoyer un email d'invitation avec le token
-      // Via une edge function par exemple
     } catch (error: any) {
-      console.error('Erreur lors de l\'invitation:', error);
+      console.error('Erreur lors de la génération du lien:', error);
       toast({
         title: "Erreur",
-        description: error.message?.includes('duplicate') 
-          ? "Ce collaborateur a déjà été invité" 
-          : "Impossible d'envoyer l'invitation",
+        description: "Impossible de générer le lien d'invitation",
         variant: "destructive"
       });
+    }
+  };
+
+  // Copier le lien d'invitation
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedLink);
+      toast({
+        title: "Lien copié",
+        description: "Le lien d'invitation a été copié dans le presse-papier"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de copier le lien",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Partager via différentes plateformes
+  const handleShare = (platform: string) => {
+    const message = `Rejoingnez notre équipe ! Utilisez ce lien pour accepter votre invitation : ${generatedLink}`;
+    
+    const shareUrls = {
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(message)}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(generatedLink)}&text=${encodeURIComponent('Rejoignez notre équipe !')}`,
+      email: `mailto:?subject=${encodeURIComponent('Invitation à rejoindre notre équipe')}&body=${encodeURIComponent(message)}`,
+      sms: `sms:?body=${encodeURIComponent(message)}`
+    };
+
+    if (shareUrls[platform as keyof typeof shareUrls]) {
+      window.open(shareUrls[platform as keyof typeof shareUrls], '_blank');
     }
   };
 
@@ -229,51 +256,113 @@ const CollaboratorManager = () => {
               <DialogTitle>Inviter un nouveau collaborateur</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newInvite.email}
-                  onChange={(e) => setNewInvite({ ...newInvite, email: e.target.value })}
-                  placeholder="collaborateur@email.com"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="name">Nom (optionnel)</Label>
-                <Input
-                  id="name"
-                  value={newInvite.name}
-                  onChange={(e) => setNewInvite({ ...newInvite, name: e.target.value })}
-                  placeholder="Martin Dupont"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Rôle</Label>
-                <Select value={newInvite.role} onValueChange={(value: Collaborator['role']) => setNewInvite({ ...newInvite, role: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="collaborateur">Collaborateur</SelectItem>
-                    <SelectItem value="admin">Administrateur</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Les administrateurs peuvent gérer tous les espaces et inviter d'autres collaborateurs
-                </p>
-              </div>
+              {!generatedLink ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nom du collaborateur *</Label>
+                    <Input
+                      id="name"
+                      value={newInvite.name}
+                      onChange={(e) => setNewInvite({ ...newInvite, name: e.target.value })}
+                      placeholder="Martin Dupont"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Rôle</Label>
+                    <Select value={newInvite.role} onValueChange={(value: Collaborator['role']) => setNewInvite({ ...newInvite, role: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="collaborateur">Collaborateur</SelectItem>
+                        <SelectItem value="admin">Administrateur</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Les collaborateurs peuvent accéder aux espaces partagés. Les administrateurs ont accès à tout.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Lien d'invitation généré</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={generatedLink}
+                        readOnly
+                        className="font-mono text-sm"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyLink}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label>Partager via</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShare('whatsapp')}
+                        className="gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        WhatsApp
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShare('telegram')}
+                        className="gap-2"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        Telegram
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShare('email')}
+                        className="gap-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Email
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShare('sms')}
+                        className="gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        SMS
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
-                Annuler
+              <Button variant="outline" onClick={() => {
+                setIsInviteDialogOpen(false);
+                setGeneratedLink('');
+                setNewInvite({ name: '', role: 'collaborateur' });
+              }}>
+                {generatedLink ? 'Fermer' : 'Annuler'}
               </Button>
-              <Button onClick={handleInviteCollaborator} disabled={!newInvite.email.trim()}>
-                Envoyer l'invitation
-              </Button>
+              {!generatedLink && (
+                <Button onClick={handleGenerateInviteLink} disabled={!newInvite.name.trim()}>
+                  <Link className="w-4 h-4 mr-2" />
+                  Générer le lien
+                </Button>
+              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -314,10 +403,19 @@ const CollaboratorManager = () => {
               
               <CardContent>
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="w-4 h-4" />
-                    <span>{collaborator.email}</span>
-                  </div>
+                  {collaborator.email && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Settings className="w-4 h-4" />
+                      <span>{collaborator.email}</span>
+                    </div>
+                  )}
+                  
+                  {collaborator.status === 'pending' && collaborator.invitation_token && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Link className="w-4 h-4" />
+                      <span>Lien d'invitation en attente</span>
+                    </div>
+                  )}
                   
                   {collaborator.status === 'pending' && (
                     <div className="text-xs text-muted-foreground">
