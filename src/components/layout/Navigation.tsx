@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bot, CheckSquare, Users, Edit3, Moon, Sun, LogOut, ChevronLeft, ChevronRight, Menu, Crown, Lock, User } from 'lucide-react';
+import { Bot, CheckSquare, Users, Edit3, Moon, Sun, LogOut, ChevronLeft, ChevronRight, Menu, Crown, Lock, User, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -55,6 +55,13 @@ const Navigation = () => {
       description: 'Générateur de contenu',
       color: 'text-purple-500',
       requiresPro: true
+    },
+    {
+      name: 'Collaboration',
+      href: '/collaboration',
+      icon: UserPlus,
+      description: 'Gestion des collaborateurs',
+      color: 'text-orange-500'
     }
   ];
 

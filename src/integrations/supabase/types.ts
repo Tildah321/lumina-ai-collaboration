@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      collaborators: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          invitation_token: string | null
+          invited_by: string
+          name: string | null
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          invitation_token?: string | null
+          invited_by: string
+          name?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          invitation_token?: string | null
+          invited_by?: string
+          name?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       noco_space_owners: {
         Row: {
           created_at: string
@@ -34,6 +70,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      space_collaborators: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          granted_by: string
+          id: string
+          permissions: string[] | null
+          space_id: string
+          updated_at: string
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          granted_by: string
+          id?: string
+          permissions?: string[] | null
+          space_id: string
+          updated_at?: string
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          granted_by?: string
+          id?: string
+          permissions?: string[] | null
+          space_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_collaborators_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_plans: {
         Row: {

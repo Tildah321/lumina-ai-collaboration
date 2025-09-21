@@ -8,10 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Building, Share2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Share2, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import nocodbService from '@/services/nocodbService';
 import ClientShareDialog from '@/components/client/ClientShareDialog';
+import SpaceAccessManager from '@/components/collaboration/SpaceAccessManager';
 import { usePlan } from '@/contexts/PlanContext';
 
 interface ClientSpace {
@@ -42,7 +43,9 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
   const [selectedSpaceForShare, setSelectedSpaceForShare] = useState<ClientSpace | null>(null);
+  const [selectedSpaceForAccess, setSelectedSpaceForAccess] = useState<ClientSpace | null>(null);
   const [editingSpace, setEditingSpace] = useState<ClientSpace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [newSpace, setNewSpace] = useState({
@@ -267,6 +270,11 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
     setIsShareDialogOpen(true);
   };
 
+  const openAccessDialog = (space: ClientSpace) => {
+    setSelectedSpaceForAccess(space);
+    setIsAccessDialogOpen(true);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Terminé': return 'default';
@@ -458,6 +466,9 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
                   <Button size="sm" variant="outline" onClick={() => openShareDialog(space)}>
                     <Share2 className="w-3 h-3" />
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => openAccessDialog(space)}>
+                    <Users className="w-3 h-3" />
+                  </Button>
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -594,6 +605,21 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
           spaceId={selectedSpaceForShare.id}
           spaceName={selectedSpaceForShare.email}
         />
+      )}
+
+      {/* Dialog de gestion des accès collaborateurs */}
+      {selectedSpaceForAccess && (
+        <Dialog open={isAccessDialogOpen} onOpenChange={setIsAccessDialogOpen}>
+          <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Gestion des accès collaborateurs</DialogTitle>
+            </DialogHeader>
+            <SpaceAccessManager 
+              spaceId={selectedSpaceForAccess.id}
+              spaceName={selectedSpaceForAccess.email}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

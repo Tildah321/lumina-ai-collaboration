@@ -18,6 +18,7 @@ import Pipou from "./pages/Pipou";
 import Copyly from "./pages/Copyly";
 import Upgrade from "./pages/Upgrade";
 import Profile from "./pages/Profile";
+import Collaboration from "./pages/Collaboration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -97,6 +98,11 @@ const App = () => (
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/collaboration" element={
+              <ProtectedRoute>
+                <Collaboration />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
