@@ -154,6 +154,10 @@ export type Database = {
         Args: { token: string; user_name: string; user_password: string }
         Returns: Json
       }
+      hash_password: {
+        Args: { password: string }
+        Returns: string
+      }
       reset_daily_ai_tokens: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -169,6 +173,10 @@ export type Database = {
       verify_collaborator_credentials: {
         Args: { p_invitation_token: string; p_name: string; p_password: string }
         Returns: Json
+      }
+      verify_password: {
+        Args: { hash: string; password: string }
+        Returns: boolean
       }
     }
     Enums: {
