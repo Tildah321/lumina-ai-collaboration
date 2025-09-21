@@ -581,15 +581,16 @@ class NocoDBService {
     return response;
   }
 
-  // Tâches - Filtered by user's projects
+  // Tâches - Filtered by user's projects and user ID
   async getTasks(
     projetId?: string,
     options: { onlyCurrentUser?: boolean } = {}
   ) {
-    // Optionally filter by current Supabase user
-    const currentUserId = options.onlyCurrentUser
-      ? await this.getCurrentUserId()
-      : null;
+    // Always get current user ID for security
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return { list: [], pageInfo: { totalRows: 0 } };
+    }
 
     // Récupère les projets accessibles à l'utilisateur en utilisant le cache si disponible
     let userProjectIds: string[] = [];
@@ -625,6 +626,7 @@ class NocoDBService {
       );
     }
 
+    // Always filter by current user for security when onlyCurrentUser is true
     if (options.onlyCurrentUser) {
       if (currentUserId) {
         list = list.filter((task: any) => {
@@ -708,31 +710,19 @@ class NocoDBService {
 
   // Tâches internes
   async getInternalTasks(forceRefresh = false, options: { onlyCurrentUser?: boolean } = {}) {
-    const currentUserId = options.onlyCurrentUser
-      ? await this.getCurrentUserId()
-      : null;
+    // Always filter by current user for security
+    const currentUserId = await this.getCurrentUserId();
+    if (!currentUserId) {
+      return { list: [], pageInfo: { totalRows: 0 } };
+    }
 
     const response = await this.makeRequest(
-      `/${this.config.tableIds.tachesInternes}`,
+      `/${this.config.tableIds.tachesInternes}?where=(supabase_user_id,eq,${currentUserId})`,
       {},
       0,
       !forceRefresh
     );
     let list = response.list || [];
-
-    if (options.onlyCurrentUser) {
-      if (currentUserId) {
-        list = list.filter((task: any) => {
-          const taskUserId =
-            task.supabase_user_id ||
-            task.user_id ||
-            task.owner_id;
-          return taskUserId === currentUserId;
-        });
-      } else {
-        list = [];
-      }
-    }
 
     list = list.map((t: any) => ({ ...t, isInternal: true }));
 
