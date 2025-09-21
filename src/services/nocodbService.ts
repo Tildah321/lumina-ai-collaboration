@@ -16,8 +16,7 @@ interface NocoDBConfig {
 import { supabase } from '@/integrations/supabase/client';
 
 class NocoDBService {
-  private supabaseUrl: string;
-  private supabaseKey: string;
+  private config: NocoDBConfig;
   private tableIds: {
     clients: string;
     projets: string;
@@ -30,17 +29,20 @@ class NocoDBService {
   private cachedProjectIds: string[] | null = null;
 
   constructor() {
-    this.supabaseUrl = "https://fmowxizbfmfrcyyomzew.supabase.co";
-    this.supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtb3d4aXpiZm1mcmN5eW9temV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1MzA3OTIsImV4cCI6MjA3MTEwNjc5Mn0.pUNLvk12_CuekWU7iQkvCFnvDM8jv-QSIGB3bKtCAOQ";
-    this.tableIds = {
-      clients: 'mpd6txaj0t86ha7',
-      projets: 'mpd6txaj0t86ha7',
-      taches: 'mon8rt3orldc3nc',
-      jalons: 'mkpfjd0kb9xvh17',
-      factures: 'm6budmy04sawh66',
-      tachesInternes: 'mz1vdjs96rg98gw',
-      prospects: 'mjz7jie90f0ygw4'
+    this.config = {
+      apiToken: 'c1e47e0c87eb68ed8b4b2b24b35b4e1e4e9c9fb5e5aed8d9b7db08e6a85fdd12',
+      baseUrl: 'https://fmowxizbfmfrcyyomzew.nocodb.cloud/api/v2/tables',
+      tableIds: {
+        clients: 'mpd6txaj0t86ha7',
+        projets: 'mpd6txaj0t86ha7',
+        taches: 'mon8rt3orldc3nc',
+        jalons: 'mkpfjd0kb9xvh17',
+        factures: 'm6budmy04sawh66',
+        tachesInternes: 'mz1vdjs96rg98gw',
+        prospects: 'mjz7jie90f0ygw4'
+      }
     };
+    this.tableIds = this.config.tableIds;
   }
 
   // Get current user ID from Supabase
@@ -120,25 +122,18 @@ class NocoDBService {
     }
   }
 
-  // Secure request method using edge function
+  // Direct request method to NocoDB
   private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      throw new Error('Authentication required');
-    }
-
-    const response = await fetch(`${this.supabaseUrl}/functions/v1/nocodb-proxy`, {
-      method: 'POST',
+    const url = `${this.config.baseUrl}${endpoint}`;
+    
+    const response = await fetch(url, {
+      method: options.method || 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
+        'xc-token': this.config.apiToken,
+        ...options.headers,
       },
-      body: JSON.stringify({
-        method: options.method || 'GET',
-        endpoint: endpoint,
-        data: options.body ? JSON.parse(options.body as string) : undefined,
-        params: this.extractParams(endpoint)
-      }),
+      body: options.body,
     });
 
     if (!response.ok) {
@@ -148,14 +143,6 @@ class NocoDBService {
     return response.json();
   }
 
-  private extractParams(endpoint: string): Record<string, string> | undefined {
-    const urlParts = endpoint.split('?');
-    if (urlParts.length > 1) {
-      const params = new URLSearchParams(urlParts[1]);
-      return Object.fromEntries(params.entries());
-    }
-    return undefined;
-  }
 
   private async delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
