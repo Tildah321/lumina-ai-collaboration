@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, UserPlus, Trash2, Settings, Link, CheckCircle, Clock, XCircle, Copy, Share2, MessageCircle } from 'lucide-react';
+import { Plus, UserPlus, Trash2, Settings, Link, CheckCircle, Clock, XCircle, Copy, Share2, MessageCircle, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import CollaboratorManageDialog from './CollaboratorManageDialog';
@@ -36,6 +36,7 @@ const CollaboratorManager = () => {
   const [spaceAccesses, setSpaceAccesses] = useState<SpaceAccess[]>([]);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [newInvite, setNewInvite] = useState({
     name: '',
     role: 'collaborateur' as Collaborator['role'],
@@ -278,13 +279,24 @@ const CollaboratorManager = () => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="password">Mot de passe pour ce collaborateur *</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={newInvite.password}
-                      onChange={(e) => setNewInvite({ ...newInvite, password: e.target.value })}
-                      placeholder="Mot de passe temporaire"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={newInvite.password}
+                        onChange={(e) => setNewInvite({ ...newInvite, password: e.target.value })}
+                        placeholder="Mot de passe temporaire"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Ce mot de passe sera utilisé par le collaborateur pour se connecter avec son nom.
                     </p>
@@ -387,6 +399,7 @@ const CollaboratorManager = () => {
               <Button variant="outline" onClick={() => {
                 setIsInviteDialogOpen(false);
                 setGeneratedLink('');
+                setShowPassword(false);
                 setNewInvite({ name: '', role: 'collaborateur', password: '' });
               }}>
                 {generatedLink ? 'Fermer' : 'Annuler'}

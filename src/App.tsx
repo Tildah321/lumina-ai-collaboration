@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import Collaboration from "./pages/Collaboration";
 import InviteAcceptPage from "./components/collaboration/InviteAcceptPage";
 import CollaboratorLogin from "./components/collaboration/CollaboratorLogin";
+import CollaborationDashboard from "./pages/CollaborationDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -108,6 +109,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/invite/:token" element={<CollaboratorLogin />} />
+            <Route path="/collaboration-dashboard" element={<CollaborationDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
