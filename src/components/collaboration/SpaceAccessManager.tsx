@@ -62,15 +62,12 @@ const SpaceAccessManager = ({ spaceId, spaceName }: SpaceAccessManagerProps) => 
 
       // Récupérer le rôle de l'utilisateur actuel
       const { data: currentUserRole } = await supabase
-        .from('collaborators')
-        .select('role')
-        .eq('email', user.email)
-        .eq('status', 'accepted')
+        .rpc('get_my_collaborator_info')
         .single();
 
       let query = supabase
         .from('collaborators')
-        .select('*')
+        .select('id, email, name, role, status, invited_by, created_at, updated_at')
         .eq('status', 'accepted');
 
       // Si l'utilisateur n'est pas admin, ne charger que les collaborateurs (pas les autres admins)
@@ -99,7 +96,7 @@ const SpaceAccessManager = ({ spaceId, spaceName }: SpaceAccessManagerProps) => 
         .from('space_collaborators')
         .select(`
           *,
-          collaborator:collaborators(*)
+          collaborator:collaborators(id, email, name, role, status, invited_by, created_at, updated_at)
         `)
         .eq('space_id', spaceId)
         .order('created_at', { ascending: false });
@@ -153,7 +150,7 @@ const SpaceAccessManager = ({ spaceId, spaceName }: SpaceAccessManagerProps) => 
         })
         .select(`
           *,
-          collaborator:collaborators(*)
+          collaborator:collaborators(id, email, name, role, status, invited_by, created_at, updated_at)
         `)
         .single();
 

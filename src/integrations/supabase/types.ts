@@ -154,6 +154,32 @@ export type Database = {
         Args: { token: string; user_name: string; user_password: string }
         Returns: Json
       }
+      get_collaborator_safe_info: {
+        Args: { p_collaborator_id?: string; p_email?: string }
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          name: string
+          role: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      get_my_collaborator_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          name: string
+          role: string
+          status: string
+          updated_at: string
+        }[]
+      }
       hash_password: {
         Args: { password: string }
         Returns: string
