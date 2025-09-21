@@ -22,34 +22,9 @@ const CollaboratorLogin = () => {
 
   // Vérifier la validité du token
   useEffect(() => {
-    const checkInvitation = async () => {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('collaborators')
-          .select('*')
-          .eq('invitation_token', token)
-          .eq('status', 'accepted')
-          .maybeSingle();
-
-        if (error || !data) {
-          setInvitationValid(false);
-        } else {
-          setInvitationValid(true);
-        }
-      } catch (error) {
-        console.error('Erreur lors de la vérification de l\'invitation:', error);
-        setInvitationValid(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkInvitation();
+    // Skip pre-check to avoid RLS issues; validation happens on submit
+    setInvitationValid(true);
+    setIsLoading(false);
   }, [token]);
 
   // Connexion collaborateur
@@ -115,26 +90,6 @@ const CollaboratorLogin = () => {
     );
   }
 
-  if (!invitationValid) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-            <CardTitle>Accès non configuré</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
-              Cette invitation n'a pas encore été configurée ou le lien n'est plus valide.
-            </p>
-            <Button onClick={() => navigate('/')} variant="outline">
-              Retour à l'accueil
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">

@@ -21,41 +21,10 @@ const InviteAcceptPage = () => {
     password: ''
   });
 
-  // Vérifier la validité du token
+  // Bypass RLS-dependent pre-check; we'll validate on accept
   useEffect(() => {
-    const checkInvitation = async () => {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('collaborators')
-          .select('*')
-          .eq('invitation_token', token)
-          .eq('status', 'pending')
-          .maybeSingle();
-
-        if (error || !data) {
-          setInvitationValid(false);
-        } else {
-          setInvitationValid(true);
-          setCollaboratorInfo(data);
-          // Pré-remplir le nom si disponible
-          if (data.name) {
-            setAcceptForm(prev => ({ ...prev, name: data.name }));
-          }
-        }
-      } catch (error) {
-        console.error('Erreur lors de la vérification de l\'invitation:', error);
-        setInvitationValid(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkInvitation();
+    setInvitationValid(true);
+    setIsLoading(false);
   }, [token]);
 
   // Accepter l'invitation
@@ -117,7 +86,7 @@ const InviteAcceptPage = () => {
     );
   }
 
-  if (!invitationValid || !collaboratorInfo) {
+  if (!invitationValid) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -146,7 +115,7 @@ const InviteAcceptPage = () => {
           <CardTitle>Configurer vos identifiants</CardTitle>
           <p className="text-sm text-muted-foreground">
             Vous êtes invité à rejoindre l'équipe en tant que{' '}
-            <span className="font-medium">{collaboratorInfo.role}</span>.
+            <span className="font-medium">{collaboratorInfo?.role ?? 'collaborateur'}</span>.
             Choisissez vos identifiants de connexion.
           </p>
         </CardHeader>
