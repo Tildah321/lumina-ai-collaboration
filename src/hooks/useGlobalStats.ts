@@ -14,6 +14,7 @@ export interface GlobalStats {
   totalTimeSpent: number; // en secondes
   averageHourlyRate: number;
   isLoading: boolean;
+  forceRefresh?: () => void;
 }
 
 export const useGlobalStats = () => {
@@ -32,6 +33,8 @@ export const useGlobalStats = () => {
     isLoading: true
   });
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   useEffect(() => {
     const loadGlobalStats = async () => {
       setStats(prev => ({ ...prev, isLoading: true }));
@@ -45,9 +48,9 @@ export const useGlobalStats = () => {
           .filter(Boolean);
 
         // Charger les données en parallèle pour accélérer l'affichage des statistiques
-        // Récupérer toutes les tâches accessibles dans les espaces de travail
+        // Récupérer toutes les tâches accessibles dans les espaces de travail de l'utilisateur
         const [tasksResponse, milestonesResponse, invoicesResponse] = await Promise.all([
-          nocodbService.getTasks(undefined, { onlyCurrentUser: false }),
+          nocodbService.getTasks(undefined, { onlyCurrentUser: false }), // filtré par espaces utilisateur
           nocodbService.getMilestones(undefined, { fields: undefined }), // filtrage utilisateur déjà géré
           (nocodbService as any).getInvoices(undefined, { /* onlyCurrentUser n'existe pas ici mais bloc try */ })
         ]);
@@ -169,14 +172,18 @@ export const useGlobalStats = () => {
     // Délai pour éviter les appels multiples au montage
     const timeoutId = setTimeout(loadGlobalStats, 100);
     
-    // Actualiser toutes les 20 minutes pour minimiser encore plus les appels
-    const interval = setInterval(loadGlobalStats, 1200000);
+    // Actualiser toutes les 5 minutes pour avoir des données plus récentes
+    const interval = setInterval(loadGlobalStats, 300000);
 
     return () => {
       clearTimeout(timeoutId);
       clearInterval(interval);
     };
-  }, []);
+  }, [refreshTrigger]);
 
-  return stats;
+  const forceRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  return { ...stats, forceRefresh };
 };

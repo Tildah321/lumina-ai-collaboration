@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, CheckCircle2, Clock, Target, FileText, Euro, TrendingUp, Users, Calculator } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, CheckCircle2, Clock, Target, FileText, Euro, TrendingUp, Users, Calculator, RefreshCw } from 'lucide-react';
 import { useGlobalStats } from '@/hooks/useGlobalStats';
 import { useSpaceData } from '@/hooks/useSpaceData';
 import { useMarginStats } from '@/hooks/useMarginStats';
@@ -101,6 +102,22 @@ const StatisticsOverview = ({ spaceId, isPublic = false }: StatisticsOverviewPro
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Statistiques</h2>
+        {!isSpaceSpecific && globalStats.forceRefresh && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={globalStats.forceRefresh}
+            disabled={isLoading}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+        )}
+      </div>
+      
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
