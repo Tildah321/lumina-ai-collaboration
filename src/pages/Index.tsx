@@ -279,19 +279,19 @@ export default function Index() {
             <div className="text-center">
               <h3 className="text-2xl font-bold mb-6 text-primary">Après = 1 portail clair avec IA</h3>
               <div className="space-y-4 glow-primary">
-                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl border border-primary/20 transition-all duration-300 hover:shadow-elegant hover:scale-105 hover:bg-primary/20">
                   <CheckCircle className="w-6 h-6 text-primary" />
                   <span>Communication centralisée</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl border border-primary/20 transition-all duration-300 hover:shadow-elegant hover:scale-105 hover:bg-primary/20">
                   <CheckCircle className="w-6 h-6 text-primary" />
                   <span>Documents organisés</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl border border-primary/20 transition-all duration-300 hover:shadow-elegant hover:scale-105 hover:bg-primary/20">
                   <CheckCircle className="w-6 h-6 text-primary" />
                   <span>Rappels automatiques IA</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl border border-primary/20 transition-all duration-300 hover:shadow-elegant hover:scale-105 hover:bg-primary/20">
                   <CheckCircle className="w-6 h-6 text-primary" />
                   <span>Suivi client professionnel</span>
                 </div>
