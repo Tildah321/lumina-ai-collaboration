@@ -119,25 +119,26 @@ const CollaboratorManager = () => {
         return;
       }
       
-      const { data, error } = await supabase
-        .from('collaborators')
-        .insert({
-          name: newInvite.name.trim(),
-          role: newInvite.role,
-          invitation_token: invitationToken,
-          status: 'pending',
-          invited_by: user.id,
-          password_hash: btoa(newInvite.password.trim()) // Simple base64 encoding pour matcher la DB
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('create_collaborator_invitation', {
+        p_name: newInvite.name.trim(),
+        p_role: newInvite.role,
+        p_invitation_token: invitationToken,
+        p_password: newInvite.password.trim(),
+        p_invited_by: user.id
+      });
 
       if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; collaborator?: any };
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de la création de l\'invitation');
+      }
 
       const inviteLink = `${window.location.origin}/invite/${invitationToken}`;
       const inviteMessage = `Lien: ${inviteLink}\nNom: ${newInvite.name}\nMot de passe: ${newInvite.password}`;
       setGeneratedLink(inviteMessage);
-      setCollaborators([data as Collaborator, ...collaborators]);
+      setCollaborators([result.collaborator as Collaborator, ...collaborators]);
 
       toast({
         title: "Lien d'invitation généré",
