@@ -97,7 +97,7 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
                 <p className="text-sm">
                   <span className="font-medium">Lien:</span> 
                   <span className="text-xs font-mono break-all ml-1">
-                    {window.location.origin}/invite-setup/{collaborator.invitation_token}
+                    {window.location.origin}/invite/{collaborator.invitation_token}
                   </span>
                 </p>
               )}

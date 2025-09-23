@@ -134,7 +134,7 @@ const CollaboratorManager = () => {
 
       if (error) throw error;
 
-      const inviteLink = `${window.location.origin}/invite-setup/${invitationToken}`;
+      const inviteLink = `${window.location.origin}/invite/${invitationToken}`;
       const inviteMessage = `Lien: ${inviteLink}\nNom: ${newInvite.name}\nMot de passe: ${newInvite.password}`;
       setGeneratedLink(inviteMessage);
       setCollaborators([data as Collaborator, ...collaborators]);
