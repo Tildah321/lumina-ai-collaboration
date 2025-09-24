@@ -523,11 +523,9 @@ const Pipou = () => {
                         ))
                       )}
                       {hasMoreProspects && (
-                        <div className="flex justify-center">
-                          <Button onClick={() => loadProspects()} disabled={isLoadingProspects}>
-                            {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
-                          </Button>
-                        </div>
+                        <p className="text-center text-sm text-muted-foreground">
+                          Plus de prospects disponibles
+                        </p>
                       )}
                     </TabsContent>
 
@@ -544,11 +542,9 @@ const Pipou = () => {
                     onCreateSpace={(prospect) => setSpaceProspect(prospect)}
                   />
                   {hasMoreProspects && (
-                    <div className="flex justify-center mt-4">
-                      <Button onClick={() => loadProspects()} disabled={isLoadingProspects}>
-                        {isLoadingProspects ? 'Chargement...' : 'Charger plus'}
-                      </Button>
-                    </div>
+                    <p className="text-center text-sm text-muted-foreground mt-4">
+                      Plus de prospects disponibles
+                    </p>
                   )}
                 </>
               )}
