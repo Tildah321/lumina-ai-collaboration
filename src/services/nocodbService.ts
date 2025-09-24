@@ -279,7 +279,7 @@ class NocoDBService {
   // Fetch a single client space filtered by user ownership
   async getClientById(id: string, forceRefresh = false) {
     const userSpaceIds = await this.getUserSpaceIds();
-    if (!userSpaceIds.includes(id)) {
+    if (userSpaceIds.length > 0 && !userSpaceIds.includes(id)) {
       return null;
     }
 
@@ -535,10 +535,12 @@ class NocoDBService {
       return response;
     }
 
-    // If user has no registered spaces, return empty to avoid data leak
+    // If user has no registered spaces, do not filter (fallback) to avoid blocking data; mapping can be populated later
     if (userSpaceIds.length === 0) {
-      this.cachedProjectIds = [];
-      return { list: [], pageInfo: { totalRows: 0 } };
+      this.cachedProjectIds = (response.list || [])
+        .map((p: any) => (p.Id || p.id)?.toString())
+        .filter(Boolean);
+      return response;
     }
 
     // Filter projects by user's owned clients
@@ -591,26 +593,16 @@ class NocoDBService {
       ? await this.getCurrentUserId()
       : null;
 
-    // Récupère les projets accessibles à l'utilisateur en utilisant le cache si disponible
-    let userProjectIds: string[] = [];
-    if (this.cachedProjectIds !== null) {
-      userProjectIds = this.cachedProjectIds;
-    } else {
-      const projetsResponse = await this.getProjets();
-      userProjectIds = (projetsResponse.list || [])
-        .map((p: any) => (p.Id || p.id)?.toString())
-        .filter(Boolean);
-    }
+    // Récupère les espaces accessibles directement
+    const userProjectIds: string[] = await this.getUserSpaceIds();
 
-    // Sécurité: si l'utilisateur n'a aucun projet accessible enregistré,
-    // on ne retourne rien (deny-by-default) pour éviter toute fuite de données
-    if (userProjectIds.length === 0) {
-      return { list: [], pageInfo: { totalRows: 0 } };
-    }
+    // Si aucun mapping encore créé, ne pas bloquer (fallback)
+    const hasRestrictions = userProjectIds.length > 0;
+
 
     const projetIdStr = projetId?.toString();
-    // Si un projet est demandé mais qu'il n'est pas dans la liste autorisée, on refuse
-    if (projetIdStr && !userProjectIds.includes(projetIdStr)) {
+    // Si un projet est demandé mais qu'il n'est pas dans la liste autorisée, on refuse (si restrictions actives)
+    if (projetIdStr && hasRestrictions && !userProjectIds.includes(projetIdStr)) {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
 
@@ -621,8 +613,8 @@ class NocoDBService {
     const response = await this.fetchAllRecords(endpoint);
     let list = response.list || [];
 
-    // En mode global, filtrer strictement par les projets autorisés
-    if (!projetIdStr) {
+    // En mode global, filtrer strictement par les projets autorisés (si restrictions actives)
+    if (!projetIdStr && hasRestrictions) {
       list = list.filter((task: any) =>
         userProjectIds.includes(task.projet_id?.toString())
       );
@@ -654,9 +646,9 @@ class NocoDBService {
       await this.getProjets();
     }
 
-    const userProjectIds = this.cachedProjectIds || [];
-    // Deny by default if aucun projet autorisé
-    if (userProjectIds.length === 0 || !userProjectIds.includes(projetId)) {
+    const userProjectIds = await this.getUserSpaceIds();
+    const hasRestrictions = userProjectIds.length > 0;
+    if (hasRestrictions && !userProjectIds.includes(projetId)) {
       return 0;
     }
 
@@ -864,20 +856,13 @@ class NocoDBService {
   // Jalons - Filtered by user's spaces
   async getMilestones(projetId?: string, options: { fields?: string } = {}) {
     const userSpaceIds = await this.getUserSpaceIds();
-    const projectIds =
-      this.cachedProjectIds ??
-      (await this.getProjets()).list
-        .map((p: any) => (p.Id || p.id)?.toString())
-        .filter(Boolean);
+    const hasRestrictions = userSpaceIds.length > 0;
 
-    // Deny-by-default: si aucun espace autorisé ou projet non autorisé
-    if (projetId) {
-      if (projectIds.length === 0 || !projectIds.includes(projetId)) {
-        return { list: [], pageInfo: { totalRows: 0 } };
-      }
-    } else if (userSpaceIds.length === 0) {
+    // Si un projet est précisé et restrictions actives, vérifier l'accès
+    if (projetId && hasRestrictions && !userSpaceIds.includes(projetId)) {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
+
 
     const fieldsParam = options.fields ? `&fields=${options.fields}` : '';
     const endpoint = projetId
@@ -886,8 +871,8 @@ class NocoDBService {
 
     const response = await this.fetchAllRecords(endpoint);
 
-    if (!projetId) {
-      // Filtrer strictement par espaces autorisés
+    if (!projetId && hasRestrictions) {
+      // Filtrer strictement par espaces autorisés uniquement si mapping présent
       const filteredList = (response.list || []).filter((milestone: any) =>
         userSpaceIds.includes(milestone.projet_id?.toString())
       );
@@ -924,20 +909,13 @@ class NocoDBService {
   // Factures - Filtered by user's spaces
   async getInvoices(projetId?: string) {
     const userSpaceIds = await this.getUserSpaceIds();
-    const projectIds =
-      this.cachedProjectIds ??
-      (await this.getProjets()).list
-        .map((p: any) => (p.Id || p.id)?.toString())
-        .filter(Boolean);
+    const hasRestrictions = userSpaceIds.length > 0;
 
-    // Deny-by-default: si aucun espace autorisé ou projet non autorisé
-    if (projetId) {
-      if (projectIds.length === 0 || !projectIds.includes(projetId)) {
-        return { list: [], pageInfo: { totalRows: 0 } };
-      }
-    } else if (userSpaceIds.length === 0) {
+    // Si un projet est précisé et restrictions actives, vérifier l'accès
+    if (projetId && hasRestrictions && !userSpaceIds.includes(projetId)) {
       return { list: [], pageInfo: { totalRows: 0 } };
     }
+
 
     const endpoint = projetId
       ? `/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`
@@ -945,7 +923,7 @@ class NocoDBService {
 
     const response = await this.fetchAllRecords(endpoint);
 
-    if (!projetId) {
+    if (!projetId && hasRestrictions) {
       // Filtrer strictement par espaces autorisés
       const filteredList = (response.list || []).filter((invoice: any) =>
         userSpaceIds.includes(invoice.projet_id?.toString())
