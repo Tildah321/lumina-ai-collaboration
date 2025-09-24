@@ -41,12 +41,18 @@ export const useMarginStats = () => {
       setMonthlyInvestment(Number(savedMonthlyInvestment));
     }
 
-    // Charger les investissements depuis NocoDB
+    // Charger les investissements depuis NocoDB (filtrés par espaces utilisateur)
     const loadNocoInvestments = async () => {
       try {
-        const clients = await nocodbService.getClients();
+        const clients = await nocodbService.getClients(); // Déjà filtré par getUserSpaceIds()
 
-        // Ajouter les investissements par projet (coqh9knygkxr52k) aux investissements localStorage
+        // Vérifier que l'utilisateur a des clients accessibles
+        if (!clients.list || clients.list.length === 0) {
+          console.log('🔒 Aucun client accessible pour les investissements');
+          return;
+        }
+
+        // Ajouter les investissements par projet uniquement des clients autorisés
         const projectInvestments =
           clients.list?.map((client: any) => {
             const notes: Record<string, unknown> =

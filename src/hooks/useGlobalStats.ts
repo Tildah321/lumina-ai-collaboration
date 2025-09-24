@@ -41,11 +41,30 @@ export const useGlobalStats = () => {
       try {
         console.log('📊 Chargement des statistiques globales...');
 
-        // Forcer le chargement des projets pour remplir le cache
+        // Forcer le chargement des projets pour remplir le cache et vérifier les droits
         const projetsResponse = await nocodbService.getProjets();
         const userProjectIds = (projetsResponse.list || [])
           .map((p: any) => (p.Id || p.id)?.toString())
           .filter(Boolean);
+
+        // SÉCURITÉ: si aucun projet accessible, ne pas calculer de stats
+        if (userProjectIds.length === 0) {
+          console.log('🔍 Aucun projet accessible, retour de stats vides');
+          setStats({
+            totalTasks: 0,
+            completedTasks: 0,
+            totalMilestones: 0,
+            completedMilestones: 0,
+            totalInvoices: 0,
+            paidInvoices: 0,
+            totalRevenue: 0,
+            paidRevenue: 0,
+            totalTimeSpent: 0,
+            averageHourlyRate: 0,
+            isLoading: false
+          });
+          return;
+        }
 
         // Charger les données en parallèle pour accélérer l'affichage des statistiques
         // Récupérer toutes les tâches accessibles dans les espaces de travail de l'utilisateur
@@ -134,12 +153,9 @@ export const useGlobalStats = () => {
           totalRevenue,
           paidRevenue,
           totalTimeSpent: totalSeconds,
-          averageHourlyRate
+          averageHourlyRate,
+          userProjectIds: userProjectIds.length
         });
-
-        if (tasks.length === 0 && milestones.length === 0 && invoices.length === 0) {
-          console.log('🔍 Aucun projet accessible, userProjectIds:', userProjectIds);
-        }
 
       } catch (error) {
         console.error('❌ Erreur lors du chargement des statistiques globales:', error);
