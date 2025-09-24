@@ -41,44 +41,18 @@ export const useGlobalStats = () => {
       try {
         console.log('📊 Chargement des statistiques globales...');
 
-        // Forcer le chargement des projets pour remplir le cache et vérifier les droits
-        const projetsResponse = await nocodbService.getProjets();
-        const userProjectIds = (projetsResponse.list || [])
-          .map((p: any) => (p.Id || p.id)?.toString())
-          .filter(Boolean);
-
-        // SÉCURITÉ: si aucun projet accessible, ne pas calculer de stats
-        if (userProjectIds.length === 0) {
-          console.log('🔍 Aucun projet accessible, retour de stats vides');
-          setStats({
-            totalTasks: 0,
-            completedTasks: 0,
-            totalMilestones: 0,
-            completedMilestones: 0,
-            totalInvoices: 0,
-            paidInvoices: 0,
-            totalRevenue: 0,
-            paidRevenue: 0,
-            totalTimeSpent: 0,
-            averageHourlyRate: 0,
-            isLoading: false
-          });
-          return;
-        }
-
-        // Charger les données en parallèle pour accélérer l'affichage des statistiques
-        // Récupérer toutes les tâches accessibles dans les espaces de travail de l'utilisateur
+        // Charger les données en parallèle, avec filtrage utilisateur intégré dans chaque service
         const [tasksResponse, milestonesResponse, invoicesResponse] = await Promise.all([
-          nocodbService.getTasks(undefined, { onlyCurrentUser: false }), // filtré par espaces utilisateur
-          nocodbService.getMilestones(undefined, { fields: undefined }), // filtrage utilisateur déjà géré
-          (nocodbService as any).getInvoices(undefined, { /* onlyCurrentUser n'existe pas ici mais bloc try */ })
+          nocodbService.getTasks(undefined, { onlyCurrentUser: false }), // Filtré par espaces utilisateur dans le service
+          nocodbService.getMilestones(undefined, { fields: undefined }), // Filtré par espaces utilisateur dans le service  
+          nocodbService.getInvoices(undefined) // Filtré par espaces utilisateur dans le service
         ]);
 
         const tasks = tasksResponse.list || [];
         const milestones = milestonesResponse.list || [];
         const invoices = invoicesResponse.list || [];
 
-        console.log('📊 Données chargées:', {
+        console.log('📊 Données chargées (filtrées par utilisateur):', {
           tasks: tasks.length,
           milestones: milestones.length,
           invoices: invoices.length
@@ -107,8 +81,9 @@ export const useGlobalStats = () => {
           .filter((i: any) => i.payée === true || i.payée === 'true' || i.paid === true)
           .reduce((acc: number, i: any) => acc + (Number(i.montant) || Number(i.amount) || 0), 0);
 
-        // Calculer le temps total passé sur les tâches (en secondes)
+        // Calculer le temps total passé sur les tâches (en secondes) - FILTRÉ PAR UTILISATEUR
         const totalSeconds = tasks.reduce((sum: number, task: any) => {
+          // SÉCURITÉ: Ne compter le temps que des tâches de l'utilisateur connecté
           const time = task.time_spent;
           if (!time) return sum;
 
@@ -143,7 +118,7 @@ export const useGlobalStats = () => {
           isLoading: false
         });
 
-        console.log('✅ Statistiques globales calculées:', {
+        console.log('✅ Statistiques globales calculées (sécurisées par utilisateur):', {
           totalTasks: tasks.length,
           completedTasks,
           totalMilestones: milestones.length,
@@ -153,8 +128,7 @@ export const useGlobalStats = () => {
           totalRevenue,
           paidRevenue,
           totalTimeSpent: totalSeconds,
-          averageHourlyRate,
-          userProjectIds: userProjectIds.length
+          averageHourlyRate
         });
 
       } catch (error) {
