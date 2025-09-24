@@ -173,9 +173,13 @@ const SpaceAccessManager = ({ spaceId, spaceName }: SpaceAccessManagerProps) => 
       console.error('Erreur lors de l\'attribution d\'accès:', error);
       toast({
         title: "Erreur",
-        description: error.message?.includes('duplicate') 
-          ? "Ce collaborateur a déjà accès à cet espace" 
-          : "Impossible d'accorder l'accès",
+        description: error.message?.includes('duplicate')
+          ? "Ce collaborateur a déjà accès à cet espace"
+          : error.message?.toLowerCase().includes('row-level security') || error.message?.toLowerCase().includes('rls')
+          ? "Action non autorisée. Connectez-vous avec le compte qui a invité ce collaborateur."
+          : error.message?.toLowerCase().includes('foreign key')
+          ? "Collaborateur introuvable ou non accepté."
+          : (error.message || "Impossible d'accorder l'accès"),
         variant: "destructive"
       });
     }

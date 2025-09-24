@@ -97,10 +97,12 @@ const CollaboratorManager = () => {
 
   // Générer un lien d'invitation
   const handleGenerateInviteLink = async () => {
-    if (!newInvite.name.trim() || !newInvite.password.trim()) {
+    const name = newInvite.name.trim();
+    const password = newInvite.password.trim();
+    if (name.length < 2 || password.length < 6) {
       toast({
-        title: "Erreur",
-        description: "Le nom et le mot de passe sont requis",
+        title: "Informations insuffisantes",
+        description: "Nom min. 2 caractères et mot de passe min. 6 caractères",
         variant: "destructive"
       });
       return;
@@ -406,7 +408,7 @@ const CollaboratorManager = () => {
                 {generatedLink ? 'Fermer' : 'Annuler'}
               </Button>
               {!generatedLink && (
-                <Button onClick={handleGenerateInviteLink} disabled={!newInvite.name.trim() || !newInvite.password.trim()}>
+                <Button onClick={handleGenerateInviteLink} disabled={newInvite.name.trim().length < 2 || newInvite.password.trim().length < 6}>
                   <Link className="w-4 h-4 mr-2" />
                   Générer le lien
                 </Button>
