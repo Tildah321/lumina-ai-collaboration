@@ -114,12 +114,14 @@ const CollaboratorManager = () => {
       
       if (!user) {
         toast({
-          title: "Erreur",
-          description: "Vous devez être connecté pour inviter des collaborateurs",
+          title: "Erreur d'authentification",
+          description: "Vous devez être connecté pour inviter des collaborateurs. Reconnectez-vous.",
           variant: "destructive"
         });
         return;
       }
+
+      console.log('🔑 Utilisateur connecté:', user.id, 'Invitation pour:', newInvite.name);
       
       const { data, error } = await supabase.rpc('create_collaborator_invitation', {
         p_name: newInvite.name.trim(),
@@ -129,7 +131,12 @@ const CollaboratorManager = () => {
         p_invited_by: user.id
       });
 
-      if (error) throw error;
+      console.log('📋 Réponse RPC:', { data, error });
+
+      if (error) {
+        console.error('❌ Erreur RPC détaillée:', error);
+        throw error;
+      }
 
       const result = data as { success: boolean; error?: string; collaborator?: any };
       
@@ -148,9 +155,23 @@ const CollaboratorManager = () => {
       });
     } catch (error: any) {
       console.error('Erreur lors de la génération du lien:', error);
+      
+      // Messages d'erreur plus spécifiques
+      let errorMessage = "Impossible de générer le lien d'invitation";
+      
+      if (error.message?.includes('row-level security')) {
+        errorMessage = "Problème de permissions. Vérifiez que vous êtes connecté avec le bon compte.";
+      } else if (error.message?.includes('duplicate')) {
+        errorMessage = "Un collaborateur avec ce nom existe déjà.";
+      } else if (error.message?.includes('foreign key')) {
+        errorMessage = "Erreur de référence utilisateur. Reconnectez-vous.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erreur",
-        description: "Impossible de générer le lien d'invitation",
+        description: errorMessage,
         variant: "destructive"
       });
     }
