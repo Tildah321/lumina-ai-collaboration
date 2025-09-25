@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -145,6 +145,11 @@ const CollaboratorLogin = () => {
             <p className="text-xs text-muted-foreground text-center">
               Utilisez les identifiants fournis lors de votre invitation
             </p>
+            {token && (
+              <p className="text-xs text-muted-foreground text-center">
+                Pas encore configuré ? <Link to={`/invite-setup/${token}`} className="underline text-primary">Configurer mon accès</Link>
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
