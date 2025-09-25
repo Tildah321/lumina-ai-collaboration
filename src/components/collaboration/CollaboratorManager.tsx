@@ -271,7 +271,10 @@ const CollaboratorManager = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-semibold">Gestion des collaborateurs</h3>
+        <h3 className="text-lg font-semibold">Gestion des collaborateurs</h3>
+        <p className="text-sm text-muted-foreground">
+          Créez des accès de connexion réutilisables pour vos collaborateurs
+        </p>
           <p className="text-sm text-muted-foreground">
             Invitez vos collaborateurs pour qu'ils puissent accéder aux espaces clients
           </p>

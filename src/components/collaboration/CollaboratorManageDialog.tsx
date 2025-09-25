@@ -213,12 +213,17 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
               <p className="text-sm"><span className="font-medium">Rôle:</span> {collaborator.role}</p>
               <p className="text-sm"><span className="font-medium">Statut:</span> {collaborator.status}</p>
               {collaborator.invitation_token && (
-                <p className="text-sm">
-                  <span className="font-medium">Lien:</span> 
-                  <span className="text-xs font-mono break-all ml-1">
-                    {window.location.origin}/invite-setup/{collaborator.invitation_token}
-                  </span>
-                </p>
+                <div className="text-sm space-y-1">
+                  <p>
+                    <span className="font-medium">Lien de connexion:</span> 
+                    <span className="text-xs font-mono break-all ml-1">
+                      {window.location.origin}/collaborator-login/{collaborator.invitation_token}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Lien réutilisable - le collaborateur peut se connecter plusieurs fois
+                  </p>
+                </div>
               )}
             </div>
           </div>

@@ -210,6 +210,10 @@ export type Database = {
         Args: { p_invitation_token: string; p_name: string; p_password: string }
         Returns: Json
       }
+      verify_collaborator_login: {
+        Args: { p_invitation_token: string; p_name: string; p_password: string }
+        Returns: Json
+      }
       verify_password: {
         Args: { hash: string; password: string }
         Returns: boolean

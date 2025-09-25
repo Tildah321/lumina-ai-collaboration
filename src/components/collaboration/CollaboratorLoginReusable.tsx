@@ -31,7 +31,7 @@ const CollaboratorLoginReusable = () => {
 
     setIsLoggingIn(true);
     try {
-      const { data, error } = await supabase.rpc('verify_collaborator_credentials', {
+      const { data, error } = await supabase.rpc('verify_collaborator_login', {
         p_invitation_token: token,
         p_name: loginForm.name.trim(),
         p_password: loginForm.password.trim()
