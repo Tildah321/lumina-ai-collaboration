@@ -27,13 +27,6 @@ const Navigation = () => {
 
   const navItems = [
     {
-      name: 'Vue d\'ensemble',
-      href: '/overview',
-      icon: BarChart,
-      description: 'Aperçu général',
-      color: 'text-blue-500'
-    },
-    {
       name: 'Dashboard',
       href: '/dashboard',
       icon: Bot,
