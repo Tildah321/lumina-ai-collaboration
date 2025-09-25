@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Users, Building, Clock, Calendar, CheckCircle } from 'lucide-react';
+import { LogOut, Users, Building, Clock, Calendar, CheckCircle, ExternalLink, FolderOpen, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import SpaceAccessManager from '@/components/collaboration/SpaceAccessManager';
+import { supabase } from '@/integrations/supabase/client';
+import nocodbService from '@/services/nocodbService';
 
 interface CollaboratorSession {
   id: string;
@@ -15,11 +16,23 @@ interface CollaboratorSession {
   loginTime: string;
 }
 
+interface SpaceAccess {
+  id: string;
+  space_id: string;
+  permissions: string[];
+  space_info?: {
+    description: string;
+    statut: string;
+    prix_payement: string;
+  };
+}
+
 const CollaborationDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [session, setSession] = useState<CollaboratorSession | null>(null);
-  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const [spaceAccesses, setSpaceAccesses] = useState<SpaceAccess[]>([]);
+  const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
 
   useEffect(() => {
     // Vérifier la session collaborateur
@@ -32,12 +45,67 @@ const CollaborationDashboard = () => {
     try {
       const parsedSession = JSON.parse(sessionData);
       setSession(parsedSession);
+      // Charger les espaces accessibles
+      loadSpaceAccesses(parsedSession.id);
     } catch (error) {
       console.error('Erreur lors du parsing de la session:', error);
       localStorage.removeItem('collaborator_session');
       navigate('/');
     }
   }, [navigate]);
+
+  const loadSpaceAccesses = async (collaboratorId: string) => {
+    setIsLoadingSpaces(true);
+    try {
+      const { data, error } = await supabase
+        .from('space_collaborators')
+        .select('*')
+        .eq('collaborator_id', collaboratorId);
+
+      if (error) throw error;
+
+      const spacesWithInfo = await Promise.all(
+        (data || []).map(async (access: any) => {
+          try {
+            const spaceInfo = await nocodbService.getClientByIdPublic(access.space_id);
+            return {
+              ...access,
+              space_info: spaceInfo ? {
+                description: spaceInfo.description || `Espace ${access.space_id}`,
+                statut: spaceInfo.statut || 'En cours',
+                prix_payement: spaceInfo.prix_payement || '0'
+              } : {
+                description: `Espace ${access.space_id}`,
+                statut: 'En cours',
+                prix_payement: '0'
+              }
+            };
+          } catch (error) {
+            console.error(`Erreur lors du chargement de l'espace ${access.space_id}:`, error);
+            return {
+              ...access,
+              space_info: {
+                description: `Espace ${access.space_id}`,
+                statut: 'Inconnu',
+                prix_payement: '0'
+              }
+            };
+          }
+        })
+      );
+
+      setSpaceAccesses(spacesWithInfo);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des espaces:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger vos espaces accessibles",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingSpaces(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('collaborator_session');
@@ -46,6 +114,10 @@ const CollaborationDashboard = () => {
       description: "À bientôt !"
     });
     navigate('/');
+  };
+
+  const openClientSpace = (spaceId: string) => {
+    navigate(`/client-space/${spaceId}`);
   };
 
   const formatLoginTime = (loginTime: string) => {
@@ -131,16 +203,75 @@ const CollaborationDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Space Access Management */}
+          {/* Accessible Spaces */}
           <div>
             <h2 className="text-lg font-semibold mb-4">Espaces Accessibles</h2>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground text-center">
-                  Les espaces qui vous sont assignés apparaîtront ici une fois que l'administrateur vous aura donné accès.
-                </p>
-              </CardContent>
-            </Card>
+            {isLoadingSpaces ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-muted-foreground">Chargement de vos espaces...</p>
+                </CardContent>
+              </Card>
+            ) : spaceAccesses.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {spaceAccesses.map((access) => (
+                  <Card key={access.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <FolderOpen className="w-5 h-5 text-primary" />
+                            {access.space_info?.description}
+                          </CardTitle>
+                          <div className="flex gap-2 mt-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {access.space_info?.statut}
+                            </Badge>
+                            {access.space_info?.prix_payement && parseInt(access.space_info.prix_payement) > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                {access.space_info.prix_payement}€
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Permissions:</p>
+                          <div className="flex gap-1 flex-wrap">
+                            {access.permissions?.map((permission: string) => (
+                              <Badge key={permission} variant="outline" className="text-xs">
+                                {permission === 'read' ? 'Lecture' : 
+                                 permission === 'write' ? 'Écriture' : 
+                                 permission === 'admin' ? 'Admin' : permission}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <Button 
+                          className="w-full gap-2" 
+                          onClick={() => openClientSpace(access.space_id)}
+                        >
+                          <Eye className="w-4 h-4" />
+                          Accéder à l'espace
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-muted-foreground text-center">
+                    Aucun espace ne vous a encore été assigné. Contactez l'administrateur pour obtenir l'accès aux espaces clients.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>
