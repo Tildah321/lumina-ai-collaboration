@@ -57,17 +57,35 @@ const CollaborationDashboard = () => {
   const loadSpaceAccesses = async (collaboratorSession: CollaboratorSession) => {
     setIsLoadingSpaces(true);
     try {
+      console.log('🔍 Chargement des espaces pour le collaborateur:', collaboratorSession);
+      
       // Utilise la RPC sécurisée avec le token d'invitation pour contourner RLS
       const { data, error } = await supabase.rpc('get_spaces_for_collaborator_by_token', {
         p_invitation_token: collaboratorSession.invitation_token
       });
 
-      if (error) throw error;
+      console.log('📡 Résultat RPC:', { data, error });
+
+      if (error) {
+        console.error('❌ Erreur RPC:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.log('ℹ️ Aucun espace trouvé pour ce collaborateur');
+        setSpaceAccesses([]);
+        return;
+      }
+
+      console.log('🗂️ Espaces trouvés:', data);
 
       const spacesWithInfo = await Promise.all(
-        (data || []).map(async (access: any) => {
+        data.map(async (access: any) => {
           try {
+            console.log('🔄 Chargement info espace:', access.space_id);
             const spaceInfo = await nocodbService.getClientByIdPublic(access.space_id);
+            console.log('📋 Info espace récupérée:', spaceInfo);
+            
             return {
               ...access,
               space_info: spaceInfo ? {
@@ -81,7 +99,7 @@ const CollaborationDashboard = () => {
               }
             };
           } catch (error) {
-            console.error(`Erreur lors du chargement de l'espace ${access.space_id}:`, error);
+            console.error(`❌ Erreur lors du chargement de l'espace ${access.space_id}:`, error);
             return {
               ...access,
               space_info: {
@@ -94,12 +112,13 @@ const CollaborationDashboard = () => {
         })
       );
 
+      console.log('✅ Espaces avec infos complètes:', spacesWithInfo);
       setSpaceAccesses(spacesWithInfo);
     } catch (error: any) {
-      console.error('Erreur lors du chargement des espaces:', error);
+      console.error('💥 Erreur lors du chargement des espaces:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger vos espaces accessibles",
+        description: `Impossible de charger vos espaces accessibles: ${error.message || error}`,
         variant: "destructive"
       });
     } finally {
