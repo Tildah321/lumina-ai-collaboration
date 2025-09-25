@@ -66,7 +66,8 @@ const ClientSpace = () => {
             recapLink: notes.recapLink || notes.lien_recap ||
               notes.lien_recapitulatif || foundSpace.lien_recap ||
               (foundSpace as any).lien_recapitulatif || '',
-            checklistLink: foundSpace.cidgucz93l1vyxd || '',
+            checklistLink: notes.checklistLink || (notes as any).lien_checklist ||
+              (foundSpace as any).cidgucz93l1vyxd || (foundSpace as any).lien_checklist || '',
             notes
           } as any;
 
@@ -229,10 +230,19 @@ const ClientSpace = () => {
     if (!space) return;
     try {
       const value = checklistLinkInput.trim() || null;
+      const updatedNotes = { ...((space as any).notes || {}) } as any;
+      if (value) {
+        updatedNotes.checklistLink = value;
+        (updatedNotes as any).lien_checklist = value;
+      } else {
+        delete updatedNotes.checklistLink;
+        delete (updatedNotes as any).lien_checklist;
+      }
       await nocodbService.updateClient((space as any).id, {
-        cidgucz93l1vyxd: value
+        cidgucz93l1vyxd: value,
+        notes: JSON.stringify(updatedNotes)
       });
-      setSpace({ ...(space as any), checklistLink: value || '' });
+      setSpace({ ...(space as any), checklistLink: value || '', notes: updatedNotes });
       setChecklistLinkInput(value || '');
       toast({ title: 'Lien enregistré', description: "Le lien de checklist de production a été mis à jour." });
     } catch (error) {
