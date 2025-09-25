@@ -401,26 +401,15 @@ const CollaboratorClientSpace = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Récapitulatif et investissement en bas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Récapitulatif du projet</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <StatisticsOverview spaceId={space.id} isPublic={true} />
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Investissement par projet</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ProjectInvestmentManager spaceId={space.id} />
-              </CardContent>
-            </Card>
-          </div>
+          {/* Investissement projet toujours visible */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Investissement par projet</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProjectInvestmentManager spaceId={space.id} />
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
