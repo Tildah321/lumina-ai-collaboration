@@ -33,15 +33,14 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
 
   // Gestion des accès aux espaces
   const [spaceAccesses, setSpaceAccesses] = useState<{ id: string; space_id: string; permissions: string[] }[]>([]);
-  const [spaces, setSpaces] = useState<{ id: string; label: string }[]>([]);
+  const [spaces, setSpaces] = useState<{ id: string; label: string; name: string }[]>([]);
   const [selectedSpace, setSelectedSpace] = useState('');
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>(['read']);
   const [isLoadingAccess, setIsLoadingAccess] = useState(false);
 
   const availablePermissions = [
     { id: 'read', label: 'Lecture' },
-    { id: 'write', label: 'Écriture' },
-    { id: 'admin', label: 'Administration' }
+    { id: 'write', label: 'Écriture' }
   ];
 
   const loadSpaces = async () => {
@@ -49,7 +48,8 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
       const res: any = await nocodbService.getClients();
       const list = (res?.list || []).map((c: any) => ({
         id: (c.Id || c.id)?.toString?.() || '',
-        label: c.email || c.description || `Espace ${(c.Id || c.id)}`
+        label: c.email || c.description || `Espace ${(c.Id || c.id)}`,
+        name: c.email || `Client ${(c.Id || c.id)}`
       })).filter((s: any) => !!s.id);
       setSpaces(list);
     } catch (e) {
@@ -250,11 +250,11 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <Select value={selectedSpace} onValueChange={setSelectedSpace}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un espace" />
+                      <SelectValue placeholder="Sélectionner un espace..." />
                     </SelectTrigger>
                     <SelectContent>
                       {spaces.filter(s => !spaceAccesses.some(a => a.space_id === s.id)).map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -300,10 +300,12 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
                     return (
                       <div key={access.id} className="flex items-center justify-between border rounded-md px-3 py-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{space?.label || access.space_id}</span>
+                          <span className="font-medium">{space?.name || space?.label || access.space_id}</span>
                           <div className="flex gap-1">
                             {access.permissions.map((perm) => (
-                              <Badge key={perm} variant="secondary" className="text-xs">{perm}</Badge>
+                              <Badge key={perm} variant="secondary" className="text-xs">
+                                {perm === 'read' ? 'Lecture' : perm === 'write' ? 'Écriture' : perm}
+                              </Badge>
                             ))}
                           </div>
                         </div>
