@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, UserPlus, Trash2, Settings, Link, CheckCircle, Clock, XCircle, Copy, Share2, MessageCircle, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import nocodbService from '@/services/nocodbService';
 import CollaboratorManageDialog from './CollaboratorManageDialog';
 
 interface Collaborator {
@@ -34,6 +35,7 @@ const CollaboratorManager = () => {
   const { toast } = useToast();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [spaceAccesses, setSpaceAccesses] = useState<SpaceAccess[]>([]);
+  const [spaces, setSpaces] = useState<{ id: string; label: string; name: string }[]>([]);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -88,10 +90,29 @@ const CollaboratorManager = () => {
     }
   };
 
+  // Charger les espaces clients
+  const loadSpaces = async () => {
+    try {
+      const res: any = await nocodbService.getClients();
+      const list = (res?.list || []).map((c: any) => {
+        const spaceId = (c.Id || c.id)?.toString?.() || '';
+        const spaceName = c.clq5g6xsxy12zmh || c.description || c.name || c.email || `Espace ${spaceId}`;
+        return {
+          id: spaceId,
+          label: String(spaceName),
+          name: String(spaceName)
+        };
+      }).filter((s: any) => !!s.id);
+      setSpaces(list);
+    } catch (e) {
+      console.error('Erreur chargement espaces:', e);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      await Promise.all([loadCollaborators(), loadSpaceAccesses()]);
+      await Promise.all([loadCollaborators(), loadSpaceAccesses(), loadSpaces()]);
       setIsLoading(false);
     };
     loadData();
@@ -495,7 +516,9 @@ const CollaboratorManager = () => {
                        <span className="text-sm font-medium">Espaces d'accès:</span>
                        <div className="flex flex-wrap gap-1">
                          {spaceAccesses.filter(sa => sa.collaborator_id === collaborator.id).map(access => {
-                           const spaceName = `Espace ${access.space_id}`;
+                           // Chercher le nom de l'espace dans la liste des espaces chargés
+                           const space = spaces.find(s => s.id === access.space_id);
+                           const spaceName = space?.name || space?.label || `Espace ${access.space_id}`;
                            return (
                              <Badge key={access.id} variant="outline" className="text-xs">
                                {spaceName}
