@@ -47,8 +47,8 @@ const CollaboratorLoginReusable = () => {
           id: result.collaborator.id,
           name: result.collaborator.name,
           role: result.collaborator.role,
-          token: token,
-          loginTime: Date.now()
+          invitation_token: token as string,
+          loginTime: new Date().toISOString()
         };
         
         localStorage.setItem('collaborator_session', JSON.stringify(collaboratorInfo));

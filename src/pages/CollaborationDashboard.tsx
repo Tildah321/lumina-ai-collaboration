@@ -59,9 +59,13 @@ const CollaborationDashboard = () => {
     try {
       console.log('🔍 Chargement des espaces pour le collaborateur:', collaboratorSession);
       
-      // Utilise la RPC sécurisée avec le token d'invitation pour contourner RLS
+      // Déterminer le bon token (compat rétro)
+      const invitationToken = collaboratorSession.invitation_token || (collaboratorSession as any).token;
+      if (!invitationToken) {
+        throw new Error("Token d'invitation manquant. Veuillez vous reconnecter.");
+      }
       const { data, error } = await supabase.rpc('get_spaces_for_collaborator_by_token', {
-        p_invitation_token: collaboratorSession.invitation_token
+        p_invitation_token: invitationToken
       });
 
       console.log('📡 Résultat RPC:', { data, error });

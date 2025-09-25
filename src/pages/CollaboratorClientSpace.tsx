@@ -53,8 +53,9 @@ const CollaboratorClientSpace = () => {
         setCollaboratorInfo(collaborator);
 
         // Vérifier l'accès à cet espace spécifique via RPC sécurisée
+        const invitationToken = collaborator.invitation_token || collaborator.token;
         const { data: accessData, error: accessError } = await supabase.rpc('get_spaces_for_collaborator_by_token', {
-          p_invitation_token: collaborator.invitation_token
+          p_invitation_token: invitationToken
         });
 
         if (accessError || !accessData || !accessData.find((access: any) => access.space_id === id)) {
