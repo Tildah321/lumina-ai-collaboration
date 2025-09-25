@@ -329,14 +329,63 @@ const CollaboratorClientSpace = () => {
             )}
           </div>
 
-          {/* Tabs complètes pour collaborateur */}
+          {/* Liens de récapitulatif projet */}
+          {(space.recapLink || space.onboardingLink) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {space.recapLink && (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-8 h-8 text-primary" />
+                      <div className="flex-1">
+                        <h3 className="font-medium">Récapitulatif du projet</h3>
+                        <p className="text-sm text-muted-foreground">Document de synthèse</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full mt-3"
+                      onClick={() => window.open(space.recapLink, '_blank')}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Voir le récapitulatif
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {space.onboardingLink && (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-8 h-8 text-primary" />
+                      <div className="flex-1">
+                        <h3 className="font-medium">Guide d'onboarding</h3>
+                        <p className="text-sm text-muted-foreground">Documentation projet</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full mt-3"
+                      onClick={() => window.open(space.onboardingLink, '_blank')}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Consulter
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Tabs pour collaborateur */}
           <Tabs defaultValue="tasks" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="tasks">Tâches</TabsTrigger>
               <TabsTrigger value="milestones">Jalons</TabsTrigger>
               <TabsTrigger value="invoices">Factures</TabsTrigger>
-              <TabsTrigger value="overview">Récapitulatif</TabsTrigger>
-              <TabsTrigger value="investment">Investissement</TabsTrigger>
             </TabsList>
             
             <TabsContent value="tasks" className="space-y-4">
@@ -350,15 +399,28 @@ const CollaboratorClientSpace = () => {
             <TabsContent value="invoices" className="space-y-4">
               <NocoInvoiceManager projetId={space.id} isClient={false} />
             </TabsContent>
-            
-            <TabsContent value="overview" className="space-y-4">
-              <StatisticsOverview spaceId={space.id} isPublic={true} />
-            </TabsContent>
-            
-            <TabsContent value="investment" className="space-y-4">
-              <ProjectInvestmentManager spaceId={space.id} />
-            </TabsContent>
           </Tabs>
+
+          {/* Récapitulatif et investissement en bas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Récapitulatif du projet</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <StatisticsOverview spaceId={space.id} isPublic={true} />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Investissement par projet</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProjectInvestmentManager spaceId={space.id} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>
