@@ -56,7 +56,8 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
     prix_payement: 0,
     lien_payement: '',
     lien_whatsapp: '',
-    lien_onboarding: ''
+    lien_onboarding: '',
+    lien_suivi_interne: ''
   });
 
   // Mapping refactorisé - alignement EXACT avec structure table NocoDB
@@ -84,8 +85,9 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
       client_password_hash: space.client_password_hash || '',
       notes: space.notes || '',
       createdAt: space.CreatedAt || '',
-      updatedAt: space.UpdatedAt || ''
-    } as ClientSpace;
+      updatedAt: space.UpdatedAt || '',
+      lien_suivi_interne: space.cidgucz93l1vyxd || ''
+    } as ClientSpace & { lien_suivi_interne: string };
     
     console.log('✅ Mapped space:', mapped);
     return mapped;
@@ -139,6 +141,7 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
         prix_payement: newSpace.prix_payement > 0 ? newSpace.prix_payement : null,
         lien_payement: newSpace.lien_payement.trim() || null,
         lien_whatsapp: newSpace.lien_whatsapp.trim() || null,
+        cidgucz93l1vyxd: newSpace.lien_suivi_interne.trim() || null,
         cz787nu83e9bvlu: newSpace.lien_onboarding.trim() || null,
         client_access_enabled: false,
         client_link_token: null,
@@ -170,7 +173,8 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
         prix_payement: 0,
         lien_payement: '',
         lien_whatsapp: '',
-        lien_onboarding: ''
+        lien_onboarding: '',
+        lien_suivi_interne: ''
       });
       setIsCreateDialogOpen(false);
       
@@ -203,6 +207,7 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
         prix_payement: editingSpace.prix_payement > 0 ? editingSpace.prix_payement : null,
         lien_payement: editingSpace.lien_payement.trim() || null,
         lien_whatsapp: editingSpace.lien_whatsapp.trim() || null,
+        cidgucz93l1vyxd: (editingSpace as any).lien_suivi_interne?.trim() || null,
         notes: JSON.stringify({
           updated_by: 'admin',
           updated_date: new Date().toISOString()
@@ -398,6 +403,19 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
                     placeholder="https://calendly.com/... ou formulaire"
                   />
                 </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="lien_suivi_interne">Lien de suivi interne (Admin/Collaborateurs uniquement)</Label>
+                  <Input
+                    id="lien_suivi_interne"
+                    value={newSpace.lien_suivi_interne || ''}
+                    onChange={(e) => setNewSpace({ ...newSpace, lien_suivi_interne: e.target.value })}
+                    placeholder="https://notion.so/... ou https://trello.com/..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Ce lien ne sera visible que par vous et vos collaborateurs, jamais par le client
+                  </p>
+                </div>
               </div>
             </div>
             
@@ -451,6 +469,7 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
                     {space.lien_portail && <Badge variant="secondary" className="text-xs">Drive</Badge>}
                     {space.lien_payement && <Badge variant="secondary" className="text-xs">Paiement</Badge>}
                     {space.lien_whatsapp && <Badge variant="secondary" className="text-xs">WhatsApp</Badge>}
+                    {(space as any).cidgucz93l1vyxd && <Badge variant="outline" className="text-xs">📋 Suivi interne</Badge>}
                     {space.client_access_enabled && <Badge variant="default" className="text-xs">🔗 Partagé</Badge>}
                     {space.client_password_hash && <Badge variant="outline" className="text-xs">🔐 Protégé</Badge>}
                   </div>
@@ -469,6 +488,16 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
                   <Button size="sm" variant="outline" onClick={() => openAccessDialog(space)}>
                     <Users className="w-3 h-3" />
                   </Button>
+                  {(space as any).cidgucz93l1vyxd && (
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      onClick={() => window.open((space as any).cidgucz93l1vyxd, '_blank')}
+                      title="Ouvrir le suivi interne"
+                    >
+                      📋
+                    </Button>
+                  )}
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -582,6 +611,19 @@ const ClientSpaceManager = ({ onSpaceSelect }: ClientSpaceManagerProps) => {
                     onChange={(e) => setEditingSpace({ ...editingSpace, lien_whatsapp: e.target.value })}
                   />
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-lien_suivi_interne">Lien de suivi interne (Admin/Collaborateurs uniquement)</Label>
+                <Input
+                  id="edit-lien_suivi_interne"
+                  value={(editingSpace as any).lien_suivi_interne || (editingSpace as any).cidgucz93l1vyxd || ''}
+                  onChange={(e) => setEditingSpace({ ...editingSpace, lien_suivi_interne: e.target.value } as any)}
+                  placeholder="https://notion.so/... ou https://trello.com/..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ce lien ne sera visible que par vous et vos collaborateurs, jamais par le client
+                </p>
               </div>
             </div>
             
