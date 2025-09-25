@@ -190,6 +190,17 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_spaces_for_collaborator_by_token: {
+        Args: { p_invitation_token: string }
+        Returns: {
+          created_at: string
+          granted_by: string
+          id: string
+          permissions: string[]
+          space_id: string
+          updated_at: string
+        }[]
+      }
       hash_password: {
         Args: { password: string }
         Returns: string
