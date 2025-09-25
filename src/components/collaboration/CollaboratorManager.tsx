@@ -469,21 +469,15 @@ const CollaboratorManager = () => {
           collaborators.map((collaborator) => (
             <Card key={collaborator.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(collaborator.status)}
-                    <CardTitle className="text-base">
-                      {collaborator.name || collaborator.email}
-                    </CardTitle>
-                  </div>
-                  <div className="flex gap-1">
-                    <Badge variant={getRoleColor(collaborator.role)} className="text-xs">
-                      {collaborator.role}
-                    </Badge>
-                    <Badge variant={getStatusColor(collaborator.status)} className="text-xs">
-                      {collaborator.status}
-                    </Badge>
-                  </div>
+                 <div className="flex items-start justify-between">
+                   <CardTitle className="text-base">
+                     {collaborator.name || collaborator.email}
+                   </CardTitle>
+                   <div className="flex gap-1">
+                     <Badge variant={getRoleColor(collaborator.role)} className="text-xs">
+                       {collaborator.role}
+                     </Badge>
+                   </div>
                 </div>
               </CardHeader>
                
@@ -495,38 +489,28 @@ const CollaboratorManager = () => {
                       <span>{collaborator.email}</span>
                     </div>
                   )}
-                  
-                  <div className="space-y-2">
-                    <span className="text-sm font-medium">Mot de passe:</span>
-                    <div className="flex gap-2">
-                      <Input
-                        type={showPasswordFor === collaborator.id ? "text" : "password"}
-                        value={showPasswordFor === collaborator.id ? (passwordsCache[collaborator.id] || "MotDePasseSecret123") : "••••••••"}
-                        disabled
-                        className="h-8 text-xs bg-muted/50 flex-1"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => togglePasswordVisibility(collaborator.id)}
-                        className="h-8 px-2 shrink-0"
-                      >
-                        {showPasswordFor === collaborator.id ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {collaborator.invitation_token && (
-                    <div className="text-xs text-muted-foreground">
-                      Créé le {new Date(collaborator.created_at).toLocaleDateString('fr-FR')}
-                    </div>
-                  )}
-                  
-                  {spaceAccesses.filter(sa => sa.collaborator_id === collaborator.id).length > 0 && (
-                    <div className="text-xs text-muted-foreground">
-                      Accès à {spaceAccesses.filter(sa => sa.collaborator_id === collaborator.id).length} espace(s)
-                    </div>
-                  )}
+                   
+                   {spaceAccesses.filter(sa => sa.collaborator_id === collaborator.id).length > 0 && (
+                     <div className="space-y-2">
+                       <span className="text-sm font-medium">Espaces d'accès:</span>
+                       <div className="flex flex-wrap gap-1">
+                         {spaceAccesses.filter(sa => sa.collaborator_id === collaborator.id).map(access => {
+                           const spaceName = `Espace ${access.space_id}`;
+                           return (
+                             <Badge key={access.id} variant="outline" className="text-xs">
+                               {spaceName}
+                             </Badge>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   )}
+                   
+                   {collaborator.invitation_token && (
+                     <div className="text-xs text-muted-foreground">
+                       Créé le {new Date(collaborator.created_at).toLocaleDateString('fr-FR')}
+                     </div>
+                   )}
                 </div>
                 
                 <div className="flex flex-wrap gap-2">

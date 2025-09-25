@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bot, CheckSquare, Users, Edit3, Moon, Sun, LogOut, ChevronLeft, ChevronRight, Menu, Crown, Lock, User, UserPlus } from 'lucide-react';
+import { Bot, CheckSquare, Users, Edit3, Moon, Sun, LogOut, ChevronLeft, ChevronRight, Menu, Crown, Lock, User, UserPlus, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -26,6 +26,13 @@ const Navigation = () => {
   };
 
   const navItems = [
+    {
+      name: 'Vue d\'ensemble',
+      href: '/overview',
+      icon: BarChart,
+      description: 'Aperçu général',
+      color: 'text-blue-500'
+    },
     {
       name: 'Dashboard',
       href: '/dashboard',

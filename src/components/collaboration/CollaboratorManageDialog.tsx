@@ -211,7 +211,6 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
             <div className="p-3 bg-muted rounded-lg space-y-1">
               <p className="text-sm"><span className="font-medium">Nom:</span> {collaborator.name}</p>
               <p className="text-sm"><span className="font-medium">Rôle:</span> {collaborator.role}</p>
-              <p className="text-sm"><span className="font-medium">Statut:</span> {collaborator.status}</p>
               {collaborator.invitation_token && (
                 <div className="text-sm space-y-1">
                   <p>

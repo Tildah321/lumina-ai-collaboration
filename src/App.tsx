@@ -19,6 +19,7 @@ import Copyly from "./pages/Copyly";
 import Upgrade from "./pages/Upgrade";
 import Profile from "./pages/Profile";
 import Collaboration from "./pages/Collaboration";
+import Overview from "./pages/Overview";
 import InviteAcceptPage from "./components/collaboration/InviteAcceptPage";
 import CollaboratorLogin from "./components/collaboration/CollaboratorLogin";
 import CollaboratorLoginReusable from "./components/collaboration/CollaboratorLoginReusable";
@@ -102,6 +103,11 @@ const App = () => (
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/overview" element={
+              <ProtectedRoute>
+                <Overview />
               </ProtectedRoute>
             } />
             <Route path="/collaboration" element={
