@@ -52,14 +52,12 @@ const CollaboratorClientSpace = () => {
         const collaborator = JSON.parse(sessionData);
         setCollaboratorInfo(collaborator);
 
-        // Vérifier l'accès à cet espace spécifique
-        const { data: accessData, error: accessError } = await supabase
-          .from('space_collaborators')
-          .select('*')
-          .eq('collaborator_id', collaborator.id)
-          .eq('space_id', id);
+        // Vérifier l'accès à cet espace spécifique via RPC sécurisée
+        const { data: accessData, error: accessError } = await supabase.rpc('get_spaces_for_collaborator_by_token', {
+          p_invitation_token: collaborator.invitation_token
+        });
 
-        if (accessError || !accessData || accessData.length === 0) {
+        if (accessError || !accessData || !accessData.find((access: any) => access.space_id === id)) {
           toast({
             title: "Accès refusé",
             description: "Vous n'avez pas l'autorisation d'accéder à cet espace",

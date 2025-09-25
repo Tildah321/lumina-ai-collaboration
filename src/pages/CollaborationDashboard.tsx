@@ -46,7 +46,7 @@ const CollaborationDashboard = () => {
       const parsedSession = JSON.parse(sessionData);
       setSession(parsedSession);
       // Charger les espaces accessibles
-      loadSpaceAccesses(parsedSession.id);
+      loadSpaceAccesses(parsedSession);
     } catch (error) {
       console.error('Erreur lors du parsing de la session:', error);
       localStorage.removeItem('collaborator_session');
@@ -54,13 +54,13 @@ const CollaborationDashboard = () => {
     }
   }, [navigate]);
 
-  const loadSpaceAccesses = async (collaboratorId: string) => {
+  const loadSpaceAccesses = async (collaboratorSession: CollaboratorSession) => {
     setIsLoadingSpaces(true);
     try {
-      const { data, error } = await supabase
-        .from('space_collaborators')
-        .select('*')
-        .eq('collaborator_id', collaboratorId);
+      // Utilise la RPC sécurisée avec le token d'invitation pour contourner RLS
+      const { data, error } = await supabase.rpc('get_spaces_for_collaborator_by_token', {
+        p_invitation_token: collaboratorSession.invitation_token
+      });
 
       if (error) throw error;
 
