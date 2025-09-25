@@ -48,11 +48,12 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
       const res: any = await nocodbService.getClients();
       const list = (res?.list || []).map((c: any) => {
         const spaceId = (c.Id || c.id)?.toString?.() || '';
-        const spaceName = c.clq5g6xsxy12zmh || c.email || `Espace ${spaceId}`;
+        // Priorité: champ NocoDB fourni par l'utilisateur, puis description, puis name, et en dernier l'email/ID
+        const spaceName = c.clq5g6xsxy12zmh || c.description || c.name || c.email || `Espace ${spaceId}`;
         return {
           id: spaceId,
-          label: spaceName,
-          name: spaceName
+          label: String(spaceName),
+          name: String(spaceName)
         };
       }).filter((s: any) => !!s.id);
       setSpaces(list);
