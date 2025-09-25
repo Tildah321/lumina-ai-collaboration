@@ -305,49 +305,49 @@ const CollaboratorClientSpace = () => {
               </Card>
             )}
 
-            {space.checklistLink && (
+            {space.recapLink && (
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <Clock className="w-8 h-8 text-primary" />
+                    <FileText className="w-8 h-8 text-primary" />
                     <div className="flex-1">
-                      <h3 className="font-medium">Checklist</h3>
-                      <p className="text-sm text-muted-foreground">Suivi production</p>
+                      <h3 className="font-medium">Récapitulatif du projet</h3>
+                      <p className="text-sm text-muted-foreground">Document de synthèse</p>
                     </div>
                   </div>
                   <Button 
                     variant="outline" 
                     size="sm" 
                     className="w-full mt-3"
-                    onClick={() => window.open(space.checklistLink, '_blank')}
+                    onClick={() => window.open(space.recapLink, '_blank')}
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Voir
+                    Voir le récapitulatif
                   </Button>
                 </CardContent>
               </Card>
             )}
           </div>
 
-          {/* Lien récapitulatif projet */}
-          {space.recapLink && (
+          {/* Lien checklist */}
+          {space.checklistLink && (
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <FileText className="w-8 h-8 text-primary" />
+                  <Clock className="w-8 h-8 text-primary" />
                   <div className="flex-1">
-                    <h3 className="font-medium">Récapitulatif du projet</h3>
-                    <p className="text-sm text-muted-foreground">Document de synthèse</p>
+                    <h3 className="font-medium">Checklist</h3>
+                    <p className="text-sm text-muted-foreground">Suivi production</p>
                   </div>
                 </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className="w-full mt-3"
-                  onClick={() => window.open(space.recapLink, '_blank')}
+                  onClick={() => window.open(space.checklistLink, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Voir le récapitulatif
+                  Voir
                 </Button>
               </CardContent>
             </Card>
@@ -374,11 +374,8 @@ const CollaboratorClientSpace = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Statistiques et investissement */}
-          <div className="space-y-6">
-            <StatisticsOverview spaceId={space.id} isPublic={true} />
-            <ProjectInvestmentManager spaceId={space.id} />
-          </div>
+          {/* Statistiques */}
+          <StatisticsOverview spaceId={space.id} isPublic={true} />
         </div>
       </main>
     </div>
