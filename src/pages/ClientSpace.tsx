@@ -236,7 +236,6 @@ const ClientSpace = () => {
       console.error('Erreur enregistrement checklist link:', error);
       toast({ title: 'Erreur', description: "Impossible d'enregistrer le lien de checklist", variant: 'destructive' });
     }
-    }
   };
 
   if (isLoading) {
@@ -537,76 +536,76 @@ const ClientSpace = () => {
 
         {/* Dialog modification du formulaire de démarrage */}
 
-          {/* Dialog modification du formulaire de démarrage */}
-          <Dialog open={isOnboardingDialogOpen} onOpenChange={setIsOnboardingDialogOpen}>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Formulaire de démarrage</DialogTitle>
-              </DialogHeader>
-              <div className="flex flex-col gap-4">
-                <Input
-                  value={onboardingLinkInput}
-                  onChange={(e) => setOnboardingLinkInput(e.target.value)}
-                  placeholder="https://exemple.com/formulaire-de-demarrage"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => { setIsOnboardingDialogOpen(false); setOnboardingLinkInput((space as any)?.onboardingLink || ''); }}>Annuler</Button>
-                  <Button onClick={async () => { await saveOnboardingLink(); setIsOnboardingDialogOpen(false); }}>Enregistrer</Button>
-                </div>
+        {/* Dialog modification du formulaire de démarrage */}
+        <Dialog open={isOnboardingDialogOpen} onOpenChange={setIsOnboardingDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Formulaire de démarrage</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <Input
+                value={onboardingLinkInput}
+                onChange={(e) => setOnboardingLinkInput(e.target.value)}
+                placeholder="https://exemple.com/formulaire-de-demarrage"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => { setIsOnboardingDialogOpen(false); setOnboardingLinkInput((space as any)?.onboardingLink || ''); }}>Annuler</Button>
+                <Button onClick={async () => { await saveOnboardingLink(); setIsOnboardingDialogOpen(false); }}>Enregistrer</Button>
               </div>
-            </DialogContent>
-          </Dialog>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-          {/* Dialog modification du récapitulatif du projet */}
-          <Dialog open={isRecapDialogOpen} onOpenChange={setIsRecapDialogOpen}>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Récapitulatif du projet</DialogTitle>
-              </DialogHeader>
-              <div className="flex flex-col gap-4">
-                <Input
-                  value={recapLinkInput}
-                  onChange={(e) => setRecapLinkInput(e.target.value)}
-                  placeholder="https://exemple.com/recap.pdf"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => { setIsRecapDialogOpen(false); setRecapLinkInput((space as any)?.recapLink || ''); }}>Annuler</Button>
-                  <Button onClick={async () => { await saveRecapLink(); setIsRecapDialogOpen(false); }}>Enregistrer</Button>
-                </div>
+        {/* Dialog modification du récapitulatif du projet */}
+        <Dialog open={isRecapDialogOpen} onOpenChange={setIsRecapDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Récapitulatif du projet</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <Input
+                value={recapLinkInput}
+                onChange={(e) => setRecapLinkInput(e.target.value)}
+                placeholder="https://exemple.com/recap.pdf"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => { setIsRecapDialogOpen(false); setRecapLinkInput((space as any)?.recapLink || ''); }}>Annuler</Button>
+                <Button onClick={async () => { await saveRecapLink(); setIsRecapDialogOpen(false); }}>Enregistrer</Button>
               </div>
-            </DialogContent>
-          </Dialog>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-          {/* Dialog modification checklist de production */}
-          <Dialog open={isChecklistDialogOpen} onOpenChange={setIsChecklistDialogOpen}>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Checklist de production</DialogTitle>
-              </DialogHeader>
-              <div className="flex flex-col gap-4">
-                <Input
-                  value={checklistLinkInput}
-                  onChange={(e) => setChecklistLinkInput(e.target.value)}
-                  placeholder="https://notion.so/checklist ou https://trello.com/board"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Ce lien ne sera visible que par vous et vos collaborateurs, jamais par le client.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => { setIsChecklistDialogOpen(false); setChecklistLinkInput((space as any)?.checklistLink || ''); }}>Annuler</Button>
-                  <Button onClick={async () => { await saveChecklistLink(); setIsChecklistDialogOpen(false); }}>Enregistrer</Button>
-                </div>
+        {/* Dialog modification checklist de production */}
+        <Dialog open={isChecklistDialogOpen} onOpenChange={setIsChecklistDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Checklist de production</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <Input
+                value={checklistLinkInput}
+                onChange={(e) => setChecklistLinkInput(e.target.value)}
+                placeholder="https://notion.so/checklist ou https://trello.com/board"
+              />
+              <p className="text-sm text-muted-foreground">
+                Ce lien ne sera visible que par vous et vos collaborateurs, jamais par le client.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => { setIsChecklistDialogOpen(false); setChecklistLinkInput((space as any)?.checklistLink || ''); }}>Annuler</Button>
+                <Button onClick={async () => { await saveChecklistLink(); setIsChecklistDialogOpen(false); }}>Enregistrer</Button>
               </div>
-            </DialogContent>
-          </Dialog>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-          {/* Dialog de partage client */}
-          <ClientShareDialog
-            isOpen={isShareDialogOpen}
-            onClose={() => setIsShareDialogOpen(false)}
-            spaceId={id || ''}
-            spaceName={space?.description || ''}
-          />
+        {/* Dialog de partage client */}
+        <ClientShareDialog
+          isOpen={isShareDialogOpen}
+          onClose={() => setIsShareDialogOpen(false)}
+          spaceId={id || ''}
+          spaceName={space?.description || ''}
+        />
       </div>
     </ClientSpaceProvider>
   );
