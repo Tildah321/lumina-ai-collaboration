@@ -46,11 +46,15 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
   const loadSpaces = async () => {
     try {
       const res: any = await nocodbService.getClients();
-      const list = (res?.list || []).map((c: any) => ({
-        id: (c.Id || c.id)?.toString?.() || '',
-        label: c.email || c.description || `Espace ${(c.Id || c.id)}`,
-        name: c.email || `Client ${(c.Id || c.id)}`
-      })).filter((s: any) => !!s.id);
+      const list = (res?.list || []).map((c: any) => {
+        const spaceId = (c.Id || c.id)?.toString?.() || '';
+        const spaceName = c.clq5g6xsxy12zmh || c.email || `Espace ${spaceId}`;
+        return {
+          id: spaceId,
+          label: spaceName,
+          name: spaceName
+        };
+      }).filter((s: any) => !!s.id);
       setSpaces(list);
     } catch (e) {
       console.error('Erreur chargement espaces:', e);
