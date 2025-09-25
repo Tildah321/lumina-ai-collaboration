@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import TaskManager from '@/components/tasks/TaskManager';
 import MilestoneManager from '@/components/milestones/MilestoneManager';
 import NocoInvoiceManager from '@/components/invoices/NocoInvoiceManager';
+import StatisticsOverview from '@/components/overview/StatisticsOverview';
+import ProjectInvestmentManager from '@/components/finances/ProjectInvestmentManager';
 import nocodbService from '@/services/nocodbService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -327,24 +329,34 @@ const CollaboratorClientSpace = () => {
             )}
           </div>
 
-          {/* Tabs simplifiées pour collaborateur */}
+          {/* Tabs complètes pour collaborateur */}
           <Tabs defaultValue="tasks" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="tasks">Tâches</TabsTrigger>
               <TabsTrigger value="milestones">Jalons</TabsTrigger>
               <TabsTrigger value="invoices">Factures</TabsTrigger>
+              <TabsTrigger value="overview">Récapitulatif</TabsTrigger>
+              <TabsTrigger value="investment">Investissement</TabsTrigger>
             </TabsList>
             
             <TabsContent value="tasks" className="space-y-4">
-              <TaskManager projetId={space.id} isClient={true} />
+              <TaskManager projetId={space.id} isClient={false} />
             </TabsContent>
             
             <TabsContent value="milestones" className="space-y-4">
-              <MilestoneManager projetId={space.id} isClient={true} />
+              <MilestoneManager projetId={space.id} isClient={false} />
             </TabsContent>
             
             <TabsContent value="invoices" className="space-y-4">
-              <NocoInvoiceManager projetId={space.id} isClient={true} />
+              <NocoInvoiceManager projetId={space.id} isClient={false} />
+            </TabsContent>
+            
+            <TabsContent value="overview" className="space-y-4">
+              <StatisticsOverview spaceId={space.id} isPublic={true} />
+            </TabsContent>
+            
+            <TabsContent value="investment" className="space-y-4">
+              <ProjectInvestmentManager spaceId={space.id} />
             </TabsContent>
           </Tabs>
         </div>
