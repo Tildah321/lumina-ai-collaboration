@@ -117,7 +117,7 @@ const CollaborationDashboard = () => {
   };
 
   const openClientSpace = (spaceId: string) => {
-    navigate(`/client-space/${spaceId}`);
+    navigate(`/collaborator-space/${spaceId}`);
   };
 
   const formatLoginTime = (loginTime: string) => {

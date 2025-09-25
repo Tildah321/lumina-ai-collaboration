@@ -23,6 +23,7 @@ import InviteAcceptPage from "./components/collaboration/InviteAcceptPage";
 import CollaboratorLogin from "./components/collaboration/CollaboratorLogin";
 import CollaboratorLoginReusable from "./components/collaboration/CollaboratorLoginReusable";
 import CollaborationDashboard from "./pages/CollaborationDashboard";
+import CollaboratorClientSpace from "./pages/CollaboratorClientSpace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
                 <ClientSpace />
               </ProtectedRoute>
             } />
+            <Route path="/collaborator-space/:id" element={<CollaboratorClientSpace />} />
             <Route path="/tasky" element={
               <ProtectedRoute>
                 <Tasky />
