@@ -144,20 +144,20 @@ const CollaboratorManager = () => {
         throw new Error(result.error || 'Erreur lors de la création de l\'invitation');
       }
 
-      const inviteLink = `${window.location.origin}/invite-setup/${invitationToken}`;
-      const inviteMessage = `Lien: ${inviteLink}\nNom: ${newInvite.name}\nMot de passe: ${newInvite.password}`;
+      const loginLink = `${window.location.origin}/collaborator-login/${invitationToken}`;
+      const inviteMessage = `Lien de connexion: ${loginLink}\nNom: ${newInvite.name}\nMot de passe: ${newInvite.password}`;
       setGeneratedLink(inviteMessage);
       setCollaborators([result.collaborator as Collaborator, ...collaborators]);
 
       toast({
-        title: "Lien d'invitation généré",
-        description: "Le lien d'invitation a été créé avec succès"
+        title: "Lien de connexion généré",
+        description: "Le lien de connexion collaborateur a été créé avec succès"
       });
     } catch (error: any) {
       console.error('Erreur lors de la génération du lien:', error);
       
       // Messages d'erreur plus spécifiques
-      let errorMessage = "Impossible de générer le lien d'invitation";
+      let errorMessage = "Impossible de générer le lien de connexion";
       
       if (error.message?.includes('row-level security')) {
         errorMessage = "Problème de permissions. Vérifiez que vous êtes connecté avec le bon compte.";

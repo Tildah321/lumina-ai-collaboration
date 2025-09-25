@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import Collaboration from "./pages/Collaboration";
 import InviteAcceptPage from "./components/collaboration/InviteAcceptPage";
 import CollaboratorLogin from "./components/collaboration/CollaboratorLogin";
+import CollaboratorLoginReusable from "./components/collaboration/CollaboratorLoginReusable";
 import CollaborationDashboard from "./pages/CollaborationDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -109,6 +110,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/invite/:token" element={<CollaboratorLogin />} />
+            <Route path="/collaborator-login/:token" element={<CollaboratorLoginReusable />} />
             <Route path="/collaboration-dashboard" element={<CollaborationDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
