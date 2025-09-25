@@ -329,55 +329,28 @@ const CollaboratorClientSpace = () => {
             )}
           </div>
 
-          {/* Liens de récapitulatif projet */}
-          {(space.recapLink || space.onboardingLink) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {space.recapLink && (
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-8 h-8 text-primary" />
-                      <div className="flex-1">
-                        <h3 className="font-medium">Récapitulatif du projet</h3>
-                        <p className="text-sm text-muted-foreground">Document de synthèse</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full mt-3"
-                      onClick={() => window.open(space.recapLink, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Voir le récapitulatif
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {space.onboardingLink && (
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-8 h-8 text-primary" />
-                      <div className="flex-1">
-                        <h3 className="font-medium">Guide d'onboarding</h3>
-                        <p className="text-sm text-muted-foreground">Documentation projet</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full mt-3"
-                      onClick={() => window.open(space.onboardingLink, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Consulter
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+          {/* Lien récapitulatif projet */}
+          {space.recapLink && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-primary" />
+                  <div className="flex-1">
+                    <h3 className="font-medium">Récapitulatif du projet</h3>
+                    <p className="text-sm text-muted-foreground">Document de synthèse</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-3"
+                  onClick={() => window.open(space.recapLink, '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Voir le récapitulatif
+                </Button>
+              </CardContent>
+            </Card>
           )}
 
           {/* Tabs pour collaborateur */}
@@ -401,15 +374,11 @@ const CollaboratorClientSpace = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Investissement projet toujours visible */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Investissement par projet</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProjectInvestmentManager spaceId={space.id} />
-            </CardContent>
-          </Card>
+          {/* Statistiques et investissement */}
+          <div className="space-y-6">
+            <StatisticsOverview spaceId={space.id} isPublic={true} />
+            <ProjectInvestmentManager spaceId={space.id} />
+          </div>
         </div>
       </main>
     </div>
