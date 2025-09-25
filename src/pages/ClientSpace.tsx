@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, ExternalLink, CreditCard, FileText, MessageSquare, Settings, Users, Calendar, Plus, Target, Clock, Menu, Share2, CheckCircle2, Euro, Lock } from 'lucide-react';
+import { ArrowLeft, ExternalLink, CreditCard, FileText, MessageSquare, Settings, Users, Calendar, Plus, Target, Clock, Menu, Share2, CheckCircle2, Euro, Lock, Clipboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TaskManager from '@/components/tasks/TaskManager';
 import MilestoneManager from '@/components/milestones/MilestoneManager';
@@ -28,8 +28,10 @@ const ClientSpace = () => {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [onboardingLinkInput, setOnboardingLinkInput] = useState('');
   const [recapLinkInput, setRecapLinkInput] = useState('');
+  const [checklistLinkInput, setChecklistLinkInput] = useState('');
   const [isOnboardingDialogOpen, setIsOnboardingDialogOpen] = useState(false);
   const [isRecapDialogOpen, setIsRecapDialogOpen] = useState(false);
+  const [isChecklistDialogOpen, setIsChecklistDialogOpen] = useState(false);
 
   useEffect(() => {
     const loadSpace = async () => {
@@ -62,12 +64,14 @@ const ClientSpace = () => {
             recapLink: notes.recapLink || notes.lien_recap ||
               notes.lien_recapitulatif || foundSpace.lien_recap ||
               (foundSpace as any).lien_recapitulatif || '',
+            checklistLink: foundSpace.cidgucz93l1vyxd || '',
             notes
           } as any;
 
           setSpace(mappedSpace);
           setOnboardingLinkInput(mappedSpace.onboardingLink || '');
           setRecapLinkInput(mappedSpace.recapLink || '');
+          setChecklistLinkInput(mappedSpace.checklistLink || '');
         } else {
           navigate('/dashboard');
         }
@@ -152,6 +156,18 @@ const ClientSpace = () => {
     window.open(link, '_blank', 'noopener,noreferrer');
   };
 
+  const openChecklistLink = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const link = (space as any)?.checklistLink;
+    if (!link || !link.trim()) {
+      console.log('❌ No checklist link available');
+      return;
+    }
+    console.log('📋 Opening checklist link:', link);
+    window.open(link, '_blank', 'noopener,noreferrer');
+  };
+
   const saveOnboardingLink = async () => {
     if (!space) return;
     try {
@@ -203,6 +219,23 @@ const ClientSpace = () => {
     } catch (error) {
       console.error('Erreur enregistrement recap link:', error);
       toast({ title: 'Erreur', description: "Impossible d'enregistrer le lien du récapitulatif", variant: 'destructive' });
+    }
+  };
+
+  const saveChecklistLink = async () => {
+    if (!space) return;
+    try {
+      const value = checklistLinkInput.trim() || null;
+      await nocodbService.updateClient((space as any).id, {
+        cidgucz93l1vyxd: value
+      });
+      setSpace({ ...(space as any), checklistLink: value || '' });
+      setChecklistLinkInput(value || '');
+      toast({ title: 'Lien enregistré', description: "Le lien de checklist de production a été mis à jour." });
+    } catch (error) {
+      console.error('Erreur enregistrement checklist link:', error);
+      toast({ title: 'Erreur', description: "Impossible d'enregistrer le lien de checklist", variant: 'destructive' });
+    }
     }
   };
 
@@ -402,7 +435,59 @@ const ClientSpace = () => {
 
         {/* Investment Manager & Client Home - Admin only */}
         {!isClient && (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          <div className="mt-6 space-y-6">
+            {/* Checklist de production - Bloc séparé */}
+            <Card className="glass-glow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Clipboard className="w-5 h-5" />
+                  Checklist de production
+                </CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Lien de suivi interne pour l'équipe de production (invisible pour le client).
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(space as any).checklistLink && (space as any).checklistLink.trim() ? (
+                  <div className="flex items-center gap-3">
+                    <Button 
+                      size="sm" 
+                      onClick={(e) => openChecklistLink(e)}
+                      className="flex items-center gap-2"
+                    >
+                      <Clipboard className="w-4 h-4" />
+                      Ouvrir la checklist
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => { 
+                        setChecklistLinkInput((space as any).checklistLink || ''); 
+                        setIsChecklistDialogOpen(true); 
+                      }}
+                    >
+                      Modifier
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => { 
+                      setChecklistLinkInput(''); 
+                      setIsChecklistDialogOpen(true); 
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter une checklist
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Investment Manager & Client Home */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             <ProjectInvestmentManager spaceId={id || ''} />
             <Card className="glass-glow h-full">
               <CardHeader className="pb-3">
@@ -447,7 +532,10 @@ const ClientSpace = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
         )}
+
+        {/* Dialog modification du formulaire de démarrage */}
 
           {/* Dialog modification du formulaire de démarrage */}
           <Dialog open={isOnboardingDialogOpen} onOpenChange={setIsOnboardingDialogOpen}>
@@ -484,6 +572,29 @@ const ClientSpace = () => {
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => { setIsRecapDialogOpen(false); setRecapLinkInput((space as any)?.recapLink || ''); }}>Annuler</Button>
                   <Button onClick={async () => { await saveRecapLink(); setIsRecapDialogOpen(false); }}>Enregistrer</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog modification checklist de production */}
+          <Dialog open={isChecklistDialogOpen} onOpenChange={setIsChecklistDialogOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Checklist de production</DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col gap-4">
+                <Input
+                  value={checklistLinkInput}
+                  onChange={(e) => setChecklistLinkInput(e.target.value)}
+                  placeholder="https://notion.so/checklist ou https://trello.com/board"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Ce lien ne sera visible que par vous et vos collaborateurs, jamais par le client.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => { setIsChecklistDialogOpen(false); setChecklistLinkInput((space as any)?.checklistLink || ''); }}>Annuler</Button>
+                  <Button onClick={async () => { await saveChecklistLink(); setIsChecklistDialogOpen(false); }}>Enregistrer</Button>
                 </div>
               </div>
             </DialogContent>
