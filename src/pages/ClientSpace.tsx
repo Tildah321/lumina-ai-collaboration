@@ -33,6 +33,17 @@ const ClientSpace = () => {
   const [isRecapDialogOpen, setIsRecapDialogOpen] = useState(false);
   const [isChecklistDialogOpen, setIsChecklistDialogOpen] = useState(false);
 
+  // Normalise les valeurs de lien potentiellement au format objet renvoyé par NocoDB
+  const normalizeLink = (v: any): string => {
+    if (v === null || v === undefined || v === 'undefined') return '';
+    if (typeof v === 'string') return v;
+    if (typeof v === 'object') {
+      const val = (v as any).value ?? (v as any).url ?? (v as any).href;
+      return typeof val === 'string' ? val : '';
+    }
+    return '';
+  };
+
   useEffect(() => {
     const loadSpace = async () => {
       setIsLoading(true);
@@ -56,18 +67,24 @@ const ClientSpace = () => {
             driveLink: foundSpace.lien_portail || '',
             paymentLink: foundSpace.lien_payement || '',
             messageLink: foundSpace.lien_whatsapp || '',
-            meetingLink:
+            meetingLink: normalizeLink(
               notes.meetingLink ||
               notes.lien_rdv ||
               (foundSpace as any).cc9tztuoagcmq8l ||
-              (foundSpace as any).lien_rdv ||
-              '',
-            onboardingLink: notes.onboardingLink || notes.lien_onboarding || foundSpace.cz787nu83e9bvlu || foundSpace.lien_onboarding || '',
-            recapLink: notes.recapLink || notes.lien_recap ||
-              notes.lien_recapitulatif || foundSpace.lien_recap ||
-              (foundSpace as any).lien_recapitulatif || '',
-            checklistLink: notes.checklistLink || (notes as any).lien_checklist ||
-              (foundSpace as any).cidgucz93l1vyxd || (foundSpace as any).lien_checklist || '',
+              (foundSpace as any).lien_rdv
+            ),
+            onboardingLink: normalizeLink(
+              notes.onboardingLink || notes.lien_onboarding || (foundSpace as any).cz787nu83e9bvlu || (foundSpace as any).lien_onboarding
+            ),
+            recapLink: normalizeLink(
+              notes.recapLink || notes.lien_recap ||
+              notes.lien_recapitulatif || (foundSpace as any).lien_recap ||
+              (foundSpace as any).lien_recapitulatif
+            ),
+            checklistLink: normalizeLink(
+              notes.checklistLink || (notes as any).lien_checklist ||
+              (foundSpace as any).cidgucz93l1vyxd || (foundSpace as any).lien_checklist
+            ),
             notes
           } as any;
 
@@ -240,6 +257,7 @@ const ClientSpace = () => {
       }
       await nocodbService.updateClient((space as any).id, {
         cidgucz93l1vyxd: value,
+        lien_checklist: value,
         notes: JSON.stringify(updatedNotes)
       });
       setSpace({ ...(space as any), checklistLink: value || '', notes: updatedNotes });
@@ -468,7 +486,7 @@ const ClientSpace = () => {
                       className="flex items-center gap-2"
                     >
                       <Clipboard className="w-4 h-4" />
-                      Ouvrir la checklist
+                      Voir
                     </Button>
                     <Button 
                       size="sm" 
