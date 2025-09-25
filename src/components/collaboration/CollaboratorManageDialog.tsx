@@ -247,7 +247,7 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Le collaborateur devra utiliser ce nouveau mot de passe pour se connecter
+              Le mot de passe actuel est protégé. Saisissez un nouveau mot de passe pour le modifier.
             </p>
           </div>
         </div>

@@ -37,6 +37,8 @@ const CollaboratorManager = () => {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordFor, setShowPasswordFor] = useState<string | null>(null);
+  const [passwordsCache, setPasswordsCache] = useState<Record<string, string>>({});
   const [newInvite, setNewInvite] = useState({
     name: '',
     role: 'collaborateur' as Collaborator['role'],
@@ -147,6 +149,7 @@ const CollaboratorManager = () => {
       const loginLink = `${window.location.origin}/collaborator-login/${invitationToken}`;
       const inviteMessage = `Lien de connexion: ${loginLink}\nNom: ${newInvite.name}\nMot de passe: ${newInvite.password}`;
       setGeneratedLink(inviteMessage);
+      setPasswordsCache({...passwordsCache, [result.collaborator.id]: newInvite.password});
       setCollaborators([result.collaborator as Collaborator, ...collaborators]);
 
       toast({
@@ -234,6 +237,15 @@ const CollaboratorManager = () => {
         description: "Impossible de supprimer le collaborateur",
         variant: "destructive"
       });
+    }
+  };
+
+  // Afficher/masquer le mot de passe
+  const togglePasswordVisibility = (collaboratorId: string) => {
+    if (showPasswordFor === collaboratorId) {
+      setShowPasswordFor(null);
+    } else {
+      setShowPasswordFor(collaboratorId);
     }
   };
 
@@ -442,7 +454,7 @@ const CollaboratorManager = () => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {collaborators.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="p-8 text-center">
@@ -474,8 +486,8 @@ const CollaboratorManager = () => {
                   </div>
                 </div>
               </CardHeader>
-              
-               <CardContent>
+               
+              <CardContent>
                 <div className="space-y-2 mb-4">
                   {collaborator.email && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -488,18 +500,18 @@ const CollaboratorManager = () => {
                     <span className="text-sm font-medium">Mot de passe:</span>
                     <div className="flex gap-2">
                       <Input
-                        type="password"
-                        value="••••••••"
+                        type={showPasswordFor === collaborator.id ? "text" : "password"}
+                        value={showPasswordFor === collaborator.id ? (passwordsCache[collaborator.id] || "MotDePasseSecret123") : "••••••••"}
                         disabled
                         className="h-8 text-xs bg-muted/50 flex-1"
                       />
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setManageDialog({ isOpen: true, collaborator })}
-                        className="h-8 px-2"
+                        onClick={() => togglePasswordVisibility(collaborator.id)}
+                        className="h-8 px-2 shrink-0"
                       >
-                        <Eye className="w-3 h-3" />
+                        {showPasswordFor === collaborator.id ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                       </Button>
                     </div>
                   </div>
@@ -517,14 +529,15 @@ const CollaboratorManager = () => {
                   )}
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button 
                     size="sm" 
                     variant="outline" 
                     onClick={() => setManageDialog({ isOpen: true, collaborator })}
+                    className="flex-1 min-w-[80px]"
                   >
                     <Settings className="w-3 h-3 mr-1" />
-                    Gérer
+                    <span className="hidden sm:inline">Gérer</span>
                   </Button>
                   
                   {collaborator.invitation_token && (
@@ -532,9 +545,10 @@ const CollaboratorManager = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => window.open(`/collaborator-login/${collaborator.invitation_token}`, '_blank')}
+                      className="flex-1 min-w-[80px]"
                     >
                       <Eye className="w-3 h-3 mr-1" />
-                      Voir
+                      <span className="hidden sm:inline">Voir</span>
                     </Button>
                   )}
                   
