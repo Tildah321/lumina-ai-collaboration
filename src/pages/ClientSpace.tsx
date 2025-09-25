@@ -38,6 +38,8 @@ const ClientSpace = () => {
       setIsLoading(true);
       try {
         const foundSpace = await nocodbService.getClientById(id || '', true);
+        console.log('🔍 foundSpace data:', foundSpace);
+        console.log('📋 cidgucz93l1vyxd field:', foundSpace?.cidgucz93l1vyxd);
         if (foundSpace) {
           // Normaliser via les notes JSON
           let notes: any = {};
@@ -68,6 +70,7 @@ const ClientSpace = () => {
             notes
           } as any;
 
+          console.log('🎯 mappedSpace.checklistLink:', mappedSpace.checklistLink);
           setSpace(mappedSpace);
           setOnboardingLinkInput(mappedSpace.onboardingLink || '');
           setRecapLinkInput(mappedSpace.recapLink || '');
