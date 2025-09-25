@@ -475,7 +475,7 @@ const CollaboratorManager = () => {
                 </div>
               </CardHeader>
               
-              <CardContent>
+               <CardContent>
                 <div className="space-y-2 mb-4">
                   {collaborator.email && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -484,16 +484,29 @@ const CollaboratorManager = () => {
                     </div>
                   )}
                   
-                  {collaborator.status === 'pending' && collaborator.invitation_token && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Link className="w-4 h-4" />
-                      <span>Lien d'invitation en attente</span>
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium">Mot de passe:</span>
+                    <div className="flex gap-2">
+                      <Input
+                        type="password"
+                        value="••••••••"
+                        disabled
+                        className="h-8 text-xs bg-muted/50 flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setManageDialog({ isOpen: true, collaborator })}
+                        className="h-8 px-2"
+                      >
+                        <Eye className="w-3 h-3" />
+                      </Button>
                     </div>
-                  )}
+                  </div>
                   
-                  {collaborator.status === 'pending' && (
+                  {collaborator.invitation_token && (
                     <div className="text-xs text-muted-foreground">
-                      Invitation envoyée le {new Date(collaborator.created_at).toLocaleDateString('fr-FR')}
+                      Créé le {new Date(collaborator.created_at).toLocaleDateString('fr-FR')}
                     </div>
                   )}
                   
@@ -513,6 +526,17 @@ const CollaboratorManager = () => {
                     <Settings className="w-3 h-3 mr-1" />
                     Gérer
                   </Button>
+                  
+                  {collaborator.invitation_token && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(`/collaborator-login/${collaborator.invitation_token}`, '_blank')}
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      Voir
+                    </Button>
+                  )}
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
