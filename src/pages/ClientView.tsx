@@ -448,7 +448,7 @@ const ClientView = () => {
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
-                Découvrir nos offres
+                Découvrir Lumina
               </Button>
             </CardContent>
           </Card>

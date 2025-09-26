@@ -411,8 +411,26 @@ const CollaboratorClientSpace = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Statistiques */}
-          <StatisticsOverview spaceId={space.id} isPublic={true} />
+           {/* Découvrir Lumina */}
+           <Card>
+             <CardHeader>
+               <CardTitle>Découvrir Lumina</CardTitle>
+               <CardDescription>Explorez nos services et solutions</CardDescription>
+             </CardHeader>
+             <CardContent>
+               <Button
+                 variant="outline"
+                 onClick={() => window.open('https://lumina.app', '_blank')}
+                 className="flex items-center gap-2"
+               >
+                 <ExternalLink className="w-4 h-4" />
+                 Découvrir Lumina
+               </Button>
+             </CardContent>
+           </Card>
+
+           {/* Statistiques */}
+           <StatisticsOverview spaceId={space.id} isPublic={true} />
         </div>
       </main>
     </div>
