@@ -63,6 +63,8 @@ export const saveBrandingToSupabase = async (settings: BrandingSettings): Promis
         payment_link: settings.paymentLink || null,
         message_link: settings.messageLink || null,
         meeting_link: settings.meetingLink || null
+      }, {
+        onConflict: 'user_id'
       });
 
     if (!error) {
@@ -70,8 +72,10 @@ export const saveBrandingToSupabase = async (settings: BrandingSettings): Promis
       saveBranding(settings);
       return true;
     }
+    console.error('Error saving branding:', error);
     return false;
-  } catch {
+  } catch (error) {
+    console.error('Exception saving branding:', error);
     return false;
   }
 };
