@@ -7,6 +7,8 @@ import { LogOut, Users, Building, Clock, Calendar, CheckCircle, ExternalLink, Fo
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import nocodbService from '@/services/nocodbService';
+import { getBrandingForUser, applyBranding, BrandingSettings } from '@/lib/branding';
+import { Logo } from '@/components/ui/logo';
 
 interface CollaboratorSession {
   id: string;
@@ -33,6 +35,7 @@ const CollaborationDashboard = () => {
   const [session, setSession] = useState<CollaboratorSession | null>(null);
   const [spaceAccesses, setSpaceAccesses] = useState<SpaceAccess[]>([]);
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
+  const [branding, setBranding] = useState<BrandingSettings>({});
 
   useEffect(() => {
     // Vérifier la session collaborateur
@@ -45,8 +48,9 @@ const CollaborationDashboard = () => {
     try {
       const parsedSession = JSON.parse(sessionData);
       setSession(parsedSession);
-      // Charger les espaces accessibles
+      // Charger les espaces accessibles et le branding
       loadSpaceAccesses(parsedSession);
+      loadBrandingData(parsedSession);
     } catch (error) {
       console.error('Erreur lors du parsing de la session:', error);
       localStorage.removeItem('collaborator_session');
@@ -143,6 +147,31 @@ const CollaborationDashboard = () => {
     navigate(`/collaborator-space/${spaceId}`);
   };
 
+  const loadBrandingData = async (collaboratorSession: CollaboratorSession) => {
+    try {
+      // Obtenir l'ID de l'utilisateur qui a invité ce collaborateur
+      const { data: collaboratorData, error } = await supabase
+        .from('collaborators')
+        .select('invited_by')
+        .eq('invitation_token', collaboratorSession.invitation_token)
+        .single();
+
+      if (error || !collaboratorData) {
+        console.error('❌ Erreur lors de la récupération des données collaborateur:', error);
+        return;
+      }
+
+      // Charger le branding de l'utilisateur inviteur
+      const brandingData = await getBrandingForUser(collaboratorData.invited_by);
+      console.log('🎨 Branding chargé pour le collaborateur:', brandingData);
+      
+      setBranding(brandingData);
+      applyBranding(brandingData);
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement du branding:', error);
+    }
+  };
+
   const formatLoginTime = (loginTime: string) => {
     return new Date(loginTime).toLocaleString('fr-FR', {
       day: 'numeric',
@@ -168,9 +197,15 @@ const CollaborationDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <Users className="w-8 h-8 text-primary" />
+                {branding.brandName ? (
+                  <Logo size="md" showText={false} />
+                ) : (
+                  <Users className="w-8 h-8 text-primary" />
+                )}
                 <div>
-                  <h1 className="text-xl font-bold">Espace Collaborateur</h1>
+                  <h1 className="text-xl font-bold">
+                    {branding.brandName ? `Espace ${branding.brandName}` : 'Espace Collaborateur'}
+                  </h1>
                   <p className="text-sm text-muted-foreground">
                     Connecté en tant que {session.name}
                   </p>
@@ -196,26 +231,28 @@ const CollaborationDashboard = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* Welcome Card */}
-          <Card>
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                Bienvenue dans l'équipe !
+                <CheckCircle className="w-5 h-5 text-primary" />
+                Bienvenue dans {branding.brandName ? `l'équipe ${branding.brandName}` : 'l\'équipe'} !
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-muted rounded-lg">
+                <div className="text-center p-4 bg-primary/5 border border-primary/20 rounded-lg">
                   <Users className="w-8 h-8 text-primary mx-auto mb-2" />
                   <p className="font-medium">{session.name}</p>
                   <p className="text-sm text-muted-foreground">Collaborateur</p>
                 </div>
-                <div className="text-center p-4 bg-muted rounded-lg">
+                <div className="text-center p-4 bg-primary/5 border border-primary/20 rounded-lg">
                   <Building className="w-8 h-8 text-primary mx-auto mb-2" />
                   <p className="font-medium">Rôle</p>
-                  <Badge variant="default">{session.role}</Badge>
+                  <Badge style={{backgroundColor: `hsl(${branding.brandColor ? branding.brandColor.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(' ') : 'var(--primary)'})`, color: 'white'}} className="border-0">
+                    {session.role}
+                  </Badge>
                 </div>
-                <div className="text-center p-4 bg-muted rounded-lg">
+                <div className="text-center p-4 bg-primary/5 border border-primary/20 rounded-lg">
                   <Calendar className="w-8 h-8 text-primary mx-auto mb-2" />
                   <p className="font-medium">Connexion</p>
                   <p className="text-sm text-muted-foreground">
@@ -275,7 +312,7 @@ const CollaborationDashboard = () => {
                           </div>
                         </div>
                         <Button 
-                          className="w-full gap-2" 
+                          className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground" 
                           onClick={() => openClientSpace(access.space_id)}
                         >
                           <Eye className="w-4 h-4" />
