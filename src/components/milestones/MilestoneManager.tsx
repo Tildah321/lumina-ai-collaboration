@@ -43,7 +43,9 @@ const MilestoneManager = ({ projetId, isClient = false, onDataChange }: Mileston
   useEffect(() => {
     const loadMilestones = async () => {
       try {
-        const response = await nocodbService.getMilestones(projetId);
+        const response = isClient
+          ? await nocodbService.getMilestonesPublic(projetId)
+          : await nocodbService.getMilestones(projetId);
         const sortedMilestones = (response.list || []).map((milestone: any) => ({
           ...milestone,
           id: milestone.Id || milestone.id,

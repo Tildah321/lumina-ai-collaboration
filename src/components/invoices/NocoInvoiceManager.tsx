@@ -46,7 +46,9 @@ const NocoInvoiceManager = ({ projetId, isClient = false, onDataChange }: NocoIn
   useEffect(() => {
     const loadInvoices = async () => {
       try {
-        const response = await nocodbService.getInvoices(projetId);
+        const response = isClient
+          ? await nocodbService.getInvoicesPublic(projetId)
+          : await nocodbService.getInvoices(projetId);
         const invoicesWithIds = (response.list || []).map((invoice: any) => ({
           ...invoice,
           id: invoice.Id || invoice.id,
