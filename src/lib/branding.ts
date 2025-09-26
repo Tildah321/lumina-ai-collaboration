@@ -1,6 +1,11 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export interface BrandingSettings {
   brandName?: string;
   brandColor?: string;
+  paymentLink?: string;
+  messageLink?: string;
+  meetingLink?: string;
 }
 
 export const loadBranding = (): BrandingSettings => {
@@ -13,6 +18,87 @@ export const loadBranding = (): BrandingSettings => {
 
 export const saveBranding = (settings: BrandingSettings) => {
   localStorage.setItem('branding', JSON.stringify(settings));
+};
+
+// Load branding from Supabase
+export const loadBrandingFromSupabase = async (): Promise<BrandingSettings> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return {};
+
+    const { data, error } = await supabase
+      .from('user_branding')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error || !data) {
+      return loadBranding(); // Fallback to localStorage
+    }
+
+    return {
+      brandName: data.brand_name || '',
+      brandColor: data.brand_color || '#895af6',
+      paymentLink: data.payment_link || '',
+      messageLink: data.message_link || '',
+      meetingLink: data.meeting_link || ''
+    };
+  } catch {
+    return loadBranding(); // Fallback to localStorage
+  }
+};
+
+// Save branding to Supabase
+export const saveBrandingToSupabase = async (settings: BrandingSettings): Promise<boolean> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { error } = await supabase
+      .from('user_branding')
+      .upsert({
+        user_id: user.id,
+        brand_name: settings.brandName || null,
+        brand_color: settings.brandColor || '#895af6',
+        payment_link: settings.paymentLink || null,
+        message_link: settings.messageLink || null,
+        meeting_link: settings.meetingLink || null
+      });
+
+    if (!error) {
+      // Also save to localStorage as backup
+      saveBranding(settings);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+// Get branding for a specific user (for admin/collaborator access)
+export const getBrandingForUser = async (userId: string): Promise<BrandingSettings> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_branding')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      return {};
+    }
+
+    return {
+      brandName: data.brand_name || '',
+      brandColor: data.brand_color || '#895af6',
+      paymentLink: data.payment_link || '',
+      messageLink: data.message_link || '',
+      meetingLink: data.meeting_link || ''
+    };
+  } catch {
+    return {};
+  }
 };
 
 const hexToHSL = (hex: string): string => {

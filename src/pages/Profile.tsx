@@ -26,7 +26,7 @@ import { usePlan } from '@/contexts/PlanContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { loadBranding, saveBranding } from '@/lib/branding';
+import { loadBranding, saveBranding, loadBrandingFromSupabase, saveBrandingToSupabase } from '@/lib/branding';
 
 const Profile = () => {
   const { user, changePassword } = useAuth();
@@ -53,30 +53,42 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    const savedLinks = JSON.parse(localStorage.getItem('defaultLinks') || '{}');
-    const savedBranding = loadBranding();
-    setFormData(prev => ({
-      ...prev,
-      paymentLink: savedLinks.paymentLink || '',
-      messageLink: savedLinks.messageLink || '',
-      meetingLink: savedLinks.meetingLink || '',
-      brandName: savedBranding.brandName || '',
-      brandColor: savedBranding.brandColor || '#895af6'
-    }));
+    const loadProfileData = async () => {
+      const savedLinks = JSON.parse(localStorage.getItem('defaultLinks') || '{}');
+      const savedBranding = await loadBrandingFromSupabase();
+      setFormData(prev => ({
+        ...prev,
+        paymentLink: savedBranding.paymentLink || savedLinks.paymentLink || '',
+        messageLink: savedBranding.messageLink || savedLinks.messageLink || '',
+        meetingLink: savedBranding.meetingLink || savedLinks.meetingLink || '',
+        brandName: savedBranding.brandName || '',
+        brandColor: savedBranding.brandColor || '#895af6'
+      }));
+    };
+    loadProfileData();
   }, []);
 
-  const handleSave = () => {
-    // TODO: Implement user profile update
-    localStorage.setItem('defaultLinks', JSON.stringify({
+  const handleSave = async () => {
+    const success = await saveBrandingToSupabase({
+      brandName: formData.brandName,
+      brandColor: formData.brandColor,
       paymentLink: formData.paymentLink,
       messageLink: formData.messageLink,
       meetingLink: formData.meetingLink
-    }));
-    saveBranding({ brandName: formData.brandName, brandColor: formData.brandColor });
-    toast({
-      title: "Profil mis à jour",
-      description: "Vos modifications ont été enregistrées avec succès."
     });
+
+    if (success) {
+      toast({
+        title: "Profil mis à jour",
+        description: "Vos modifications ont été enregistrées avec succès."
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder les modifications",
+        variant: "destructive"
+      });
+    }
     setIsEditing(false);
   };
 

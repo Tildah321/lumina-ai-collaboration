@@ -14,6 +14,7 @@ import StatisticsOverview from '@/components/overview/StatisticsOverview';
 import ProjectInvestmentManager from '@/components/finances/ProjectInvestmentManager';
 import nocodbService from '@/services/nocodbService';
 import { supabase } from '@/integrations/supabase/client';
+import { getBrandingForUser, applyBranding } from '@/lib/branding';
 
 const CollaboratorClientSpace = () => {
   const { id } = useParams();
@@ -23,6 +24,7 @@ const CollaboratorClientSpace = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const [collaboratorInfo, setCollaboratorInfo] = useState<any>(null);
+  const [ownerBranding, setOwnerBranding] = useState<any>(null);
 
   // Normalise les valeurs de lien potentiellement au format objet renvoyé par NocoDB
   const normalizeLink = (v: any): string => {
@@ -111,6 +113,19 @@ const CollaboratorClientSpace = () => {
           };
 
           setSpace(mappedSpace);
+          
+          // Charger le branding du propriétaire de l'espace
+          const { data: spaceOwnerData } = await supabase
+            .from('noco_space_owners')
+            .select('user_id')
+            .eq('space_id', id)
+            .maybeSingle();
+          
+          if (spaceOwnerData?.user_id) {
+            const branding = await getBrandingForUser(spaceOwnerData.user_id);
+            setOwnerBranding(branding);
+            applyBranding(branding);
+          }
         } else {
           navigate('/collaboration-dashboard');
         }
@@ -171,7 +186,7 @@ const CollaboratorClientSpace = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header simplifié pour collaborateur */}
+      {/* Header avec branding personnalisé */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -189,6 +204,9 @@ const CollaboratorClientSpace = () => {
                 <h1 className="text-lg font-semibold">{space.description}</h1>
                 <p className="text-sm text-muted-foreground">
                   Vue collaborateur - {collaboratorInfo?.name}
+                  {ownerBranding?.brandName && (
+                    <span className="ml-2 text-primary">• {ownerBranding.brandName}</span>
+                  )}
                 </p>
               </div>
             </div>

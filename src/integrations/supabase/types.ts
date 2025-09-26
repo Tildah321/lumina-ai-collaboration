@@ -112,6 +112,42 @@ export type Database = {
           },
         ]
       }
+      user_branding: {
+        Row: {
+          brand_color: string | null
+          brand_name: string | null
+          created_at: string
+          id: string
+          meeting_link: string | null
+          message_link: string | null
+          payment_link: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_color?: string | null
+          brand_name?: string | null
+          created_at?: string
+          id?: string
+          meeting_link?: string | null
+          message_link?: string | null
+          payment_link?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_color?: string | null
+          brand_name?: string | null
+          created_at?: string
+          id?: string
+          meeting_link?: string | null
+          message_link?: string | null
+          payment_link?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_plans: {
         Row: {
           active_spaces_count: number
