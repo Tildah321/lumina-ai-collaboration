@@ -366,11 +366,11 @@ const CollaboratorClientSpace = () => {
             </TabsContent>
             
             <TabsContent value="milestones" className="space-y-4">
-              <MilestoneManager projetId={space.id} isClient={false} />
+              <MilestoneManager projetId={space.id} isClient={true} />
             </TabsContent>
             
             <TabsContent value="invoices" className="space-y-4">
-              <NocoInvoiceManager projetId={space.id} isClient={false} />
+              <NocoInvoiceManager projetId={space.id} isClient={true} />
             </TabsContent>
           </Tabs>
 
