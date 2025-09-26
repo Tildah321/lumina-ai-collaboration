@@ -115,16 +115,30 @@ const CollaboratorClientSpace = () => {
           setSpace(mappedSpace);
           
           // Charger le branding du propriétaire de l'espace
-          const { data: spaceOwnerData } = await supabase
+          console.log('Checking for space owner branding for space:', id);
+          const { data: spaceOwnerData, error: ownerError } = await supabase
             .from('noco_space_owners')
             .select('user_id')
             .eq('space_id', id)
             .maybeSingle();
           
+          console.log('Space owner data:', spaceOwnerData, 'Error:', ownerError);
+          
           if (spaceOwnerData?.user_id) {
+            console.log('Loading branding for user:', spaceOwnerData.user_id);
             const branding = await getBrandingForUser(spaceOwnerData.user_id);
+            console.log('Loaded branding:', branding);
             setOwnerBranding(branding);
             applyBranding(branding);
+          } else {
+            console.log('No space owner found, checking collaborator branding');
+            // Fallback: utiliser le branding de l'utilisateur qui a invité le collaborateur
+            if (collaborator.invited_by) {
+              const branding = await getBrandingForUser(collaborator.invited_by);
+              console.log('Collaborator owner branding:', branding);
+              setOwnerBranding(branding);
+              applyBranding(branding);
+            }
           }
         } else {
           navigate('/collaboration-dashboard');
@@ -201,11 +215,20 @@ const CollaboratorClientSpace = () => {
                 Retour
               </Button>
               <div>
-                <h1 className="text-lg font-semibold">{space.description}</h1>
+                <h1 className="text-lg font-semibold">
+                  {space.description}
+                  {ownerBranding?.brandName && (
+                    <span className="ml-2 text-primary font-normal">- {ownerBranding.brandName}</span>
+                  )}
+                </h1>
                 <p className="text-sm text-muted-foreground">
                   Vue collaborateur - {collaboratorInfo?.name}
-                  {ownerBranding?.brandName && (
-                    <span className="ml-2 text-primary">• {ownerBranding.brandName}</span>
+                  {ownerBranding?.brandColor && (
+                    <span 
+                      className="ml-2 inline-block w-3 h-3 rounded-full border border-border" 
+                      style={{ backgroundColor: ownerBranding.brandColor }}
+                      title={`Couleur de marque: ${ownerBranding.brandColor}`}
+                    />
                   )}
                 </p>
               </div>
