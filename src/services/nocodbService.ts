@@ -443,9 +443,26 @@ class NocoDBService {
   }
 
   async deleteClient(id: string) {
-    return this.makeRequest(`/${this.config.tableIds.clients}/${id}`, {
-      method: 'DELETE',
-    });
+    // Utiliser la fonction edge pour supprimer en cascade
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-space-cascade', {
+        body: { spaceId: id }
+      });
+
+      if (error) {
+        console.error('Error calling delete-space-cascade:', error);
+        throw error;
+      }
+
+      // Invalider le cache après suppression
+      this.invalidateCache(`/${this.config.tableIds.clients}`);
+      this.invalidateProjectCache();
+
+      return data;
+    } catch (error) {
+      console.error('Error in deleteClient:', error);
+      throw error;
+    }
   }
 
   // Prospects - Filtered by user
