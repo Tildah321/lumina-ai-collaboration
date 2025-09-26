@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import nocodbService from '@/services/nocodbService';
 import ClientShareDialog from '@/components/client/ClientShareDialog';
 import ProspectKanban from '@/components/prospection/ProspectKanban';
@@ -118,20 +118,33 @@ const Pipou = () => {
     data: ProspectFormData & { status: string; lastContact?: string }
   ) => ({
     name: data.name,
+    // Entreprise / Société
     [PROSPECT_COMPANY_COLUMN]: data.company,
     entreprise: data.company,
     Entreprise: data.company,
+    societe: data.company,
+    société: data.company,
+    company: data.company,
+    // Coordonnées
     email: data.email,
     [PROSPECT_PHONE_COLUMN]: data.phone,
     telephone: data.phone,
     Telephone: data.phone,
     Téléphone: data.phone,
     phone: data.phone,
+    tel: data.phone,
+    mobile: data.phone,
+    portable: data.phone,
+    // Présence en ligne
     [PROSPECT_SITE_COLUMN]: data.website,
     site: data.website,
     reseaux: data.website,
     website: data.website,
     'Réseaux / Site': data.website,
+    site_web: data.website,
+    reseaux_site: data.website,
+    url: data.website,
+    // Statut / suivi
     status: mapProspectStatusToNoco(data.status),
     dernier_contact:
       data.lastContact || new Date().toISOString().split('T')[0]
@@ -156,6 +169,8 @@ const Pipou = () => {
             (p as { entreprise?: string }).entreprise ||
             (p as { company?: string }).company ||
             (p as Record<string, string>)['Entreprise'] ||
+            (p as { societe?: string }).societe ||
+            (p as Record<string, string>)['société'] ||
             '',
           email: (p as { email?: string }).email || '',
           phone:
@@ -507,6 +522,7 @@ const Pipou = () => {
         <DialogContent className="sm:max-w-[340px]">
           <DialogHeader>
             <DialogTitle>Créer un prospect</DialogTitle>
+            <DialogDescription>Renseignez les infos du contact</DialogDescription>
           </DialogHeader>
           <ProspectForm
             onCancel={() => setIsCreateProspectDialogOpen(false)}
@@ -526,6 +542,7 @@ const Pipou = () => {
           <DialogContent className="sm:max-w-[340px]">
             <DialogHeader>
               <DialogTitle>Modifier le prospect</DialogTitle>
+              <DialogDescription>Mettez à jour les informations du prospect</DialogDescription>
             </DialogHeader>
             <ProspectForm
               initialData={editingProspect}

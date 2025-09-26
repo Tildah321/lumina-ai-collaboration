@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Prospect } from '@/types/prospect';
-import nocodbService from '@/services/nocodbService';
 import { useToast } from '@/hooks/use-toast';
+import nocodbService from '@/services/nocodbService';
 
 interface ProspectCreateSpaceDialogProps {
   prospect: Prospect | null;
@@ -18,102 +16,143 @@ interface ProspectCreateSpaceDialogProps {
 
 const ProspectCreateSpaceDialog = ({ prospect, open, onOpenChange, onCreated }: ProspectCreateSpaceDialogProps) => {
   const { toast } = useToast();
+
   const [form, setForm] = useState({
-    email: '',
-    description: '',
-    statut: 'Nouveau',
+    name: '',
+    googleDriveLink: '',
+    paymentAmount: '',
+    paymentLink: '',
+    messageLink: '',
+    meetingLink: '',
   });
+
+  // Prefill like Dashboard + use prospect data
+  useEffect(() => {
+    const savedLinks = JSON.parse(localStorage.getItem('defaultLinks') || '{}');
+    setForm(f => ({
+      ...f,
+      paymentLink: savedLinks.paymentLink || '',
+      messageLink: savedLinks.messageLink || '',
+      meetingLink: savedLinks.meetingLink || ''
+    }));
+  }, [open]);
 
   useEffect(() => {
     if (prospect) {
-      setForm({
-        email: prospect.email || '',
-        description: prospect.company || prospect.name || '',
-        statut: 'Nouveau',
-      });
+      setForm(prev => ({
+        ...prev,
+        name: prospect.company || prospect.name || ''
+      }));
     }
   }, [prospect]);
 
-  const handleChange = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [field]: e.target.value });
-  };
-
   const handleCreate = async () => {
-    if (!form.email.trim()) return;
+    if (!form.name.trim()) return;
+
     try {
-      const payload = {
-        email: form.email.trim(),
-        statut: form.statut,
-        description: form.description.trim() || null,
-        lien_portail: null,
-        prix_payement: null,
-        lien_payement: null,
-        lien_whatsapp: null,
-        cz787nu83e9bvlu: null,
+      const payload: any = {
+        description: form.name.trim(),
+        statut: 'Nouveau',
+        lien_portail: form.googleDriveLink || null,
+        prix_payement: form.paymentAmount ? parseFloat(form.paymentAmount) : null,
+        lien_payement: form.paymentLink || null,
+        lien_whatsapp: form.messageLink || null,
+        cc9tztuoagcmq8l: form.meetingLink || null,
+        lien_rdv: form.meetingLink || null,
         client_access_enabled: false,
         client_link_token: null,
-        notes: JSON.stringify({
-          created_by: 'admin',
-          creation_date: new Date().toISOString(),
-        }),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
-      await nocodbService.createClient(payload);
+
+      // If we have the prospect email, add it too
+      if (prospect?.email) {
+        payload.email = prospect.email;
+      }
+
+      const response = await nocodbService.createClient(payload);
+
       toast({ title: 'Espace créé', description: "L'espace client a été créé avec succès" });
       onOpenChange(false);
       onCreated?.();
+      return response;
     } catch (error) {
-      console.error('Erreur création espace:', error);
+      console.error('Erreur création espace depuis prospect:', error);
       toast({ title: 'Erreur', description: "Impossible de créer l'espace client", variant: 'destructive' });
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Créer un espace</DialogTitle>
+          <DialogTitle>Créer un nouvel espace client</DialogTitle>
+          <DialogDescription>
+            Configurez un portail collaboratif personnalisé pour votre client
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="space-email">Email du client *</Label>
+            <Label htmlFor="spaceName">Nom de l'espace *</Label>
             <Input
-              id="space-email"
-              type="email"
-              value={form.email}
-              onChange={handleChange('email')}
+              id="spaceName"
+              placeholder="Ex: Projet Site Web StartupTech"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="space-description">Description du projet</Label>
-            <Textarea
-              id="space-description"
-              value={form.description}
-              onChange={handleChange('description')}
+            <Label htmlFor="googleDrive">Lien Portail / Drive (optionnel)</Label>
+            <Input
+              id="googleDrive"
+              placeholder="https://drive.google.com/..."
+              value={form.googleDriveLink}
+              onChange={(e) => setForm({ ...form, googleDriveLink: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="paymentAmount">Montant (€)</Label>
+              <Input
+                id="paymentAmount"
+                type="number"
+                placeholder="1500"
+                value={form.paymentAmount}
+                onChange={(e) => setForm({ ...form, paymentAmount: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="paymentLink">Lien de paiement</Label>
+              <Input
+                id="paymentLink"
+                placeholder="https://stripe.com/payment/..."
+                value={form.paymentLink}
+                onChange={(e) => setForm({ ...form, paymentLink: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="messageLink">Lien Messages (optionnel)</Label>
+            <Input
+              id="messageLink"
+              placeholder="https://slack.com/... ou https://discord.gg/..."
+              value={form.messageLink}
+              onChange={(e) => setForm({ ...form, messageLink: e.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label>Statut</Label>
-            <Select value={form.statut} onValueChange={value => setForm({ ...form, statut: value })}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Nouveau">Nouveau</SelectItem>
-                <SelectItem value="En cours">En cours</SelectItem>
-                <SelectItem value="Terminé">Terminé</SelectItem>
-                <SelectItem value="En attente">En attente</SelectItem>
-                <SelectItem value="Annulé">Annulé</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="meetingLink">Lien RDV (optionnel)</Label>
+            <Input
+              id="meetingLink"
+              placeholder="https://calendly.com/..."
+              value={form.meetingLink}
+              onChange={(e) => setForm({ ...form, meetingLink: e.target.value })}
+            />
           </div>
         </div>
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleCreate} disabled={!form.email.trim()}>
-            Créer
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <Button onClick={handleCreate} disabled={!form.name.trim()}>Créer l'espace</Button>
         </div>
       </DialogContent>
     </Dialog>
