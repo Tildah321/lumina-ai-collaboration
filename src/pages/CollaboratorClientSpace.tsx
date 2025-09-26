@@ -420,7 +420,7 @@ const CollaboratorClientSpace = () => {
              <CardContent>
                <Button
                  variant="outline"
-                 onClick={() => window.open('https://lumina.app', '_blank')}
+                 onClick={() => window.open('https://lumina.app', '_blank', 'noopener,noreferrer')}
                  className="flex items-center gap-2"
                >
                  <ExternalLink className="w-4 h-4" />

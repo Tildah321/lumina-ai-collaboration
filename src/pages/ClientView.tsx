@@ -444,7 +444,7 @@ const ClientView = () => {
             <CardContent>
               <Button
                 variant="outline"
-                onClick={() => openLink('https://lumina.app')}
+                onClick={() => window.open('https://lumina.app', '_blank', 'noopener,noreferrer')}
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
