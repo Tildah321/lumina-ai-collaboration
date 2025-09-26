@@ -53,12 +53,12 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
           onDrop={e => handleDrop(e, column.id)}
           className={`${column.color} rounded-lg p-4`}
         >
-          <h3 className="font-semibold mb-4 flex items-center justify-between">
-            {column.title}
+          <div className="font-semibold mb-4 flex items-center justify-between">
+            <span>{column.title}</span>
             <Badge variant="secondary" className="ml-2">
               {prospects.filter(p => p.status === column.id).length}
             </Badge>
-          </h3>
+          </div>
           <div className="space-y-3">
             {prospects
               .filter(p => p.status === column.id)

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import nocodbService from '@/services/nocodbService';
 import ClientShareDialog from '@/components/client/ClientShareDialog';
 import ProspectKanban from '@/components/prospection/ProspectKanban';
+import ProspectList from '@/components/prospection/ProspectList';
 import ProspectForm, { ProspectFormData } from '@/components/prospection/ProspectForm';
 import { Prospect } from '@/types/prospect';
 import { mapProspectStatus, mapProspectStatusToNoco } from '@/lib/prospectStatus';
@@ -111,6 +112,7 @@ const Pipou = () => {
   const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
   const [activeTab, setActiveTab] = useState('clients');
   const [spaceProspect, setSpaceProspect] = useState<Prospect | null>(null);
+  const [prospectView, setProspectView] = useState<'kanban' | 'list'>('list');
 
   const buildProspectPayload = (
     data: ProspectFormData & { status: string; lastContact?: string }
@@ -199,9 +201,20 @@ const Pipou = () => {
   );
 
   useEffect(() => {
-    if (activeTab !== 'prospection' || prospects.length > 0) return;
+    if (activeTab !== 'prospection') return;
     loadProspects();
-  }, [activeTab, prospects.length, loadProspects]);
+  }, [activeTab, loadProspects]);
+
+  // Debug logging pour les prospects
+  useEffect(() => {
+    console.log('📊 Prospects state updated:', {
+      count: prospects.length,
+      isLoading: isLoadingProspects,
+      hasMore: hasMoreProspects,
+      offset: prospectOffset,
+      prospects: prospects.map(p => ({ id: p.id, name: p.name, company: p.company, status: p.status }))
+    });
+  }, [prospects, isLoadingProspects, hasMoreProspects, prospectOffset]);
 
   const addProspect = async (data: ProspectFormData) => {
     if (!data.name || !data.company) return;
@@ -441,115 +454,53 @@ const Pipou = () => {
                 </TabsContent>
 
         <TabsContent value="prospection" className="space-y-4">
-          <Tabs defaultValue="list" className="space-y-4">
-                    <TabsList className="w-fit">
-                      <TabsTrigger value="list">Liste</TabsTrigger>
-                      <TabsTrigger value="kanban">Kanban</TabsTrigger>
-                    </TabsList>
+          <div className="flex items-center justify-between mb-4">
+            <ToggleGroup type="single" value={prospectView} onValueChange={(value) => setProspectView(value as 'kanban' | 'list')}>
+              <ToggleGroupItem value="list" aria-label="Vue liste">
+                Liste
+              </ToggleGroupItem>
+              <ToggleGroupItem value="kanban" aria-label="Vue kanban">
+                Kanban
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
 
-                    <TabsContent value="list" className="grid gap-4">
-                      {prospects.length === 0 ? (
-                        <p className="text-center text-sm text-muted-foreground">
-                          Aucun prospect trouvé.
-                        </p>
-                      ) : (
-                        prospects.map((prospect) => (
-                          <Card key={prospect.id} className="glass-glow hover:shadow-glow transition-all duration-300">
-                            <CardHeader>
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <CardTitle className="text-lg">{prospect.name}</CardTitle>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {prospect.status && (
-                                    <span className="text-sm text-muted-foreground">
-                                      {prospect.status}
-                                    </span>
-                                  )}
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                      setEditingProspect(prospect);
-                                      setIsEditProspectDialogOpen(true);
-                                    }}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                      if (confirm('Supprimer ce prospect ?')) {
-                                        handleDeleteProspect(prospect.id);
-                                      }
-                                    }}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-4 text-sm">
-                              <div className="flex justify-between">
-                                <span>Email</span>
-                                <span className="font-medium">{prospect.email}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Téléphone</span>
-                                <span className="font-medium">{prospect.phone}</span>
-                              </div>
-                              <div className="flex gap-2 pt-2 flex-wrap">
-                                {prospect.email && (
-                                  <Button size="sm" className="gap-2" asChild>
-                                    <a href={`mailto:${prospect.email}`}>
-                                      <Mail className="w-4 h-4" />
-                                      Contacter
-                                    </a>
-                                  </Button>
-                                )}
-                                {prospect.phone && (
-                                  <Button size="sm" variant="secondary" className="gap-2" asChild>
-                                    <a href={`tel:${prospect.phone}`}>
-                                      <Phone className="w-4 h-4" />
-                                      Appeler
-                                    </a>
-                                  </Button>
-                                )}
-                              </div>
+          {prospectView === 'list' ? (
+            <ProspectList
+              prospects={prospects}
+              isLoading={isLoadingProspects}
+              onEdit={(prospect) => {
+                setEditingProspect(prospect);
+                setIsEditProspectDialogOpen(true);
+              }}
+              onDelete={(id) => {
+                if (confirm('Supprimer ce prospect ?')) {
+                  handleDeleteProspect(id);
+                }
+              }}
+              onCreateSpace={(prospect) => setSpaceProspect(prospect)}
+              onLoadMore={() => loadProspects()}
+              hasMore={hasMoreProspects}
+            />
+          ) : (
+            <ProspectKanban
+              prospects={prospects}
+              setProspects={setProspects}
+              onCreateSpace={(prospect) => setSpaceProspect(prospect)}
+            />
+          )}
 
-                            </CardContent>
-                          </Card>
-                        ))
-                      )}
-                      {hasMoreProspects && (
-                        <p className="text-center text-sm text-muted-foreground">
-                          Plus de prospects disponibles
-                        </p>
-                      )}
-                    </TabsContent>
-
-            <TabsContent value="kanban">
-              {prospects.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground">
-                  Aucun prospect trouvé.
-                </p>
-              ) : (
-                <>
-                  <ProspectKanban
-                    prospects={prospects}
-                    setProspects={setProspects}
-                    onCreateSpace={(prospect) => setSpaceProspect(prospect)}
-                  />
-                  {hasMoreProspects && (
-                    <p className="text-center text-sm text-muted-foreground mt-4">
-                      Plus de prospects disponibles
-                    </p>
-                  )}
-                </>
-              )}
-            </TabsContent>
-          </Tabs>
+          {hasMoreProspects && prospectView === 'kanban' && (
+            <div className="text-center">
+              <Button
+                variant="outline"
+                onClick={() => loadProspects()}
+                disabled={isLoadingProspects}
+              >
+                {isLoadingProspects ? 'Chargement...' : 'Plus de prospects disponibles'}
+              </Button>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
       <Dialog open={isCreateProspectDialogOpen} onOpenChange={setIsCreateProspectDialogOpen}>
