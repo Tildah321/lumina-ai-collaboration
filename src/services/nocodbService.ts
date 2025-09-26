@@ -512,7 +512,11 @@ class NocoDBService {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+    
+    // Invalidation complète du cache prospects
     this.invalidateCache(`/${this.config.tableIds.prospects}`);
+    NocoDBService.requestCache.clear(); // Force refresh complet
+    
     return response;
   }
 
@@ -521,7 +525,11 @@ class NocoDBService {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+    
+    // Invalidation complète du cache prospects
     this.invalidateCache(`/${this.config.tableIds.prospects}`);
+    NocoDBService.requestCache.clear(); // Force refresh complet
+    
     return response;
   }
 
@@ -529,7 +537,11 @@ class NocoDBService {
     const response = await this.makeRequest(`/${this.config.tableIds.prospects}/${id}`, {
       method: 'DELETE',
     });
+    
+    // Invalidation complète du cache prospects
     this.invalidateCache(`/${this.config.tableIds.prospects}`);
+    NocoDBService.requestCache.clear(); // Force refresh complet
+    
     return response;
   }
 

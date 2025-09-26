@@ -14,11 +14,11 @@ interface ProspectKanbanProps {
 }
 
 const statuses = [
-  { id: 'Nouveau', title: 'Nouveau', color: 'bg-gray-100 dark:bg-gray-800' },
-  { id: 'En contact', title: 'En contact', color: 'bg-blue-100 dark:bg-blue-900/30' },
-  { id: 'En discussion', title: 'En discussion', color: 'bg-yellow-100 dark:bg-yellow-900/30' },
-  { id: 'Proposition', title: 'Proposition', color: 'bg-purple-100 dark:bg-purple-900/30' },
-  { id: 'Converti', title: 'Converti', color: 'bg-green-100 dark:bg-green-900/30' },
+  { id: 'Nouveau', title: 'Nouveau', color: 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700' },
+  { id: 'En contact', title: 'En contact', color: 'bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800' },
+  { id: 'En discussion', title: 'En discussion', color: 'bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800' },
+  { id: 'Proposition', title: 'Proposition', color: 'bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800' },
+  { id: 'Converti', title: 'Converti', color: 'bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800' },
 ];
 
 const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects, onCreateSpace }) => {
@@ -33,11 +33,19 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>, status: string) => {
     event.preventDefault();
     const id = event.dataTransfer.getData('text/plain');
+    const previousProspect = prospects.find(p => p.id === id);
+    
+    // Mise à jour optimiste
     setProspects(prev => prev.map(p => (p.id === id ? { ...p, status } : p)));
+    
     try {
       await nocodbService.updateProspect(id, { status: mapProspectStatusToNoco(status) });
     } catch (error) {
       console.error('Erreur mise à jour prospect:', error);
+      // Revert en cas d'erreur
+      if (previousProspect) {
+        setProspects(prev => prev.map(p => (p.id === id ? previousProspect : p)));
+      }
     }
   };
 
@@ -45,17 +53,17 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
     url && (url.startsWith('http://') || url.startsWith('https://')) ? url : `https://${url}`;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
       {statuses.map(column => (
         <div
           key={column.id}
           onDragOver={handleDragOver}
           onDrop={e => handleDrop(e, column.id)}
-          className={`${column.color} rounded-lg p-4`}
+          className={`${column.color} rounded-xl p-4 min-h-[600px] transition-all duration-200 hover:shadow-sm`}
         >
-          <div className="font-semibold mb-4 flex items-center justify-between">
-            <span>{column.title}</span>
-            <Badge variant="secondary" className="ml-2">
+          <div className="font-semibold mb-4 flex items-center justify-between sticky top-0 bg-inherit pb-2">
+            <span className="text-sm font-medium text-foreground">{column.title}</span>
+            <Badge variant="outline" className="text-xs px-2 py-1">
               {prospects.filter(p => p.status === column.id).length}
             </Badge>
           </div>
@@ -65,76 +73,85 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
               .map(p => (
                 <Card
                   key={p.id}
-                  className="hover:shadow-md transition-shadow cursor-move"
+                  className="hover:shadow-lg transition-all duration-200 cursor-move bg-card/95 backdrop-blur-sm border-border/50 hover:border-border group"
                   draggable
                   onDragStart={e => handleDragStart(e, p.id)}
                 >
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start">
-                      <div className="flex-1">
-                        <h4 className="font-medium break-words">{p.name}</h4>
+                      <div className="flex-1 space-y-2">
+                        <h4 className="font-semibold text-foreground text-sm leading-tight">{p.name}</h4>
                         {p.company && (
-                          <p className="text-sm text-muted-foreground break-words">{p.company}</p>
-                        )}
-                        {p.email && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1 break-all">
-                            <Mail className="w-3 h-3" />
-                            {p.email}
+                          <p className="text-sm text-muted-foreground font-medium bg-muted/50 px-2 py-1 rounded-md inline-block">
+                            {p.company}
                           </p>
                         )}
-                        {p.phone && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1 break-all">
-                            <Phone className="w-3 h-3" />
-                            {p.phone}
-                          </p>
-                        )}
-                        {p.website && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1 break-all">
-                            <Globe className="w-3 h-3" />
-                            <a
-                              href={ensureProtocol(p.website)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="underline underline-offset-2 hover:no-underline break-all"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              {p.website}
-                            </a>
-                          </p>
-                        )}
-                        {p.lastContact && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1 break-words">
-                            <Calendar className="w-3 h-3" />
-                            Dernier contact: {new Date(p.lastContact).toLocaleDateString()}
-                          </p>
-                        )}
+                        <div className="space-y-1">
+                          {p.email && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-2">
+                              <Mail className="w-3 h-3 text-primary" />
+                              <span className="truncate">{p.email}</span>
+                            </div>
+                          )}
+                          {p.phone && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-2">
+                              <Phone className="w-3 h-3 text-primary" />
+                              <span>{p.phone}</span>
+                            </div>
+                          )}
+                          {p.website && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-2">
+                              <Globe className="w-3 h-3 text-primary" />
+                              <a
+                                href={ensureProtocol(p.website)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline truncate"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                {p.website}
+                              </a>
+                            </div>
+                          )}
+                          {p.lastContact && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-2">
+                              <Calendar className="w-3 h-3 text-primary" />
+                              <span>Dernier contact: {new Date(p.lastContact).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     {(p.email || p.phone) && (
-                      <div className="flex gap-2 pt-2 flex-wrap" onClick={e => e.stopPropagation()}>
-                        <Button size="sm" className="gap-2" asChild>
+                      <div className="flex gap-2 pt-3 border-t border-border/50" onClick={e => e.stopPropagation()}>
+                        <Button size="sm" className="gap-2 flex-1 h-8" asChild>
                           <a href={p.email ? `mailto:${p.email}` : `tel:${p.phone}`}>
-                            {p.email ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
-                            Contacter
+                            {p.email ? <Mail className="w-3 h-3" /> : <Phone className="w-3 h-3" />}
+                            Contact
                           </a>
                         </Button>
                         <Button
                           size="sm"
-                          variant="secondary"
-                          className="gap-2"
+                          variant="outline"
+                          className="gap-2 flex-1 h-8"
                           onClick={e => {
                             e.stopPropagation();
                             onCreateSpace(p);
                           }}
                         >
-                          Créer un espace
+                          Espace
                         </Button>
                       </div>
                     )}
                   </CardContent>
                 </Card>
               ))}
+            {prospects.filter(p => p.status === column.id).length === 0 && (
+              <div className="text-center text-muted-foreground text-sm py-8 border-2 border-dashed border-border rounded-lg">
+                Glissez un prospect ici
+              </div>
+            )}
           </div>
         </div>
       ))}

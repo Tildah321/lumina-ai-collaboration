@@ -198,6 +198,7 @@ const Pipou = () => {
             (p as { dernier_contact?: string }).dernier_contact ||
             ''
         }));
+        
         if (forceRefresh) {
           setProspects(list);
           setProspectOffset(list.length);
@@ -208,6 +209,7 @@ const Pipou = () => {
         setHasMoreProspects(list.length === PROSPECTS_PAGE_SIZE);
       } catch (error) {
         console.error('Erreur chargement prospects:', error);
+        // En cas d'erreur, ne pas modifier l'état des prospects
       } finally {
         setIsLoadingProspects(false);
       }
@@ -271,10 +273,15 @@ const Pipou = () => {
           (response as { dernier_contact?: string }).dernier_contact ||
           payload.dernier_contact
       };
-      setProspects(prev => [...prev, created]);
-      setProspectOffset(prev => prev + 1);
+      
+      // Mise à jour immédiate de l'état
+      setProspects(prev => [created, ...prev]);
       setIsCreateProspectDialogOpen(false);
-      loadProspects(true);
+      
+      // Forcer un refresh complet des données
+      setTimeout(() => {
+        loadProspects(true);
+      }, 500);
     } catch (error) {
       console.error('Erreur création prospect:', error);
     }
@@ -303,7 +310,11 @@ const Pipou = () => {
           lastContact: data.lastContact
         })
       );
-      loadProspects(true);
+      
+      // Forcer un refresh complet des données
+      setTimeout(() => {
+        loadProspects(true);
+      }, 500);
     } catch (error) {
       console.error('Erreur mise à jour prospect:', error);
       if (previous) {
