@@ -237,6 +237,15 @@ const CollaboratorManager = () => {
   // Supprimer un collaborateur
   const handleDeleteCollaborator = async (collaboratorId: string) => {
     try {
+      // Supprimer d'abord les accès aux espaces
+      const { error: spaceError } = await supabase
+        .from('space_collaborators')
+        .delete()
+        .eq('collaborator_id', collaboratorId);
+
+      if (spaceError) throw spaceError;
+
+      // Ensuite supprimer le collaborateur
       const { error } = await supabase
         .from('collaborators')
         .delete()
@@ -244,8 +253,14 @@ const CollaboratorManager = () => {
 
       if (error) throw error;
 
+      // Mettre à jour les états locaux
       setCollaborators(collaborators.filter(c => c.id !== collaboratorId));
       setSpaceAccesses(spaceAccesses.filter(sa => sa.collaborator_id !== collaboratorId));
+
+      // Déclencher un événement pour actualiser les stats de la vue d'ensemble
+      window.dispatchEvent(new CustomEvent('collaboratorDeleted', { 
+        detail: { collaboratorId } 
+      }));
 
       toast({
         title: "Collaborateur supprimé",

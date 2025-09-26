@@ -98,6 +98,17 @@ const Overview = () => {
 
   useEffect(() => {
     loadOverviewData();
+
+    // Écouter les événements de suppression de collaborateur
+    const handleCollaboratorDeleted = () => {
+      loadOverviewData();
+    };
+
+    window.addEventListener('collaboratorDeleted', handleCollaboratorDeleted);
+
+    return () => {
+      window.removeEventListener('collaboratorDeleted', handleCollaboratorDeleted);
+    };
   }, []);
 
   const getActivityIcon = (type: string) => {

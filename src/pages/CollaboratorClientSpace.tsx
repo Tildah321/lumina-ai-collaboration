@@ -115,30 +115,26 @@ const CollaboratorClientSpace = () => {
           setSpace(mappedSpace);
           
           // Charger le branding du propriétaire de l'espace
-          console.log('Checking for space owner branding for space:', id);
-          const { data: spaceOwnerData, error: ownerError } = await supabase
+          // Charger le branding du propriétaire de l'espace
+          const { data: spaceOwnerData } = await supabase
             .from('noco_space_owners')
             .select('user_id')
             .eq('space_id', id)
             .maybeSingle();
           
-          console.log('Space owner data:', spaceOwnerData, 'Error:', ownerError);
+          let brandingUserId = null;
           
           if (spaceOwnerData?.user_id) {
-            console.log('Loading branding for user:', spaceOwnerData.user_id);
-            const branding = await getBrandingForUser(spaceOwnerData.user_id);
-            console.log('Loaded branding:', branding);
+            brandingUserId = spaceOwnerData.user_id;
+          } else if (collaborator.invited_by) {
+            // Fallback: utiliser le branding de l'utilisateur qui a invité le collaborateur
+            brandingUserId = collaborator.invited_by;
+          }
+          
+          if (brandingUserId) {
+            const branding = await getBrandingForUser(brandingUserId);
             setOwnerBranding(branding);
             applyBranding(branding);
-          } else {
-            console.log('No space owner found, checking collaborator branding');
-            // Fallback: utiliser le branding de l'utilisateur qui a invité le collaborateur
-            if (collaborator.invited_by) {
-              const branding = await getBrandingForUser(collaborator.invited_by);
-              console.log('Collaborator owner branding:', branding);
-              setOwnerBranding(branding);
-              applyBranding(branding);
-            }
           }
         } else {
           navigate('/collaboration-dashboard');
