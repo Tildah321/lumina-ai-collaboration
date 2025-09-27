@@ -198,8 +198,8 @@ const Tasky = () => {
           const res = await nocodbService.getInternalTasks(false, { onlyCurrentUser: true });
           list = res.list || [];
         } else {
-          // Récupérer toutes les tâches des espaces de l'utilisateur selon noco_space_owners
-          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: false });
+          // Récupérer SEULEMENT les tâches assignées à l'utilisateur (pas les tâches client)
+          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: true });
           list = (res.list || []).map((t: any) => ({ ...t, isInternal: false }));
         }
 
