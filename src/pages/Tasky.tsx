@@ -200,7 +200,14 @@ const Tasky = () => {
         } else {
           // Récupérer les tâches de vos espaces (exclut les tâches assignées aux clients)
           const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: false });
-          list = (res.list || []).filter((t: any) => !t.assigned_to_client).map((t: any) => ({ ...t, isInternal: false }));
+          const isClientAssigned = (t: any) => {
+            const v = (t.assigne_a || t['assigné_a'] || t.responsable || t.responsible || '')
+              .toString()
+              .trim()
+              .toLowerCase();
+            return v === 'client';
+          };
+          list = (res.list || []).filter((t: any) => !isClientAssigned(t)).map((t: any) => ({ ...t, isInternal: false }));
         }
 
         const projectMap = new Map(
@@ -231,10 +238,10 @@ const Tasky = () => {
 
   // Colonnes basées sur les statuts simplifiés
   const columns = [
-    { id: 'À faire', title: 'À faire', color: 'bg-gray-100 dark:bg-gray-800' },
-    { id: 'En cours', title: 'En cours', color: 'bg-blue-100 dark:bg-blue-900/30' },
-    { id: 'Bientôt fini', title: 'Bientôt fini', color: 'bg-yellow-100 dark:bg-yellow-900/30' },
-    { id: 'Terminé', title: 'Terminé', color: 'bg-green-100 dark:bg-green-900/30' },
+    { id: 'À faire', title: 'À faire', color: 'bg-muted/40 dark:bg-muted/20' },
+    { id: 'En cours', title: 'En cours', color: 'bg-accent/10 dark:bg-accent/20' },
+    { id: 'Bientôt fini', title: 'Bientôt fini', color: 'bg-secondary/10 dark:bg-secondary/20' },
+    { id: 'Terminé', title: 'Terminé', color: 'bg-primary/5 dark:bg-primary/10' },
   ];
 
   const handleDragStart = (e: DragEvent, taskId: string | number) => {
@@ -364,7 +371,7 @@ const Tasky = () => {
   };
 
   return (
-    <div className="space-y-6 fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -437,7 +444,7 @@ const Tasky = () => {
               columns.map((column) => (
                 <div
                   key={column.id}
-                  className={`${column.color} rounded-lg p-4`}
+                  className={`${column.color} rounded-lg p-4 border shadow-sm`}
                   onDragOver={handleDragOver}
                   onDrop={e => handleDrop(e, column.id)}
                 >
@@ -454,7 +461,7 @@ const Tasky = () => {
                       .map((task) => (
                         <Card
                           key={task.id}
-                          className="hover:shadow-md transition-shadow"
+                          className="hover:shadow-md transition-shadow hover-scale"
                           draggable
                           onDragStart={e => handleDragStart(e, task.id)}
                         >
@@ -534,7 +541,7 @@ const Tasky = () => {
                     tasks.map((task) => (
                       <div key={task.id} className="space-y-2">
                         <div
-                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors hover-scale animate-fade-in"
                         >
                           <div>
                             <h4 className="font-medium">{task.titre}</h4>
