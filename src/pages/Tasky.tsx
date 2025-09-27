@@ -198,9 +198,9 @@ const Tasky = () => {
           const res = await nocodbService.getInternalTasks(false, { onlyCurrentUser: true });
           list = res.list || [];
         } else {
-          // Récupérer SEULEMENT les tâches assignées à l'utilisateur (pas les tâches client)
-          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: true });
-          list = (res.list || []).map((t: any) => ({ ...t, isInternal: false }));
+          // Récupérer les tâches de vos espaces (exclut les tâches assignées aux clients)
+          const res = await nocodbService.getTasks(undefined, { onlyCurrentUser: false });
+          list = (res.list || []).filter((t: any) => !t.assigned_to_client).map((t: any) => ({ ...t, isInternal: false }));
         }
 
         const projectMap = new Map(
