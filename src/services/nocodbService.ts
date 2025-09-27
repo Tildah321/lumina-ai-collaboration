@@ -564,12 +564,9 @@ class NocoDBService {
       return response;
     }
 
-    // If user has no registered spaces, do not filter (fallback) to avoid blocking data; mapping can be populated later
+    // SÉCURITÉ: Si l'utilisateur n'a pas d'espaces enregistrés, retourner une liste vide
     if (userSpaceIds.length === 0) {
-      this.cachedProjectIds = (response.list || [])
-        .map((p: any) => (p.Id || p.id)?.toString())
-        .filter(Boolean);
-      return response;
+      return { list: [], pageInfo: { totalRows: 0 } };
     }
 
     // Filter projects by user's owned clients
@@ -625,7 +622,10 @@ class NocoDBService {
     // Récupère les espaces accessibles directement
     const userProjectIds: string[] = await this.getUserSpaceIds();
 
-    // Si aucun mapping encore créé, ne pas bloquer (fallback)
+    // SÉCURITÉ: Si aucun espace enregistré, retourner vide
+    if (userProjectIds.length === 0) {
+      return { list: [], pageInfo: { totalRows: 0 } };
+    }
     const hasRestrictions = userProjectIds.length > 0;
 
 
@@ -898,10 +898,15 @@ class NocoDBService {
       ? `/${this.config.tableIds.jalons}?where=(projet_id,eq,${projetId})${fieldsParam}`
       : `/${this.config.tableIds.jalons}${fieldsParam ? `?${fieldsParam.slice(1)}` : ''}`;
 
+    // SÉCURITÉ: Si aucun espace enregistré, retourner vide
+    if (userSpaceIds.length === 0) {
+      return { list: [], pageInfo: { totalRows: 0 } };
+    }
+
     const response = await this.fetchAllRecords(endpoint);
 
     if (!projetId && hasRestrictions) {
-      // Filtrer strictement par espaces autorisés uniquement si mapping présent
+      // Filtrer strictement par espaces autorisés
       const filteredList = (response.list || []).filter((milestone: any) =>
         userSpaceIds.includes(milestone.projet_id?.toString())
       );
@@ -949,6 +954,11 @@ class NocoDBService {
     const endpoint = projetId
       ? `/${this.config.tableIds.factures}?where=(projet_id,eq,${projetId})`
       : `/${this.config.tableIds.factures}`;
+
+    // SÉCURITÉ: Si aucun espace enregistré, retourner vide
+    if (userSpaceIds.length === 0) {
+      return { list: [], pageInfo: { totalRows: 0 } };
+    }
 
     const response = await this.fetchAllRecords(endpoint);
 
