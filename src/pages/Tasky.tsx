@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
-import { Plus, LayoutGrid, List, Target, Clock, Edit, Trash2, Users, Building } from 'lucide-react';
+import { Plus, LayoutGrid, List, Target, Clock, Edit, Trash2, Users, Building, Calendar, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -238,10 +238,10 @@ const Tasky = () => {
 
   // Colonnes basées sur les statuts simplifiés
   const columns = [
-    { id: 'À faire', title: 'À faire', color: 'bg-muted/40 dark:bg-muted/20' },
-    { id: 'En cours', title: 'En cours', color: 'bg-accent/10 dark:bg-accent/20' },
-    { id: 'Bientôt fini', title: 'Bientôt fini', color: 'bg-secondary/10 dark:bg-secondary/20' },
-    { id: 'Terminé', title: 'Terminé', color: 'bg-primary/5 dark:bg-primary/10' },
+    { id: 'À faire', title: 'À faire', color: 'bg-orange-50/50 dark:bg-orange-950/20' },
+    { id: 'En cours', title: 'En cours', color: 'bg-blue-50/50 dark:bg-blue-950/20' },
+    { id: 'Bientôt fini', title: 'Bientôt fini', color: 'bg-yellow-50/50 dark:bg-yellow-950/20' },
+    { id: 'Terminé', title: 'Terminé', color: 'bg-green-50/50 dark:bg-green-950/20' },
   ];
 
   const handleDragStart = (e: DragEvent, taskId: string | number) => {
@@ -371,150 +371,200 @@ const Tasky = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <span className="text-2xl">🤖</span>
-            Tasky - Chef de projet IA
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Gestion intelligente de vos tâches et projets
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      {/* Header avec design élégant */}
+      <div className="glass-glow border-b bg-background/80 backdrop-blur-sm sticky top-0 z-40">
+        <div className="space-y-6 p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold flex items-center gap-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm">
+                  <Sparkles className="w-8 h-8 text-primary" />
+                </div>
+                Tasky
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Gestion intelligente de vos tâches et projets
+              </p>
+            </div>
 
-        <div className="flex items-center gap-3">
-          <ToggleGroup
-            type="single"
-            value={taskScope}
-            onValueChange={value => value && setTaskScope(value as 'client' | 'internal')}
-            variant="outline"
-            className="bg-muted rounded-lg p-1"
-          >
-            <ToggleGroupItem value="client" className="gap-2 px-3">
-              <Users className="w-4 h-4" />
-              Clients
-            </ToggleGroupItem>
-            <ToggleGroupItem value="internal" className="gap-2 px-3">
-              <Building className="w-4 h-4" />
-              Interne
-            </ToggleGroupItem>
-          </ToggleGroup>
+            <div className="flex items-center gap-3">
+              <ToggleGroup
+                type="single"
+                value={taskScope}
+                onValueChange={value => value && setTaskScope(value as 'client' | 'internal')}
+                variant="outline"
+                className="glass rounded-xl p-1 border-border/50"
+              >
+                <ToggleGroupItem value="client" className="gap-2 px-4 py-2 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  <Users className="w-4 h-4" />
+                  Clients
+                </ToggleGroupItem>
+                <ToggleGroupItem value="internal" className="gap-2 px-4 py-2 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  <Building className="w-4 h-4" />
+                  Interne
+                </ToggleGroupItem>
+              </ToggleGroup>
 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode(viewMode === 'kanban' ? 'list' : 'kanban')}
+                className="glass border-border/50 hover:bg-accent/10 gap-2"
+              >
+                {viewMode === 'kanban' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
+                {viewMode === 'kanban' ? 'Vue Liste' : 'Vue Kanban'}
+              </Button>
+              
+              <Button onClick={handleAiOrganize} variant="secondary" className="gap-2 glass border-border/50 hover:bg-secondary/20">
+                <Target className="w-4 h-4" />
+                Organiser IA
+              </Button>
+              
+              <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90" onClick={() => setIsCreateOpen(true)}>
+                <Plus className="w-4 h-4" />
+                Nouvelle tâche
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setViewMode(viewMode === 'kanban' ? 'list' : 'kanban')}
-          >
-            {viewMode === 'kanban' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
-            {viewMode === 'kanban' ? 'Vue Liste' : 'Vue Kanban'}
-          </Button>
-          <Button onClick={handleAiOrganize} variant="secondary" className="gap-2">
-            <Target className="w-4 h-4" />
-            Organiser IA
-          </Button>
-          <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Nouvelle tâche
-          </Button>
-        </div>
-        </div>
+      {/* Contenu principal */}
+      <div className="p-6 space-y-6">
         {projects.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-4">
+          <div className="flex gap-3 overflow-x-auto pb-2">
             {projects.map((p) => (
               <Button
                 key={p.id}
                 size="sm"
                 variant="outline"
                 onClick={() => setSpaceTasksProject(p)}
+                className="glass border-border/50 hover:bg-accent/10 hover-scale whitespace-nowrap"
               >
                 {getProjectName(p)}
               </Button>
             ))}
           </div>
         )}
+
         {viewMode === 'kanban' ? (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
             {tasks.length === 0 ? (
-              <p className="col-span-full text-center text-sm text-muted-foreground">
-                Aucune tâche trouvée.
-              </p>
+              <div className="col-span-full text-center py-12">
+                <div className="glass-glow rounded-2xl p-8 border border-border/50">
+                  <CheckCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-lg font-medium text-muted-foreground">
+                    Aucune tâche trouvée
+                  </p>
+                  <p className="text-sm text-muted-foreground/80 mt-2">
+                    Créez votre première tâche pour commencer !
+                  </p>
+                </div>
+              </div>
             ) : (
               columns.map((column) => (
                 <div
                   key={column.id}
-                  className={`${column.color} rounded-lg p-4 border shadow-sm`}
+                  className="space-y-4"
                   onDragOver={handleDragOver}
                   onDrop={e => handleDrop(e, column.id)}
                 >
-                  <h3 className="font-semibold mb-4 flex items-center justify-between">
-                    {column.title}
-                    <Badge variant="secondary" className="ml-2">
-                      {tasks.filter(task => task.status === column.id).length}
-                    </Badge>
-                  </h3>
+                  {/* En-tête de colonne */}
+                  <div className="glass-glow rounded-xl p-4 border border-border/50 bg-gradient-to-br from-background/50 to-background/80">
+                    <h3 className="font-semibold flex items-center justify-between text-foreground">
+                      <span className="flex items-center gap-2">
+                        {column.id === 'À faire' && <AlertCircle className="w-4 h-4 text-orange-500" />}
+                        {column.id === 'En cours' && <Clock className="w-4 h-4 text-blue-500" />}
+                        {column.id === 'Bientôt fini' && <Target className="w-4 h-4 text-yellow-500" />}
+                        {column.id === 'Terminé' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                        {column.title}
+                      </span>
+                      <Badge variant="secondary" className="bg-accent/20 text-accent-foreground">
+                        {tasks.filter(task => task.status === column.id).length}
+                      </Badge>
+                    </h3>
+                  </div>
                   
-                  <div className="space-y-3">
+                  {/* Cartes de tâches */}
+                  <div className="space-y-3 min-h-[200px]">
                     {tasks
                       .filter(task => task.status === column.id)
-                      .map((task) => (
+                      .map((task, index) => (
                         <Card
                           key={task.id}
-                          className="hover:shadow-md transition-shadow hover-scale"
+                          className="glass-glow hover:shadow-glow transition-all duration-300 hover-scale border-border/50 animate-fade-in hover:border-primary/20"
+                          style={{ animationDelay: `${index * 100}ms` }}
                           draggable
                           onDragStart={e => handleDragStart(e, task.id)}
                         >
-                          <CardContent className="p-4">
-                            <h4 className="font-medium mb-2">{task.titre}</h4>
-                            
-                              <div className="flex items-center justify-between text-xs">
+                          <CardContent className="p-4 space-y-3">
+                            <div className="space-y-2">
+                              <h4 className="font-medium text-foreground leading-tight">{task.titre}</h4>
+                              
+                              <div className="flex items-center justify-between gap-2">
                                 {!task.isInternal && task._spaceName && (
-                                  <Badge variant="outline">{task._spaceName}</Badge>
+                                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                    {task._spaceName}
+                                  </Badge>
                                 )}
                                 {task.deadline && (
-                                  <span className="text-muted-foreground">{task.deadline}</span>
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Calendar className="w-3 h-3" />
+                                    {task.deadline}
+                                  </div>
                                 )}
                               </div>
-                            <div className="space-y-2 mt-3">
+
+                              {/* Badge de priorité et responsable */}
+                              <div className="flex items-center gap-2">
+                                {task.priorite && (
+                                  <Badge 
+                                    variant={task.priorite === 'Haute' ? 'destructive' : task.priorite === 'Moyenne' ? 'default' : 'secondary'}
+                                    className="text-xs"
+                                  >
+                                    {task.priorite}
+                                  </Badge>
+                                )}
+                                {task.responsable && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {task.responsable}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2 pt-2 border-t border-border/30">
                               {!task.isInternal && (
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
-                                  className="w-full gap-2 text-xs"
+                                  className="w-full gap-2 text-xs glass border-border/50 hover:bg-accent/10"
                                 >
                                   <Clock className="w-3 h-3" />
-                                  Timer
+                                  {timerTaskId === task.id ? 'Arrêter timer' : 'Démarrer timer'}
                                 </Button>
                               )}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleTaskDeconstruct(task)}
-                                className="w-full text-xs"
-                                disabled={isClientTask(task)}
-                              >
-                                Déconstruire la tâche
-                              </Button>
-                              <div className="flex gap-2">
+                              
+                              <div className="flex gap-1">
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="p-2"
                                   onClick={() => handleEditTask(task)}
+                                  className="flex-1 gap-1 text-xs glass border-border/50 hover:bg-accent/10"
                                 >
                                   <Edit className="w-3 h-3" />
-                                  <span className="sr-only">Editer</span>
+                                  Éditer
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="p-2 text-destructive"
                                   onClick={() => handleDeleteTask(task)}
+                                  className="flex-1 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                                 >
                                   <Trash2 className="w-3 h-3" />
-                                  <span className="sr-only">Supprimer</span>
+                                  Supprimer
                                 </Button>
                               </div>
                             </div>
@@ -526,122 +576,201 @@ const Tasky = () => {
               ))
             )}
           </div>
-      ) : (
-        <Card className="glass-glow">
-              <CardHeader>
-                <CardTitle>Vue Liste des Tâches</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {tasks.length === 0 ? (
-                    <p className="text-center text-sm text-muted-foreground">
-                      Aucune tâche trouvée.
-                    </p>
-                  ) : (
-                    tasks.map((task) => (
-                      <div key={task.id} className="space-y-2">
-                        <div
-                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors hover-scale animate-fade-in"
-                        >
-                          <div>
-                            <h4 className="font-medium">{task.titre}</h4>
+        ) : (
+          <div className="space-y-4">
+            {tasks.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="glass-glow rounded-2xl p-8 border border-border/50">
+                  <CheckCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-lg font-medium text-muted-foreground">
+                    Aucune tâche trouvée
+                  </p>
+                  <p className="text-sm text-muted-foreground/80 mt-2">
+                    Créez votre première tâche pour commencer !
+                  </p>
+                </div>
+              </div>
+            ) : (
+              tasks.map((task, index) => (
+                <Card 
+                  key={task.id} 
+                  className="glass-glow hover:shadow-glow transition-all duration-300 hover-scale border-border/50 animate-fade-in hover:border-primary/20"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-6 gap-6 items-center">
+                      <div className="md:col-span-2 space-y-2">
+                        <h4 className="font-semibold text-foreground text-lg">{task.titre}</h4>
+                        {task.time_spent && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            {Math.round(task.time_spent / 60)}min
                           </div>
-                          <div className="flex items-center gap-3">
-                            {!task.isInternal && task._spaceName && (
-                              <Badge variant="outline">{task._spaceName}</Badge>
-                            )}
-                            {!task.isInternal && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
-                                className="gap-2"
-                              >
-                                <Clock className="w-4 h-4" />
-                                Timer
-                              </Button>
-                            )}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleTaskDeconstruct(task)}
-                                disabled={isClientTask(task)}
-                              >
-                                Déconstruire la tâche
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditTask(task)}
-                                className="p-2"
-                              >
-                                <Edit className="w-4 h-4" />
-                                <span className="sr-only">Editer</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteTask(task)}
-                                className="p-2 text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                <span className="sr-only">Supprimer</span>
-                              </Button>
-                          </div>
-                        </div>
+                        )}
                       </div>
-                    ))
-                  )}
-                  </div>
-                </CardContent>
-          </Card>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <Badge 
+                          variant={
+                            task.status === 'Terminé' ? 'default' : 
+                            task.status === 'En cours' ? 'secondary' : 
+                            'outline'
+                          }
+                          className="text-xs bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20"
+                        >
+                          {task.status}
+                        </Badge>
+                        {task.priorite && (
+                          <Badge 
+                            variant={task.priorite === 'Haute' ? 'destructive' : task.priorite === 'Moyenne' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {task.priorite}
+                          </Badge>
+                        )}
+                        {!task.isInternal && task._spaceName && (
+                          <Badge variant="outline" className="text-xs bg-accent/10 text-accent-foreground border-accent/20">
+                            {task._spaceName}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground">
+                        <Badge variant="outline" className="bg-background/50">
+                          {task.responsable}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground">
+                        {task.deadline && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {task.deadline}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex gap-2 justify-end">
+                        {!task.isInternal && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
+                            className="gap-1 glass border-border/50 hover:bg-accent/10"
+                          >
+                            <Clock className="w-3 h-3" />
+                            {timerTaskId === task.id ? 'Stop' : 'Timer'}
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditTask(task)}
+                          className="gap-1 glass border-border/50 hover:bg-accent/10"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteTask(task)}
+                          className="gap-1 text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         )}
 
-        {currentTimerTask && (
+        {/* Timer flottant avec design amélioré */}
+        {timerTaskId && currentTimerTask && (
           <div
-            className="fixed w-80 z-50"
-            style={{ top: timerPosition.top, right: timerPosition.right }}
+            className="fixed glass-glow border border-border/50 rounded-xl p-4 shadow-glow z-50 cursor-move backdrop-blur-sm bg-background/90"
+            style={{ right: timerPosition.right, top: timerPosition.top }}
+            onMouseDown={handleTimerDragStart}
           >
             <TimeTracker
               task={currentTimerTask}
               onTimeUpdate={handleTimeUpdate}
               onClose={() => setTimerTaskId(null)}
-              onDragStart={handleTimerDragStart}
             />
           </div>
         )}
+      </div>
 
-        {/* Dialog création tâche */}
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+      {/* Dialog de création avec design moderne */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="glass-glow border-border/50 max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nouvelle tâche</DialogTitle>
+            <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Nouvelle tâche
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Titre *</Label>
-              <Input value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} />
+          
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="title" className="text-sm font-medium">Titre</Label>
+              <Input
+                id="title"
+                value={newTask.title}
+                onChange={e => setNewTask({ ...newTask, title: e.target.value })}
+                placeholder="Titre de la tâche"
+                className="glass border-border/50 focus:border-primary/50 mt-1"
+              />
             </div>
+            
+            <div>
+              <Label htmlFor="spaceId" className="text-sm font-medium">Espace client</Label>
+              <Select
+                value={newTask.spaceId}
+                onValueChange={value => setNewTask({ ...newTask, spaceId: value })}
+              >
+                <SelectTrigger className="glass border-border/50 focus:border-primary/50 mt-1">
+                  <SelectValue placeholder="Sélectionner un espace" />
+                </SelectTrigger>
+                <SelectContent className="glass border-border/50">
+                  <SelectItem value="">Tâche interne</SelectItem>
+                  {projects.map(p => (
+                    <SelectItem key={p.id} value={p.id.toString()}>
+                      {getProjectName(p)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Responsable</Label>
-                <Select value={newTask.responsible} onValueChange={(v: any) => setNewTask({ ...newTask, responsible: v })}>
-                  <SelectTrigger>
+              <div>
+                <Label htmlFor="responsible" className="text-sm font-medium">Responsable</Label>
+                <Select
+                  value={newTask.responsible}
+                  onValueChange={value => setNewTask({ ...newTask, responsible: value })}
+                >
+                  <SelectTrigger className="glass border-border/50 focus:border-primary/50 mt-1">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="glass border-border/50">
                     <SelectItem value="Nous">Nous</SelectItem>
                     <SelectItem value="Client">Client</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Priorité</Label>
-                <Select value={newTask.priority} onValueChange={(v: any) => setNewTask({ ...newTask, priority: v })}>
-                  <SelectTrigger>
+              
+              <div>
+                <Label htmlFor="priority" className="text-sm font-medium">Priorité</Label>
+                <Select
+                  value={newTask.priority}
+                  onValueChange={value => setNewTask({ ...newTask, priority: value })}
+                >
+                  <SelectTrigger className="glass border-border/50 focus:border-primary/50 mt-1">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="glass border-border/50">
                     <SelectItem value="Basse">Basse</SelectItem>
                     <SelectItem value="Moyenne">Moyenne</SelectItem>
                     <SelectItem value="Haute">Haute</SelectItem>
@@ -649,14 +778,18 @@ const Tasky = () => {
                 </Select>
               </div>
             </div>
+            
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Statut</Label>
-                <Select value={newTask.status} onValueChange={(v: any) => setNewTask({ ...newTask, status: v })}>
-                  <SelectTrigger>
+              <div>
+                <Label htmlFor="status" className="text-sm font-medium">Statut</Label>
+                <Select
+                  value={newTask.status}
+                  onValueChange={value => setNewTask({ ...newTask, status: value })}
+                >
+                  <SelectTrigger className="glass border-border/50 focus:border-primary/50 mt-1">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="glass border-border/50">
                     <SelectItem value="À faire">À faire</SelectItem>
                     <SelectItem value="En cours">En cours</SelectItem>
                     <SelectItem value="Bientôt fini">Bientôt fini</SelectItem>
@@ -664,105 +797,157 @@ const Tasky = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Échéance</Label>
-                <Input type="date" value={newTask.deadline} onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })} />
+              
+              <div>
+                <Label htmlFor="deadline" className="text-sm font-medium">Deadline</Label>
+                <Input
+                  id="deadline"
+                  type="date"
+                  value={newTask.deadline}
+                  onChange={e => setNewTask({ ...newTask, deadline: e.target.value })}
+                  className="glass border-border/50 focus:border-primary/50 mt-1"
+                />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>ID espace client (optionnel)</Label>
-              <Input value={newTask.spaceId} onChange={(e) => setNewTask({ ...newTask, spaceId: e.target.value })} />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Annuler</Button>
-            <Button onClick={createTask} disabled={!newTask.title.trim()}>Créer</Button>
+          
+          <DialogFooter className="pt-6">
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)} className="glass border-border/50">
+              Annuler
+            </Button>
+            <Button 
+              onClick={createTask} 
+              disabled={!newTask.title}
+              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+            >
+              Créer la tâche
+            </Button>
           </DialogFooter>
         </DialogContent>
-        </Dialog>
+      </Dialog>
 
-        {/* Dialog édition tâche */}
-        <Dialog open={!!editTask} onOpenChange={(o) => !o && setEditTask(null)}>
-          {editTask && (
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Modifier la tâche</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label>Titre *</Label>
-                  <Input value={editTask.title} onChange={(e) => setEditTask({ ...editTask, title: e.target.value })} />
+      {/* Dialog d'édition avec design moderne */}
+      {editTask && (
+        <Dialog open={!!editTask} onOpenChange={() => setEditTask(null)}>
+          <DialogContent className="glass-glow border-border/50 max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Éditer la tâche
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="edit-title" className="text-sm font-medium">Titre</Label>
+                <Input
+                  id="edit-title"
+                  value={editTask.title}
+                  onChange={e => setEditTask({ ...editTask, title: e.target.value })}
+                  placeholder="Titre de la tâche"
+                  className="glass border-border/50 focus:border-primary/50 mt-1"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-responsible" className="text-sm font-medium">Responsable</Label>
+                  <Select
+                    value={editTask.responsible}
+                    onValueChange={value => setEditTask({ ...editTask, responsible: value })}
+                  >
+                    <SelectTrigger className="glass border-border/50 focus:border-primary/50 mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="glass border-border/50">
+                      <SelectItem value="Nous">Nous</SelectItem>
+                      <SelectItem value="Client">Client</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Responsable</Label>
-                    <Select value={editTask.responsible} onValueChange={(v: any) => setEditTask({ ...editTask, responsible: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Nous">Nous</SelectItem>
-                        <SelectItem value="Client">Client</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Priorité</Label>
-                    <Select value={editTask.priority} onValueChange={(v: any) => setEditTask({ ...editTask, priority: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Basse">Basse</SelectItem>
-                        <SelectItem value="Moyenne">Moyenne</SelectItem>
-                        <SelectItem value="Haute">Haute</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Statut</Label>
-                    <Select value={editTask.status} onValueChange={(v: any) => setEditTask({ ...editTask, status: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="À faire">À faire</SelectItem>
-                        <SelectItem value="En cours">En cours</SelectItem>
-                        <SelectItem value="Bientôt fini">Bientôt fini</SelectItem>
-                        <SelectItem value="Terminé">Terminé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Échéance</Label>
-                    <Input type="date" value={editTask.deadline} onChange={(e) => setEditTask({ ...editTask, deadline: e.target.value })} />
-                  </div>
+                
+                <div>
+                  <Label htmlFor="edit-priority" className="text-sm font-medium">Priorité</Label>
+                  <Select
+                    value={editTask.priority}
+                    onValueChange={value => setEditTask({ ...editTask, priority: value })}
+                  >
+                    <SelectTrigger className="glass border-border/50 focus:border-primary/50 mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="glass border-border/50">
+                      <SelectItem value="Basse">Basse</SelectItem>
+                      <SelectItem value="Moyenne">Moyenne</SelectItem>
+                      <SelectItem value="Haute">Haute</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setEditTask(null)}>Annuler</Button>
-                <Button onClick={handleEditSubmit}>Enregistrer</Button>
-              </DialogFooter>
-            </DialogContent>
-          )}
-          </Dialog>
-          <Dialog
-            open={!!spaceTasksProject}
-            onOpenChange={(o) => !o && setSpaceTasksProject(null)}
-          >
-            {spaceTasksProject && (
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Tâches {getProjectName(spaceTasksProject)}</DialogTitle>
-                </DialogHeader>
-                <TaskManager projetId={spaceTasksProject.id} />
-              </DialogContent>
-            )}
-          </Dialog>
-        </div>
-    );
-  };
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-status" className="text-sm font-medium">Statut</Label>
+                  <Select
+                    value={editTask.status}
+                    onValueChange={value => setEditTask({ ...editTask, status: value })}
+                  >
+                    <SelectTrigger className="glass border-border/50 focus:border-primary/50 mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="glass border-border/50">
+                      <SelectItem value="À faire">À faire</SelectItem>
+                      <SelectItem value="En cours">En cours</SelectItem>
+                      <SelectItem value="Bientôt fini">Bientôt fini</SelectItem>
+                      <SelectItem value="Terminé">Terminé</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-deadline" className="text-sm font-medium">Deadline</Label>
+                  <Input
+                    id="edit-deadline"
+                    type="date"
+                    value={editTask.deadline}
+                    onChange={e => setEditTask({ ...editTask, deadline: e.target.value })}
+                    className="glass border-border/50 focus:border-primary/50 mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter className="pt-6">
+              <Button variant="outline" onClick={() => setEditTask(null)} className="glass border-border/50">
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleEditSubmit} 
+                disabled={!editTask.title}
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+              >
+                Sauvegarder
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
-  export default Tasky;
+      {/* Dialog pour les tâches d'un espace spécifique */}
+      {spaceTasksProject && (
+        <Dialog open={!!spaceTasksProject} onOpenChange={() => setSpaceTasksProject(null)}>
+          <DialogContent className="glass-glow border-border/50 max-w-4xl max-h-[80vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Tâches - {getProjectName(spaceTasksProject)}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto">
+              <TaskManager projetId={spaceTasksProject.id} isClient={false} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+};
+
+export default Tasky;
