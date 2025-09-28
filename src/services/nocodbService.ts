@@ -445,23 +445,47 @@ class NocoDBService {
   async deleteClient(id: string) {
     // Utiliser la fonction edge pour supprimer en cascade
     try {
+      console.log('🗑️ Starting client deletion for space:', id);
+      
       const { data, error } = await supabase.functions.invoke('delete-space-cascade', {
         body: { spaceId: id }
       });
 
+      console.log('🔍 Edge function response:', { data, error });
+
       if (error) {
-        console.error('Error calling delete-space-cascade:', error);
-        throw error;
+        console.error('❌ Error calling delete-space-cascade:', error);
+        // Fallback: essayer la suppression simple sans cascade
+        console.log('⚠️ Falling back to simple deletion');
+        const fallbackResponse = await this.makeRequest(`/${this.config.tableIds.clients}/${id}`, {
+          method: 'DELETE',
+        });
+        console.log('✅ Fallback deletion successful:', fallbackResponse);
       }
 
       // Invalider le cache après suppression
       this.invalidateCache(`/${this.config.tableIds.clients}`);
       this.invalidateProjectCache();
 
-      return data;
+      return data || { success: true };
     } catch (error) {
-      console.error('Error in deleteClient:', error);
-      throw error;
+      console.error('❌ Error in deleteClient:', error);
+      
+      // Dernier recours: suppression directe
+      try {
+        console.log('🚨 Last resort: direct deletion');
+        const directResponse = await this.makeRequest(`/${this.config.tableIds.clients}/${id}`, {
+          method: 'DELETE',
+        });
+        
+        this.invalidateCache(`/${this.config.tableIds.clients}`);
+        this.invalidateProjectCache();
+        
+        return directResponse;
+      } catch (directError) {
+        console.error('💥 Direct deletion also failed:', directError);
+        throw directError;
+      }
     }
   }
 
