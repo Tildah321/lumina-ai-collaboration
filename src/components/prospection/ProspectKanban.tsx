@@ -53,13 +53,13 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
     url && (url.startsWith('http://') || url.startsWith('https://')) ? url : `https://${url}`;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
       {statuses.map(column => (
         <div
           key={column.id}
           onDragOver={handleDragOver}
           onDrop={e => handleDrop(e, column.id)}
-          className={`${column.color} rounded-xl p-4 min-h-[600px] transition-all duration-200 hover:shadow-sm`}
+          className={`${column.color} rounded-xl p-3 lg:p-4 min-h-[600px] transition-all duration-200 hover:shadow-sm`}
         >
           <div className="font-semibold mb-4 flex items-center justify-between sticky top-0 bg-inherit pb-2">
             <span className="text-sm font-medium text-foreground">{column.title}</span>
@@ -77,10 +77,10 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
                   draggable
                   onDragStart={e => handleDragStart(e, p.id)}
                 >
-                  <CardContent className="p-4 space-y-3">
+                  <CardContent className="p-3 lg:p-4 space-y-3">
                     <div className="flex items-start">
                       <div className="flex-1 space-y-2">
-                        <h4 className="font-semibold text-foreground text-sm leading-tight">{p.name}</h4>
+                        <h4 className="font-semibold text-foreground text-sm leading-tight line-clamp-2">{p.name}</h4>
                         {p.company && (
                           <p className="text-sm text-muted-foreground font-medium bg-muted/50 px-2 py-1 rounded-md inline-block">
                             {p.company}

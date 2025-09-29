@@ -13,6 +13,7 @@ import { Navigate } from 'react-router-dom';
 import nocodbService from '@/services/nocodbService';
 import { TimeTracker } from '@/components/time/TimeTracker';
 import TaskManager from '@/components/tasks/TaskManager';
+import TaskKanban from '@/components/tasks/TaskKanban';
 
 const Tasky = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
@@ -444,133 +445,32 @@ const Tasky = () => {
         )}
 
         {viewMode === 'kanban' ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
-            {tasks.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <div className="glass-glow rounded-2xl p-8 border border-border/50">
-                  <CheckCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">
-                    Aucune tâche trouvée
-                  </p>
-                  <p className="text-sm text-muted-foreground/80 mt-2">
-                    Créez votre première tâche pour commencer !
-                  </p>
-                </div>
+          tasks.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="glass-glow rounded-2xl p-8 border border-border/50 max-w-md mx-auto">
+                <CheckCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium text-muted-foreground">
+                  Aucune tâche trouvée
+                </p>
+                <p className="text-sm text-muted-foreground/80 mt-2">
+                  Créez votre première tâche pour commencer !
+                </p>
               </div>
-            ) : (
-              columns.map((column) => (
-                <div
-                  key={column.id}
-                  className="space-y-4"
-                  onDragOver={handleDragOver}
-                  onDrop={e => handleDrop(e, column.id)}
-                >
-                  {/* En-tête de colonne */}
-                  <div className="glass-glow rounded-xl p-4 border border-border/50 bg-gradient-to-br from-background/50 to-background/80">
-                    <h3 className="font-semibold flex items-center justify-between text-foreground">
-                      <span className="flex items-center gap-2">
-                        {column.id === 'À faire' && <AlertCircle className="w-4 h-4 text-orange-500" />}
-                        {column.id === 'En cours' && <Clock className="w-4 h-4 text-blue-500" />}
-                        {column.id === 'Bientôt fini' && <Target className="w-4 h-4 text-yellow-500" />}
-                        {column.id === 'Terminé' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                        {column.title}
-                      </span>
-                      <Badge variant="secondary" className="bg-accent/20 text-accent-foreground">
-                        {tasks.filter(task => task.status === column.id).length}
-                      </Badge>
-                    </h3>
-                  </div>
-                  
-                  {/* Cartes de tâches */}
-                  <div className="space-y-3 min-h-[200px]">
-                    {tasks
-                      .filter(task => task.status === column.id)
-                      .map((task, index) => (
-                        <Card
-                          key={task.id}
-                          className="glass-glow hover:shadow-glow transition-all duration-300 hover-scale border-border/50 animate-fade-in hover:border-primary/20"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                          draggable
-                          onDragStart={e => handleDragStart(e, task.id)}
-                        >
-                          <CardContent className="p-4 space-y-3">
-                            <div className="space-y-2">
-                              <h4 className="font-medium text-foreground leading-tight">{task.titre}</h4>
-                              
-                              <div className="flex items-center justify-between gap-2">
-                                {!task.isInternal && task._spaceName && (
-                                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                                    {task._spaceName}
-                                  </Badge>
-                                )}
-                                {task.deadline && (
-                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <Calendar className="w-3 h-3" />
-                                    {task.deadline}
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Badge de priorité et responsable */}
-                              <div className="flex items-center gap-2">
-                                {task.priorite && (
-                                  <Badge 
-                                    variant={task.priorite === 'Haute' ? 'destructive' : task.priorite === 'Moyenne' ? 'default' : 'secondary'}
-                                    className="text-xs"
-                                  >
-                                    {task.priorite}
-                                  </Badge>
-                                )}
-                                {task.responsable && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {task.responsable}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-2 pt-2 border-t border-border/30">
-                              {!task.isInternal && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setTimerTaskId(timerTaskId === task.id ? null : task.id)}
-                                  className="w-full gap-2 text-xs glass border-border/50 hover:bg-accent/10"
-                                >
-                                  <Clock className="w-3 h-3" />
-                                  {timerTaskId === task.id ? 'Arrêter timer' : 'Démarrer timer'}
-                                </Button>
-                              )}
-                              
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleEditTask(task)}
-                                  className="flex-1 gap-1 text-xs glass border-border/50 hover:bg-accent/10"
-                                >
-                                  <Edit className="w-3 h-3" />
-                                  Éditer
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleDeleteTask(task)}
-                                  className="flex-1 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                  Supprimer
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+            </div>
+          ) : (
+            <TaskKanban
+              tasks={tasks}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onEditTask={handleEditTask}
+              onDeleteTask={handleDeleteTask}
+              onTaskDeconstruct={handleTaskDeconstruct}
+              onTimeUpdate={handleTimeUpdate}
+              timerTaskId={timerTaskId}
+              setTimerTaskId={setTimerTaskId}
+            />
+          )
         ) : (
           <div className="space-y-4">
             {tasks.length === 0 ? (
