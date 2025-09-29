@@ -18,11 +18,6 @@ import TaskKanban from '@/components/tasks/TaskKanban';
 const Tasky = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
-  
-  if (!loading && !hasFeatureAccess('hasAIAssistants')) {
-    upgradeRequired();
-    return <Navigate to="/dashboard" replace />;
-  }
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTask, setNewTask] = useState<any>({
     title: '',
@@ -370,6 +365,12 @@ const Tasky = () => {
       console.error('Erreur suppression tâche:', error);
     }
   };
+
+  // Check for feature access after all hooks are declared
+  if (!loading && !hasFeatureAccess('hasAIAssistants')) {
+    upgradeRequired();
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
