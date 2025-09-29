@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
-import { Plus, LayoutGrid, List, Target, Clock, Edit, Trash2, Users, Building, Calendar, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { Plus, LayoutGrid, List, Target, Clock, Edit, Trash2, Users, Building, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -372,60 +372,55 @@ const Tasky = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      {/* Header avec design élégant */}
-      <div className="glass-glow border-b bg-background/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="space-y-6 p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold flex items-center gap-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm">
-                  <Sparkles className="w-8 h-8 text-primary" />
-                </div>
-                Tasky
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Gestion intelligente de vos tâches et projets
-              </p>
-            </div>
+      {/* Header simple comme Pipou */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <Target className="w-8 h-8" />
+              Tasky
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Gestion intelligente de vos tâches et projets
+            </p>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <ToggleGroup
-                type="single"
-                value={taskScope}
-                onValueChange={value => value && setTaskScope(value as 'client' | 'internal')}
-                variant="outline"
-                className="glass rounded-xl p-1 border-border/50"
-              >
-                <ToggleGroupItem value="client" className="gap-2 px-4 py-2 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                  <Users className="w-4 h-4" />
-                  Clients
-                </ToggleGroupItem>
-                <ToggleGroupItem value="internal" className="gap-2 px-4 py-2 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                  <Building className="w-4 h-4" />
-                  Interne
-                </ToggleGroupItem>
-              </ToggleGroup>
+          <div className="flex items-center gap-3">
+            <ToggleGroup
+              type="single"
+              value={taskScope}
+              onValueChange={value => value && setTaskScope(value as 'client' | 'internal')}
+              variant="outline"
+            >
+              <ToggleGroupItem value="client" className="gap-2">
+                <Users className="w-4 h-4" />
+                Clients
+              </ToggleGroupItem>
+              <ToggleGroupItem value="internal" className="gap-2">
+                <Building className="w-4 h-4" />
+                Interne
+              </ToggleGroupItem>
+            </ToggleGroup>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewMode(viewMode === 'kanban' ? 'list' : 'kanban')}
-                className="glass border-border/50 hover:bg-accent/10 gap-2"
-              >
-                {viewMode === 'kanban' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
-                {viewMode === 'kanban' ? 'Vue Liste' : 'Vue Kanban'}
-              </Button>
-              
-              <Button onClick={handleAiOrganize} variant="secondary" className="gap-2 glass border-border/50 hover:bg-secondary/20">
-                <Target className="w-4 h-4" />
-                Organiser IA
-              </Button>
-              
-              <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90" onClick={() => setIsCreateOpen(true)}>
-                <Plus className="w-4 h-4" />
-                Nouvelle tâche
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode(viewMode === 'kanban' ? 'list' : 'kanban')}
+              className="gap-2"
+            >
+              {viewMode === 'kanban' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
+              {viewMode === 'kanban' ? 'Vue Liste' : 'Vue Kanban'}
+            </Button>
+            
+            <Button onClick={handleAiOrganize} variant="secondary" className="gap-2">
+              <Target className="w-4 h-4" />
+              Organiser IA
+            </Button>
+            
+            <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Nouvelle tâche
+            </Button>
           </div>
         </div>
       </div>
