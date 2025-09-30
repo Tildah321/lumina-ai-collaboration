@@ -139,8 +139,8 @@ const TaskKanban: React.FC<TaskKanbanProps> = ({
                       </div>
                     </div>
 
-                    {/* Timer pour les tâches en cours */}
-                    {task.status === 'En cours' && task.responsable === 'Nous' && (
+                    {/* Timer pour les tâches client en cours */}
+                    {task.status === 'En cours' && task.responsable === 'Client' && (
                       <TimeTracker
                         task={{ id: task.id.toString(), titre: task.titre, time_spent: task.time_spent, isInternal: task.isInternal }}
                         onTimeUpdate={(taskId, time) => onTimeUpdate(taskId, time)}
