@@ -140,7 +140,7 @@ const TaskKanban: React.FC<TaskKanbanProps> = ({
                     </div>
 
                     {/* Timer pour les tâches client en cours */}
-                    {task.status === 'En cours' && task.responsable === 'Client' && (
+                    {task.status === 'En cours' && task.responsable === 'Client' && timerTaskId === task.id.toString() && (
                       <TimeTracker
                         task={{ id: task.id.toString(), titre: task.titre, time_spent: task.time_spent, isInternal: task.isInternal }}
                         onTimeUpdate={(taskId, time) => onTimeUpdate(taskId, time)}
@@ -162,6 +162,20 @@ const TaskKanban: React.FC<TaskKanbanProps> = ({
                         <Target className="w-3 h-3" />
                         IA
                       </Button>
+                      
+                      {isClientTask(task) && task.status === 'En cours' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 h-7 text-xs px-2"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setTimerTaskId(timerTaskId === task.id.toString() ? null : task.id.toString());
+                          }}
+                        >
+                          <Clock className="w-3 h-3" />
+                        </Button>
+                      )}
                       
                       {!isClientTask(task) && (
                         <>
