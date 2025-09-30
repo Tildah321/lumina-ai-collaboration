@@ -74,6 +74,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          message: string | null
+          read: boolean
+          title: string
+          user_id: string
+          webhook_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string | null
+          read?: boolean
+          title: string
+          user_id: string
+          webhook_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string | null
+          read?: boolean
+          title?: string
+          user_id?: string
+          webhook_id?: string | null
+        }
+        Relationships: []
+      }
       space_collaborators: {
         Row: {
           collaborator_id: string
@@ -176,6 +209,42 @@ export type Database = {
           created_at?: string
           id?: string
           plan_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhooks: {
+        Row: {
+          created_at: string
+          description: string | null
+          endpoint_key: string
+          id: string
+          is_active: boolean
+          name: string
+          secret_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          endpoint_key: string
+          id?: string
+          is_active?: boolean
+          name: string
+          secret_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          endpoint_key?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          secret_token?: string | null
           updated_at?: string
           user_id?: string
         }
