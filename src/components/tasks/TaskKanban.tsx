@@ -69,9 +69,50 @@ const TaskKanban: React.FC<TaskKanbanProps> = ({
 
   const isClientTask = (task: TaskKanbanTask) => task.responsable === 'Client';
 
+  const [dragPosition, setDragPosition] = React.useState({ x: 100, y: 100 });
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
+
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    setIsDragging(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setDragPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
+  const activeTask = tasks.find(task => task.id.toString() === timerTaskId);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-      {columns.map(column => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        {columns.map(column => (
         <div
           key={column.id}
           onDragOver={onDragOver}
@@ -139,14 +180,6 @@ const TaskKanban: React.FC<TaskKanbanProps> = ({
                       </div>
                     </div>
 
-                    {/* Timer pour les tâches client en cours */}
-                    {task.status === 'En cours' && task.responsable === 'Client' && timerTaskId === task.id.toString() && (
-                      <TimeTracker
-                        task={{ id: task.id.toString(), titre: task.titre, time_spent: task.time_spent, isInternal: task.isInternal }}
-                        onTimeUpdate={(taskId, time) => onTimeUpdate(taskId, time)}
-                        onClose={() => setTimerTaskId(null)}
-                      />
-                    )}
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-3 border-t border-border/50" onClick={e => e.stopPropagation()}>
@@ -216,7 +249,32 @@ const TaskKanban: React.FC<TaskKanbanProps> = ({
           </div>
         </div>
       ))}
-    </div>
+      </div>
+
+      {/* TimeTracker en popup draggable */}
+      {timerTaskId && activeTask && (
+        <div
+          className="fixed z-50 w-80"
+          style={{
+            left: `${dragPosition.x}px`,
+            top: `${dragPosition.y}px`,
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }}
+        >
+          <TimeTracker
+            task={{
+              id: activeTask.id.toString(),
+              titre: activeTask.titre,
+              time_spent: activeTask.time_spent,
+              isInternal: activeTask.isInternal
+            }}
+            onTimeUpdate={(taskId, time) => onTimeUpdate(taskId, time)}
+            onClose={() => setTimerTaskId(null)}
+            onDragStart={handleDragStart}
+          />
+        </div>
+      )}
+    </>
   );
 };
 
