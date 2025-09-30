@@ -196,7 +196,7 @@ const TaskKanban: React.FC<TaskKanbanProps> = ({
                         IA
                       </Button>
                       
-                      {isClientTask(task) && task.status === 'En cours' && (
+                      {isClientTask(task) && (
                         <Button
                           size="sm"
                           variant="outline"
