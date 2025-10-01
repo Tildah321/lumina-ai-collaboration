@@ -19,6 +19,7 @@ interface Notification {
   read: boolean;
   created_at: string;
   webhooks?: {
+    id: string;
     name: string;
   };
 }
@@ -82,8 +83,14 @@ export const NotificationList = () => {
       
       // Map webhook names to notifications
       const webhooksMap = new Map(webhooksData?.map(w => [w.id, w]) || []);
-      const enrichedNotifications = notificationsData?.map(notif => ({
-        ...notif,
+      const enrichedNotifications: Notification[] = notificationsData?.map(notif => ({
+        id: notif.id,
+        webhook_id: notif.webhook_id,
+        title: notif.title,
+        message: notif.message,
+        data: notif.data,
+        read: notif.read,
+        created_at: notif.created_at,
         webhooks: notif.webhook_id ? webhooksMap.get(notif.webhook_id) : undefined
       })) || [];
 
