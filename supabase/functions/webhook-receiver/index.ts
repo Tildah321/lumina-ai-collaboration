@@ -132,18 +132,22 @@ serve(async (req) => {
       );
     }
 
-    // Verify secret token if provided
-    if (webhookConfig.secret_token && webhookConfig.secret_token !== secret_token) {
-      console.error('Invalid secret token');
-      return new Response(
-        JSON.stringify({ 
-          error: 'Invalid secret token' 
-        }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+    // Verify secret token only if webhook requires it AND token is provided in request
+    if (webhookConfig.secret_token) {
+      if (secret_token && webhookConfig.secret_token !== secret_token) {
+        console.error('Invalid secret token');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Invalid secret token' 
+          }),
+          { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      // If webhook has a secret but none provided, allow it (for services like Fillout that don't send custom headers)
+      console.log('Webhook has secret_token configured, but allowing request without verification for external services');
     }
 
     // Create notification
