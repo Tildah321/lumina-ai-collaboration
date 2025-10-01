@@ -181,7 +181,7 @@ export const WebhookManager = () => {
   };
 
   const getWebhookUrl = (endpointKey: string) => {
-    return `https://fmowxizbfmfrcyyomzew.supabase.co/functions/v1/webhook-receiver`;
+    return `https://fmowxizbfmfrcyyomzew.supabase.co/functions/v1/webhook-receiver?endpoint_key=${endpointKey}`;
   };
 
   const copyWebhookUrl = async (webhook: WebhookData) => {
