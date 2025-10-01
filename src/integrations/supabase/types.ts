@@ -105,7 +105,15 @@ export type Database = {
           user_id?: string
           webhook_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_notifications_webhook_id"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       space_collaborators: {
         Row: {

@@ -15,6 +15,8 @@ import ClientShareDialog from '@/components/client/ClientShareDialog';
 import nocodbService from '@/services/nocodbService';
 import { useGlobalStats } from '@/hooks/useGlobalStats';
 import GlobalStats from '@/components/overview/GlobalStats';
+import { WebhookManager } from '@/components/notifications/WebhookManager';
+import { NotificationList } from '@/components/notifications/NotificationList';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -542,6 +544,13 @@ const Dashboard = () => {
           spaceName={selectedSpaceForShare.name}
         />
       )}
+
+      {/* Section Notifications */}
+      <div className="space-y-6 pt-8 border-t">
+        <h2 className="text-2xl font-bold">Notifications</h2>
+        <WebhookManager />
+        <NotificationList />
+      </div>
     </div>
   );
 };

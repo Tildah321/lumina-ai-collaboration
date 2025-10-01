@@ -62,20 +62,32 @@ export const NotificationList = () => {
     
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Get notifications
+      const { data: notificationsData, error: notifError } = await supabase
         .from('notifications')
-        .select(`
-          *,
-          webhooks (
-            name
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
-      setNotifications(data || []);
+      if (notifError) throw notifError;
+      
+      // Get webhook names
+      const webhookIds = [...new Set(notificationsData?.map(n => n.webhook_id).filter(Boolean) || [])];
+      const { data: webhooksData } = await supabase
+        .from('webhooks')
+        .select('id, name')
+        .in('id', webhookIds);
+      
+      // Map webhook names to notifications
+      const webhooksMap = new Map(webhooksData?.map(w => [w.id, w]) || []);
+      const enrichedNotifications = notificationsData?.map(notif => ({
+        ...notif,
+        webhooks: notif.webhook_id ? webhooksMap.get(notif.webhook_id) : undefined
+      })) || [];
+
+      setNotifications(enrichedNotifications);
     } catch (error) {
       console.error('Erreur lors du chargement des notifications:', error);
       toast({
