@@ -15,7 +15,6 @@ import ClientShareDialog from '@/components/client/ClientShareDialog';
 import nocodbService from '@/services/nocodbService';
 import { useGlobalStats } from '@/hooks/useGlobalStats';
 import GlobalStats from '@/components/overview/GlobalStats';
-import { WebhookManager } from '@/components/notifications/WebhookManager';
 import { NotificationList } from '@/components/notifications/NotificationList';
 
 const Dashboard = () => {
@@ -547,8 +546,17 @@ const Dashboard = () => {
 
       {/* Section Notifications */}
       <div className="space-y-6 pt-8 border-t">
-        <h2 className="text-2xl font-bold">Notifications</h2>
-        <WebhookManager />
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Notifications</h2>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/profile')}
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nouveau webhook
+          </Button>
+        </div>
         <NotificationList />
       </div>
     </div>

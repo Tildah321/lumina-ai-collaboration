@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { loadBranding, saveBranding, loadBrandingFromSupabase, saveBrandingToSupabase } from '@/lib/branding';
+import { WebhookManager } from '@/components/notifications/WebhookManager';
 
 const Profile = () => {
   const { user, changePassword } = useAuth();
@@ -514,6 +515,12 @@ const Profile = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Section Webhooks */}
+      <div className="pt-8 border-t">
+        <h2 className="text-2xl font-bold mb-6">Configuration des Webhooks</h2>
+        <WebhookManager />
       </div>
     </div>
   );
