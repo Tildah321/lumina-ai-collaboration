@@ -365,7 +365,16 @@ export const WebhookManager = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyWebhookUrl(webhook)}
+                      onClick={() => {
+                        const url = getWebhookUrl(webhook.endpoint_key);
+                        navigator.clipboard.writeText(url);
+                        setCopiedUrl(webhook.id!);
+                        setTimeout(() => setCopiedUrl(null), 2000);
+                        toast({
+                          title: "URL copiée",
+                          description: "L'URL du webhook a été copiée dans le presse-papier"
+                        });
+                      }}
                       className="gap-2"
                     >
                       {copiedUrl === webhook.id ? (
@@ -373,7 +382,7 @@ export const WebhookManager = () => {
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
-                      Copier config
+                      Copier URL
                     </Button>
                     <Button
                       variant="outline"

@@ -230,11 +230,20 @@ export const NotificationList = () => {
                         
                         {notification.data && Object.keys(notification.data).length > 0 && <details className="text-xs">
                             <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                              Voir les données (JSON)
+                              Voir les données
                             </summary>
-                            <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
-                              {JSON.stringify(notification.data, null, 2)}
-                            </pre>
+                            <div className="mt-2 p-3 bg-muted rounded space-y-1">
+                              {Object.entries(notification.data).map(([key, value]) => (
+                                <div key={key} className="flex gap-2">
+                                  <span className="font-medium text-foreground">{key}:</span>
+                                  <span className="text-muted-foreground">
+                                    {typeof value === 'object' && value !== null 
+                                      ? JSON.stringify(value, null, 2)
+                                      : String(value)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </details>}
                       </div>
                       
