@@ -32,30 +32,33 @@ export const NotificationBell = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      loadNotifications();
-
-      // Subscribe to real-time updates
-      const channel = supabase
-        .channel('notifications_changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`,
-          },
-          () => {
-            loadNotifications();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
+    if (!user) {
+      setLoading(false);
+      return;
     }
+    
+    loadNotifications();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('notifications_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          loadNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const loadNotifications = async () => {
@@ -172,6 +175,10 @@ export const NotificationBell = () => {
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
