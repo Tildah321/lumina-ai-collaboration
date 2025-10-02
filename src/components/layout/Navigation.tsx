@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlan } from '@/contexts/PlanContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 const Navigation = () => {
   const location = useLocation();
@@ -166,6 +167,13 @@ const Navigation = () => {
       {/* Footer */}
       <div className="flex-shrink-0 border-t border-border/50 bg-background">
         <div className={cn('space-y-2', collapsed && !isMobile ? 'p-2' : 'p-6 pt-4')}>
+          {/* Notifications - uniquement sur desktop */}
+          {!isMobile && (
+            <div className={cn('flex', collapsed ? 'justify-center' : 'justify-start px-3 mb-2')}>
+              <NotificationBell />
+            </div>
+          )}
+          
           {/* Bouton rétracter - uniquement sur desktop */}
           {!isMobile && (
             <Button 
@@ -227,7 +235,9 @@ const Navigation = () => {
         <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 h-14 flex items-center justify-between px-4">
           <Logo size="sm" showText={true} />
           
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu className="w-5 h-5" />
@@ -239,6 +249,7 @@ const Navigation = () => {
               </div>
             </SheetContent>
           </Sheet>
+          </div>
         </div>
       </>
     );
