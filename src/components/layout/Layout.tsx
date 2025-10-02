@@ -15,7 +15,7 @@ const Layout = ({ children }: LayoutProps) => {
       <Navigation />
       
       {/* Cloche de notification fixe en haut à droite */}
-      <div className="fixed top-6 right-10 z-50">
+      <div className="fixed top-3 right-3 z-50">
         <NotificationBell />
       </div>
       
