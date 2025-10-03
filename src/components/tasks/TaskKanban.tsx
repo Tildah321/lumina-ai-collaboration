@@ -183,32 +183,32 @@ const TaskKanban: React.FC<TaskKanbanProps> = ({
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-3 border-t border-border/50" onClick={e => e.stopPropagation()}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1 flex-1 h-7 text-xs"
-                        onClick={e => {
-                          e.stopPropagation();
-                          onTaskDeconstruct(task);
-                        }}
-                      >
-                        <Target className="w-3 h-3" />
-                        IA
-                      </Button>
-                      
-                      {isClientTask(task) && (
+                      {!isClientTask(task) && (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="gap-1 h-7 text-xs px-2"
+                          className="gap-1 flex-1 h-7 text-xs"
                           onClick={e => {
                             e.stopPropagation();
-                            setTimerTaskId(timerTaskId === task.id.toString() ? null : task.id.toString());
+                            onTaskDeconstruct(task);
                           }}
                         >
-                          <Clock className="w-3 h-3" />
+                          <Target className="w-3 h-3" />
+                          IA
                         </Button>
                       )}
+                      
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 h-7 text-xs px-2"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setTimerTaskId(timerTaskId === task.id.toString() ? null : task.id.toString());
+                        }}
+                      >
+                        <Clock className="w-3 h-3" />
+                      </Button>
                       
                       {!isClientTask(task) && (
                         <>
