@@ -9,8 +9,9 @@ import { Mail, Phone, Globe, Calendar } from 'lucide-react';
 
 interface ProspectKanbanProps {
   prospects: Prospect[];
-  setProspects: React.Dispatch<React.SetStateAction<Prospect[]>>;
+  onUpdateProspect: (id: string, status: string) => void;
   onCreateSpace: (prospect: Prospect) => void;
+  onEdit: (prospect: Prospect) => void;
 }
 
 const statuses = [
@@ -21,31 +22,24 @@ const statuses = [
   { id: 'Converti', title: 'Converti', color: 'bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800' },
 ];
 
-const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects, onCreateSpace }) => {
+const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, onUpdateProspect, onCreateSpace, onEdit }) => {
+  const [draggedId, setDraggedId] = React.useState<string | null>(null);
+
   const handleDragStart = (event: React.DragEvent<HTMLDivElement>, id: string) => {
-    event.dataTransfer.setData('text/plain', id);
+    setDraggedId(id);
+    event.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
   };
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>, status: string) => {
     event.preventDefault();
-    const id = event.dataTransfer.getData('text/plain');
-    const previousProspect = prospects.find(p => p.id === id);
-    
-    // Mise à jour optimiste
-    setProspects(prev => prev.map(p => (p.id === id ? { ...p, status } : p)));
-    
-    try {
-      await nocodbService.updateProspect(id, { status: mapProspectStatusToNoco(status) });
-    } catch (error) {
-      console.error('Erreur mise à jour prospect:', error);
-      // Revert en cas d'erreur
-      if (previousProspect) {
-        setProspects(prev => prev.map(p => (p.id === id ? previousProspect : p)));
-      }
+    if (draggedId) {
+      onUpdateProspect(draggedId, status);
+      setDraggedId(null);
     }
   };
 
@@ -125,11 +119,16 @@ const ProspectKanban: React.FC<ProspectKanbanProps> = ({ prospects, setProspects
 
                     {(p.email || p.phone) && (
                       <div className="flex gap-2 pt-3 border-t border-border/50" onClick={e => e.stopPropagation()}>
-                        <Button size="sm" className="gap-2 flex-1 h-8" asChild>
-                          <a href={p.email ? `mailto:${p.email}` : `tel:${p.phone}`}>
-                            {p.email ? <Mail className="w-3 h-3" /> : <Phone className="w-3 h-3" />}
-                            Contact
-                          </a>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-2 flex-1 h-8"
+                          onClick={e => {
+                            e.stopPropagation();
+                            onEdit(p);
+                          }}
+                        >
+                          Modifier
                         </Button>
                         <Button
                           size="sm"

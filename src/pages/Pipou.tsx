@@ -1,32 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Users, MessageCircle, FileText, Share2, ExternalLink, Edit, Trash2, Mail, Phone, Target, Euro, Plus } from 'lucide-react';
+import { Users, MessageCircle, FileText, Share2, ExternalLink, Euro, Plus } from 'lucide-react';
 import { usePlan } from '@/contexts/PlanContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import nocodbService from '@/services/nocodbService';
 import ClientShareDialog from '@/components/client/ClientShareDialog';
 import ProspectKanban from '@/components/prospection/ProspectKanban';
 import ProspectList from '@/components/prospection/ProspectList';
-import ProspectForm, { ProspectFormData } from '@/components/prospection/ProspectForm';
+import { ProspectDialog } from '@/components/prospection/ProspectDialog';
 import { Prospect } from '@/types/prospect';
-import { mapProspectStatus, mapProspectStatusToNoco } from '@/lib/prospectStatus';
 import MilestoneManager from '@/components/milestones/MilestoneManager';
 import NocoInvoiceManager from '@/components/invoices/NocoInvoiceManager';
 import ProspectCreateSpaceDialog from '@/components/prospection/ProspectCreateSpaceDialog';
+import { useProspectCache } from '@/hooks/useProspectCache';
 
 type NocoRecord = Record<string, unknown>;
 
-const PROSPECT_COMPANY_COLUMN = 'cxi03jrd1enf3n2';
-const PROSPECT_PHONE_COLUMN = 'ch2fw3p077t9y6w';
-const PROSPECT_SITE_COLUMN = 'coo7e2wbo6zvvux';
-
 interface Project {
-  id: string; // Client space ID
-  projectId: string; // NocoDB project ID
+  id: string;
+  projectId: string;
   client: string;
   spaceName: string;
   status: string;
@@ -37,17 +33,10 @@ interface Project {
   price: number;
 }
 
-const PROSPECTS_PAGE_SIZE = 20;
-
-// Fonction utilitaire supprimée : les appels réseau sont limités
-
 const Pipou = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
   const navigate = useNavigate();
 
-  // Accès autorisé pour tous les utilisateurs
-  
-  // Projets chargés depuis NocoDB
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -102,241 +91,47 @@ const Pipou = () => {
     loadProjects();
   }, [loadProjects]);
 
-  // Données mockées de prospection CRM
-  const [prospects, setProspects] = useState<Prospect[]>([]);
-  const [isLoadingProspects, setIsLoadingProspects] = useState(true);
-  const [prospectOffset, setProspectOffset] = useState(0);
-  const [hasMoreProspects, setHasMoreProspects] = useState(true);
-  const [isCreateProspectDialogOpen, setIsCreateProspectDialogOpen] = useState(false);
-  const [isEditProspectDialogOpen, setIsEditProspectDialogOpen] = useState(false);
-  const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
+  const {
+    prospects,
+    isLoading: isLoadingProspects,
+    hasMore: hasMoreProspects,
+    loadProspects,
+    createProspect,
+    updateProspect,
+    deleteProspect,
+    updateProspectStatus
+  } = useProspectCache();
+
   const [activeTab, setActiveTab] = useState('clients');
   const [spaceProspect, setSpaceProspect] = useState<Prospect | null>(null);
   const [prospectView, setProspectView] = useState<'kanban' | 'list'>('list');
-
-  const buildProspectPayload = (
-    data: ProspectFormData & { status: string; lastContact?: string }
-  ) => ({
-    name: data.name,
-    // Entreprise / Société
-    [PROSPECT_COMPANY_COLUMN]: data.company,
-    entreprise: data.company,
-    Entreprise: data.company,
-    societe: data.company,
-    société: data.company,
-    company: data.company,
-    // Coordonnées
-    email: data.email,
-    [PROSPECT_PHONE_COLUMN]: data.phone,
-    telephone: data.phone,
-    Telephone: data.phone,
-    Téléphone: data.phone,
-    phone: data.phone,
-    tel: data.phone,
-    mobile: data.phone,
-    portable: data.phone,
-    // Présence en ligne
-    [PROSPECT_SITE_COLUMN]: data.website,
-    site: data.website,
-    reseaux: data.website,
-    website: data.website,
-    'Réseaux / Site': data.website,
-    site_web: data.website,
-    reseaux_site: data.website,
-    url: data.website,
-    // Statut / suivi
-    status: mapProspectStatusToNoco(data.status),
-    dernier_contact:
-      data.lastContact || new Date().toISOString().split('T')[0]
-  });
-
-  const loadProspects = useCallback(
-    async (forceRefresh = false) => {
-      setIsLoadingProspects(true);
-
-      try {
-        const response = await nocodbService.getProspects(
-          PROSPECTS_PAGE_SIZE,
-          forceRefresh ? 0 : prospectOffset,
-          forceRefresh,
-          { onlyCurrentUser: true }
-        );
-        const list = (response.list || []).map((p: Record<string, unknown>) => ({
-          id: ((p as { Id?: unknown; id?: unknown }).Id || (p as { Id?: unknown; id?: unknown }).id || '').toString(),
-          name: (p as { name?: string }).name || '',
-          company:
-            (p as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
-            (p as { entreprise?: string }).entreprise ||
-            (p as { company?: string }).company ||
-            (p as Record<string, string>)['Entreprise'] ||
-            (p as { societe?: string }).societe ||
-            (p as Record<string, string>)['société'] ||
-            '',
-          email: (p as { email?: string }).email || '',
-          phone:
-            (p as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
-            (p as { telephone?: string }).telephone ||
-            (p as { numero?: string }).numero ||
-            (p as { phone?: string }).phone ||
-            (p as Record<string, string>)['t_l_phone'] ||
-            (p as Record<string, string>)['téléphone'] ||
-            (p as Record<string, string>)['Téléphone'] ||
-            (p as Record<string, string>)['Telephone'] ||
-            '',
-          website:
-            (p as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
-            (p as { site?: string }).site ||
-            (p as { reseaux?: string }).reseaux ||
-            (p as { website?: string }).website ||
-            (p as Record<string, string>)['reseaux_site'] ||
-            (p as Record<string, string>)['site_web'] ||
-            (p as Record<string, string>)['Réseaux / Site'] ||
-            '',
-          status: mapProspectStatus((p as { status?: string }).status || 'nouveau'),
-          lastContact:
-            (p as { lastContact?: string; dernier_contact?: string }).lastContact ||
-            (p as { dernier_contact?: string }).dernier_contact ||
-            ''
-        }));
-        
-        if (forceRefresh) {
-          setProspects(list);
-          setProspectOffset(list.length);
-        } else {
-          setProspects(prev => [...prev, ...list]);
-          setProspectOffset(prev => prev + list.length);
-        }
-        setHasMoreProspects(list.length === PROSPECTS_PAGE_SIZE);
-      } catch (error) {
-        console.error('Erreur chargement prospects:', error);
-        // En cas d'erreur, ne pas modifier l'état des prospects
-      } finally {
-        setIsLoadingProspects(false);
-      }
-    },
-    [prospectOffset]
-  );
+  const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
+  const [prospectDialogMode, setProspectDialogMode] = useState<'create' | 'edit'>('create');
+  const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
 
   useEffect(() => {
-    if (activeTab !== 'prospection') return;
-    loadProspects();
-  }, [activeTab, loadProspects]);
-
-  // Debug logging pour les prospects
-  useEffect(() => {
-    console.log('📊 Prospects state updated:', {
-      count: prospects.length,
-      isLoading: isLoadingProspects,
-      hasMore: hasMoreProspects,
-      offset: prospectOffset,
-      prospects: prospects.map(p => ({ id: p.id, name: p.name, company: p.company, status: p.status }))
-    });
-  }, [prospects, isLoadingProspects, hasMoreProspects, prospectOffset]);
-
-  const addProspect = async (data: ProspectFormData) => {
-    if (!data.name || !data.company) return;
-    try {
-      const payload = buildProspectPayload({ ...data, status: 'Nouveau' });
-      const response = (await nocodbService.createProspect(payload)) as Record<string, unknown>;
-      const created: Prospect = {
-        id: ((response as { Id?: unknown; id?: unknown }).Id || (response as { Id?: unknown; id?: unknown }).id || '').toString(),
-        name: (response as { name?: string }).name || data.name,
-        company:
-          (response as Record<string, unknown>)[PROSPECT_COMPANY_COLUMN] as string ||
-          (response as { entreprise?: string }).entreprise ||
-          (response as { company?: string }).company ||
-          (response as Record<string, string>)['Entreprise'] ||
-          data.company,
-        email: (response as { email?: string }).email || data.email,
-        phone:
-          (response as Record<string, unknown>)[PROSPECT_PHONE_COLUMN] as string ||
-          (response as { telephone?: string }).telephone ||
-          (response as { numero?: string }).numero ||
-          (response as { phone?: string }).phone ||
-          (response as Record<string, string>)['t_l_phone'] ||
-          (response as Record<string, string>)['téléphone'] ||
-          (response as Record<string, string>)['Téléphone'] ||
-          (response as Record<string, string>)['Telephone'] ||
-          data.phone,
-        website:
-          (response as Record<string, unknown>)[PROSPECT_SITE_COLUMN] as string ||
-          (response as { site?: string }).site ||
-          (response as { reseaux?: string }).reseaux ||
-          (response as { website?: string }).website ||
-          (response as Record<string, string>)['reseaux_site'] ||
-          (response as Record<string, string>)['site_web'] ||
-          (response as Record<string, string>)['Réseaux / Site'] ||
-          data.website,
-        status: mapProspectStatus((response as { status?: string }).status || 'nouveau'),
-        lastContact:
-          (response as { lastContact?: string; dernier_contact?: string }).lastContact ||
-          (response as { dernier_contact?: string }).dernier_contact ||
-          payload.dernier_contact
-      };
-      
-      // Mise à jour immédiate de l'état
-      setProspects(prev => [created, ...prev]);
-      setIsCreateProspectDialogOpen(false);
-      
-      // Forcer un refresh complet des données
-      setTimeout(() => {
-        loadProspects(true);
-      }, 500);
-    } catch (error) {
-      console.error('Erreur création prospect:', error);
+    if (activeTab === 'prospection' && prospects.length === 0) {
+      loadProspects();
     }
-  };
+  }, [activeTab]);
 
-  const handleEditProspect = async (data: Prospect) => {
-    if (!data.id) return;
-    const id = data.id;
-    const previous = prospects.find(p => p.id === id);
-
-    // Mise à jour optimiste
-    setProspects(prev => prev.map(p => (p.id === id ? data : p)));
-    setIsEditProspectDialogOpen(false);
+  const handleOpenCreateDialog = () => {
     setEditingProspect(null);
-
-    try {
-      await nocodbService.updateProspect(
-        id,
-        buildProspectPayload({
-          name: data.name,
-          company: data.company,
-          email: data.email,
-          phone: data.phone,
-          website: data.website,
-          status: data.status,
-          lastContact: data.lastContact
-        })
-      );
-      
-      // Forcer un refresh complet des données
-      setTimeout(() => {
-        loadProspects(true);
-      }, 500);
-    } catch (error) {
-      console.error('Erreur mise à jour prospect:', error);
-      if (previous) {
-        setProspects(prev => prev.map(p => (p.id === id ? previous : p)));
-      }
-    }
+    setProspectDialogMode('create');
+    setProspectDialogOpen(true);
   };
 
-  const handleDeleteProspect = async (id: string) => {
-    if (!id) return;
-    const previousProspects = [...prospects];
+  const handleOpenEditDialog = (prospect: Prospect) => {
+    setEditingProspect(prospect);
+    setProspectDialogMode('edit');
+    setProspectDialogOpen(true);
+  };
 
-    // Mise à jour optimiste
-    setProspects(prev => prev.filter(p => p.id !== id));
-    setProspectOffset(prev => Math.max(0, prev - 1));
-
-    try {
-      await nocodbService.deleteProspect(id);
-    } catch (error) {
-      console.error('Erreur suppression prospect:', error);
-      // Revenir à l'état précédent
-      setProspects(previousProspects);
+  const handleProspectSubmit = async (data: Partial<Prospect>) => {
+    if (prospectDialogMode === 'create') {
+      await createProspect(data);
+    } else if (editingProspect) {
+      await updateProspect(editingProspect.id, data);
     }
   };
 
@@ -379,7 +174,7 @@ const Pipou = () => {
             </TabsTrigger>
           </TabsList>
           {activeTab === 'prospection' && (
-            <Button onClick={() => setIsCreateProspectDialogOpen(true)} className="gap-2">
+            <Button onClick={handleOpenCreateDialog} className="gap-2">
               <Plus className="w-4 h-4" />
               Nouveau prospect
             </Button>
@@ -411,7 +206,7 @@ const Pipou = () => {
                                 className="gap-2"
                               >
                                 <ExternalLink className="w-4 h-4" />
-                                Ouvrir l’espace
+                                Ouvrir l'espace
                               </Button>
                               {project.driveLink && (
                                 <Button
@@ -432,7 +227,7 @@ const Pipou = () => {
                                 onClick={() => setMilestonesProject(project)}
                                 className="gap-2"
                               >
-                                <Target className="w-4 h-4" />
+                                <Euro className="w-4 h-4" />
                                 Jalons
                               </Button>
                               <Button
@@ -495,13 +290,10 @@ const Pipou = () => {
             <ProspectList
               prospects={prospects}
               isLoading={isLoadingProspects}
-              onEdit={(prospect) => {
-                setEditingProspect(prospect);
-                setIsEditProspectDialogOpen(true);
-              }}
+              onEdit={handleOpenEditDialog}
               onDelete={(id) => {
                 if (confirm('Supprimer ce prospect ?')) {
-                  handleDeleteProspect(id);
+                  deleteProspect(id);
                 }
               }}
               onCreateSpace={(prospect) => setSpaceProspect(prospect)}
@@ -511,7 +303,8 @@ const Pipou = () => {
           ) : (
             <ProspectKanban
               prospects={prospects}
-              setProspects={setProspects}
+              onUpdateProspect={updateProspectStatus}
+              onEdit={handleOpenEditDialog}
               onCreateSpace={(prospect) => setSpaceProspect(prospect)}
             />
           )}
@@ -529,41 +322,15 @@ const Pipou = () => {
           )}
         </TabsContent>
       </Tabs>
-      <Dialog open={isCreateProspectDialogOpen} onOpenChange={setIsCreateProspectDialogOpen}>
-        <DialogContent className="sm:max-w-[340px]">
-          <DialogHeader>
-            <DialogTitle>Créer un prospect</DialogTitle>
-            <DialogDescription>Renseignez les infos du contact</DialogDescription>
-          </DialogHeader>
-          <ProspectForm
-            onCancel={() => setIsCreateProspectDialogOpen(false)}
-            onSubmit={addProspect}
-            submitLabel="Créer"
-          />
-        </DialogContent>
-      </Dialog>
-      {editingProspect && (
-        <Dialog
-          open={isEditProspectDialogOpen}
-          onOpenChange={(open) => {
-            setIsEditProspectDialogOpen(open);
-            if (!open) setEditingProspect(null);
-          }}
-        >
-          <DialogContent className="sm:max-w-[340px]">
-            <DialogHeader>
-              <DialogTitle>Modifier le prospect</DialogTitle>
-              <DialogDescription>Mettez à jour les informations du prospect</DialogDescription>
-            </DialogHeader>
-            <ProspectForm
-              initialData={editingProspect}
-              onCancel={() => setIsEditProspectDialogOpen(false)}
-              onSubmit={(data) => handleEditProspect({ ...editingProspect, ...data })}
-              submitLabel="Mettre à jour"
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+
+      <ProspectDialog
+        open={prospectDialogOpen}
+        onOpenChange={setProspectDialogOpen}
+        prospect={editingProspect}
+        onSubmit={handleProspectSubmit}
+        mode={prospectDialogMode}
+      />
+
       {spaceProspect && (
         <ProspectCreateSpaceDialog
           prospect={spaceProspect}
