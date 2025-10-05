@@ -27,42 +27,51 @@ export const useProspectCache = () => {
   const loadingRef = useRef(false);
 
   const mapNocoToProspect = useCallback((record: Record<string, unknown>): Prospect => {
-    const id = ((record as any).Id || (record as any).id || '').toString();
-    const name = (record.name as string) || '';
+    const anyRec = record as any;
+    const id = (anyRec.Id || anyRec.id || '').toString();
+    const name = (anyRec.name as string) || '';
+
     const company = (
-      record[PROSPECT_COMPANY_COLUMN] ||
-      record.entreprise ||
-      record.company ||
-      record.Entreprise ||
-      record.societe ||
-      record.société ||
+      anyRec[PROSPECT_COMPANY_COLUMN] ||
+      anyRec.entreprise ||
+      anyRec.company ||
+      anyRec.Entreprise ||
+      anyRec.societe ||
+      anyRec['société'] ||
+      anyRec.lien_onboarding || // fallback commonly used in this base
+      anyRec.description ||
       ''
     ) as string;
     
-    const email = (record.email as string) || '';
+    const email = (anyRec.email as string) || '';
     
     const phone = (
-      record[PROSPECT_PHONE_COLUMN] ||
-      record.telephone ||
-      record.numero ||
-      record.phone ||
-      record.tel ||
-      record.mobile ||
-      record.portable ||
-      record.Téléphone ||
-      record.Telephone ||
+      anyRec[PROSPECT_PHONE_COLUMN] ||
+      anyRec.telephone ||
+      anyRec.numero ||
+      anyRec.phone ||
+      anyRec.tel ||
+      anyRec.mobile ||
+      anyRec.portable ||
+      anyRec['Téléphone'] ||
+      anyRec.Telephone ||
+      anyRec.lien_whatsapp || // fallback
       ''
     ) as string;
     
     const website = (
-      record[PROSPECT_SITE_COLUMN] ||
-      record.site ||
-      record.reseaux ||
-      record.website ||
-      record.site_web ||
-      record.reseaux_site ||
-      record['Réseaux / Site'] ||
-      record.url ||
+      anyRec[PROSPECT_SITE_COLUMN] ||
+      anyRec.site ||
+      anyRec.reseaux ||
+      anyRec.website ||
+      anyRec.site_web ||
+      anyRec.reseaux_site ||
+      anyRec['Réseaux / Site'] ||
+      anyRec.url ||
+      anyRec.lien_portail || // often used for portal/drive/site
+      anyRec.lien_onboarding ||
+      anyRec.lien_payement ||
+      anyRec.lien_rdv ||
       ''
     ) as string;
     
@@ -74,12 +83,14 @@ export const useProspectCache = () => {
       'converti': 'Converti'
     };
     
-    const rawStatus = (record.status as string) || 'nouveau';
-    const status = statusMap[rawStatus.toLowerCase()] || 'Nouveau';
+    const rawStatus = (anyRec.status as string) || (anyRec.statut as string) || 'nouveau';
+    const status = statusMap[rawStatus.toLowerCase?.() || 'nouveau'] || 'Nouveau';
     
     const lastContact = (
-      record.lastContact ||
-      record.dernier_contact ||
+      anyRec.lastContact ||
+      anyRec.dernier_contact ||
+      anyRec.last_contact ||
+      anyRec.CreatedAt ||
       ''
     ) as string;
 
@@ -95,15 +106,35 @@ export const useProspectCache = () => {
       'Converti': 'converti'
     };
 
-    return {
-      name: prospect.name || '',
-      email: prospect.email || '',
-      [PROSPECT_COMPANY_COLUMN]: prospect.company || '',
-      [PROSPECT_PHONE_COLUMN]: prospect.phone || '',
-      [PROSPECT_SITE_COLUMN]: prospect.website || '',
+    const payload: Record<string, any> = {
       status: statusMap[prospect.status || 'Nouveau'] || 'nouveau',
+      statut: statusMap[prospect.status || 'Nouveau'] || 'nouveau',
       dernier_contact: prospect.lastContact || new Date().toISOString().split('T')[0]
     };
+
+    if (prospect.name !== undefined) payload.name = prospect.name;
+    if (prospect.email !== undefined) payload.email = prospect.email;
+
+    if (prospect.company !== undefined) {
+      payload[PROSPECT_COMPANY_COLUMN] = prospect.company;
+      // Fallback column used in this base
+      if (!payload.lien_onboarding) payload.lien_onboarding = prospect.company;
+    }
+
+    if (prospect.phone !== undefined) {
+      payload[PROSPECT_PHONE_COLUMN] = prospect.phone;
+      // Fallback: store phone in WhatsApp/message field when available
+      payload.lien_whatsapp = prospect.phone;
+    }
+
+    if (prospect.website !== undefined) {
+      payload[PROSPECT_SITE_COLUMN] = prospect.website;
+      // Fallback: store website/portal link
+      payload.lien_portail = prospect.website;
+      if (!payload.lien_onboarding) payload.lien_onboarding = prospect.website;
+    }
+
+    return payload;
   }, []);
 
   const loadProspects = useCallback(async (forceRefresh = false) => {
