@@ -61,15 +61,14 @@ export const useProspectCache = () => {
     
     const website = (
       anyRec[PROSPECT_SITE_COLUMN] ||
-      anyRec.site ||
-      anyRec.reseaux ||
       anyRec.website ||
+      anyRec.url ||
+      anyRec.site ||
       anyRec.site_web ||
+      anyRec.reseaux ||
       anyRec.reseaux_site ||
       anyRec['Réseaux / Site'] ||
-      anyRec.url ||
       anyRec.lien_portail || // often used for portal/drive/site
-      anyRec.lien_onboarding ||
       anyRec.lien_payement ||
       anyRec.lien_rdv ||
       ''
@@ -131,7 +130,6 @@ export const useProspectCache = () => {
       payload[PROSPECT_SITE_COLUMN] = prospect.website;
       // Fallback: store website/portal link
       payload.lien_portail = prospect.website;
-      if (!payload.lien_onboarding) payload.lien_onboarding = prospect.website;
     }
 
     return payload;
