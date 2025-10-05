@@ -117,8 +117,7 @@ export const useProspectCache = () => {
       const response = await nocodbService.getProspects(
         PAGE_SIZE,
         offset,
-        forceRefresh,
-        { onlyCurrentUser: true }
+        forceRefresh
       );
 
       const list = (response.list || []).map(mapNocoToProspect);
