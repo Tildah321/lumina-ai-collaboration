@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 const PROSPECT_COMPANY_COLUMN = 'cxi03jrd1enf3n2';
 const PROSPECT_PHONE_COLUMN = 'ch2fw3p077t9y6w';
 const PROSPECT_SITE_COLUMN = 'coo7e2wbo6zvvux';
+const PROSPECT_RESEAUX_COLUMN = 'cyr48yof0ean2dq';
+const PROSPECT_PRIX_COLUMN = 'csfu3bqetc3s1tz';
 const PAGE_SIZE = 20;
 
 interface ProspectCache {
@@ -65,12 +67,22 @@ export const useProspectCache = () => {
       anyRec.url ||
       anyRec.site ||
       anyRec.site_web ||
+      ''
+    ) as string;
+    
+    const reseaux = (
+      anyRec[PROSPECT_RESEAUX_COLUMN] ||
       anyRec.reseaux ||
       anyRec.reseaux_site ||
       anyRec['Réseaux / Site'] ||
-      anyRec.lien_portail || // often used for portal/drive/site
-      anyRec.lien_payement ||
-      anyRec.lien_rdv ||
+      ''
+    ) as string;
+    
+    const prix = (
+      anyRec[PROSPECT_PRIX_COLUMN] ||
+      anyRec.prix ||
+      anyRec.price ||
+      anyRec.montant ||
       ''
     ) as string;
     
@@ -93,7 +105,7 @@ export const useProspectCache = () => {
       ''
     ) as string;
 
-    return { id, name, company, email, phone, website, status, lastContact };
+    return { id, name, company, email, phone, website, reseaux, prix, status, lastContact };
   }, []);
 
   const buildProspectPayload = useCallback((prospect: Partial<Prospect>) => {
@@ -128,8 +140,14 @@ export const useProspectCache = () => {
 
     if (prospect.website !== undefined) {
       payload[PROSPECT_SITE_COLUMN] = prospect.website;
-      // Fallback: store website/portal link
-      payload.lien_portail = prospect.website;
+    }
+
+    if (prospect.reseaux !== undefined) {
+      payload[PROSPECT_RESEAUX_COLUMN] = prospect.reseaux;
+    }
+
+    if (prospect.prix !== undefined) {
+      payload[PROSPECT_PRIX_COLUMN] = prospect.prix;
     }
 
     return payload;

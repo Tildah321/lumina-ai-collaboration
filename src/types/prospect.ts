@@ -5,6 +5,8 @@ export interface Prospect {
   email: string;
   phone: string;
   website: string;
+  reseaux: string;
+  prix: string;
   status: string;
   lastContact: string;
 }

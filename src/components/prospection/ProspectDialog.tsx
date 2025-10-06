@@ -29,6 +29,8 @@ export const ProspectDialog = ({ open, onOpenChange, prospect, onSubmit, mode }:
     email: '',
     phone: '',
     website: '',
+    reseaux: '',
+    prix: '',
     status: 'Nouveau',
     lastContact: new Date().toISOString().split('T')[0]
   });
@@ -45,6 +47,8 @@ export const ProspectDialog = ({ open, onOpenChange, prospect, onSubmit, mode }:
         email: '',
         phone: '',
         website: '',
+        reseaux: '',
+        prix: '',
         status: 'Nouveau',
         lastContact: new Date().toISOString().split('T')[0]
       });
@@ -165,12 +169,32 @@ export const ProspectDialog = ({ open, onOpenChange, prospect, onSubmit, mode }:
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="website" className="text-sm font-medium">Site web / Réseaux</Label>
+            <Label htmlFor="website" className="text-sm font-medium">Site web</Label>
             <Input
               id="website"
               value={formData.website || ''}
               onChange={(e) => updateField('website', e.target.value)}
               placeholder="https://exemple.com"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reseaux" className="text-sm font-medium">Réseaux</Label>
+            <Input
+              id="reseaux"
+              value={formData.reseaux || ''}
+              onChange={(e) => updateField('reseaux', e.target.value)}
+              placeholder="Instagram, LinkedIn..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="prix" className="text-sm font-medium">Prix</Label>
+            <Input
+              id="prix"
+              value={formData.prix || ''}
+              onChange={(e) => updateField('prix', e.target.value)}
+              placeholder="Montant"
             />
           </div>
 
