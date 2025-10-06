@@ -17,6 +17,7 @@ import MilestoneManager from '@/components/milestones/MilestoneManager';
 import NocoInvoiceManager from '@/components/invoices/NocoInvoiceManager';
 import ProspectCreateSpaceDialog from '@/components/prospection/ProspectCreateSpaceDialog';
 import { useProspectCache } from '@/hooks/useProspectCache';
+import ProspectStats from '@/components/prospection/ProspectStats';
 
 type NocoRecord = Record<string, unknown>;
 
@@ -275,6 +276,8 @@ const Pipou = () => {
                 </TabsContent>
 
         <TabsContent value="prospection" className="space-y-4">
+          <ProspectStats prospects={prospects} />
+          
           <div className="flex items-center justify-between mb-4">
             <ToggleGroup type="single" value={prospectView} onValueChange={(value) => setProspectView(value as 'kanban' | 'list')}>
               <ToggleGroupItem value="list" aria-label="Vue liste">
