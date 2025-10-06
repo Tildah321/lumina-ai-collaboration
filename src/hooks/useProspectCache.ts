@@ -61,30 +61,12 @@ export const useProspectCache = () => {
       ''
     ) as string;
     
-    const website = (
-      anyRec[PROSPECT_SITE_COLUMN] ||
-      anyRec.website ||
-      anyRec.url ||
-      anyRec.site ||
-      anyRec.site_web ||
-      ''
-    ) as string;
+    const website = (anyRec[PROSPECT_SITE_COLUMN] ?? '') as string;
     
-    const reseaux = (
-      anyRec[PROSPECT_RESEAUX_COLUMN] ||
-      anyRec.reseaux ||
-      anyRec.reseaux_site ||
-      anyRec['Réseaux / Site'] ||
-      ''
-    ) as string;
+    const reseaux = (anyRec[PROSPECT_RESEAUX_COLUMN] ?? '') as string;
     
-    const prix = (
-      anyRec[PROSPECT_PRIX_COLUMN] ||
-      anyRec.prix ||
-      anyRec.price ||
-      anyRec.montant ||
-      ''
-    ) as string;
+    const prixVal = anyRec[PROSPECT_PRIX_COLUMN];
+    const prix = (prixVal !== undefined && prixVal !== null) ? String(prixVal) : '';
     
     const statusMap: Record<string, string> = {
       'nouveau': 'Nouveau',
