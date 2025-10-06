@@ -110,14 +110,10 @@ export const useProspectCache = () => {
 
     if (prospect.company !== undefined) {
       payload[PROSPECT_COMPANY_COLUMN] = prospect.company;
-      // Fallback column used in this base
-      if (!payload.lien_onboarding) payload.lien_onboarding = prospect.company;
     }
 
     if (prospect.phone !== undefined) {
       payload[PROSPECT_PHONE_COLUMN] = prospect.phone;
-      // Fallback: store phone in WhatsApp/message field when available
-      payload.lien_whatsapp = prospect.phone;
     }
 
     if (prospect.website !== undefined) {
@@ -129,7 +125,9 @@ export const useProspectCache = () => {
     }
 
     if (prospect.prix !== undefined) {
-      payload[PROSPECT_PRIX_COLUMN] = prospect.prix;
+      const rawPrix = typeof prospect.prix === 'string' ? prospect.prix : String(prospect.prix);
+      const parsed = parseFloat(rawPrix.replace(',', '.'));
+      payload[PROSPECT_PRIX_COLUMN] = Number.isFinite(parsed) ? parsed : rawPrix;
     }
 
     return payload;
@@ -187,7 +185,7 @@ export const useProspectCache = () => {
         description: 'Prospect créé avec succès'
       });
 
-      setTimeout(() => loadProspects(true), 300);
+      await loadProspects(true);
       return created;
     } catch (error) {
       console.error('Erreur création prospect:', error);
@@ -219,7 +217,7 @@ export const useProspectCache = () => {
         description: 'Prospect mis à jour avec succès'
       });
 
-      setTimeout(() => loadProspects(true), 300);
+      await loadProspects(true);
     } catch (error) {
       console.error('Erreur mise à jour prospect:', error);
       setCache(prev => ({
