@@ -14,6 +14,7 @@ import nocodbService from '@/services/nocodbService';
 import { TimeTracker } from '@/components/time/TimeTracker';
 import TaskManager from '@/components/tasks/TaskManager';
 import TaskKanban from '@/components/tasks/TaskKanban';
+import { TaskStats } from '@/components/tasks/TaskStats';
 
 const Tasky = () => {
   const { hasFeatureAccess, upgradeRequired, loading } = usePlan();
@@ -429,6 +430,8 @@ const Tasky = () => {
 
       {/* Contenu principal */}
       <div className="p-6 space-y-6">
+        <TaskStats tasks={tasks} />
+        
         {projects.length > 0 && (
           <div className="flex gap-3 overflow-x-auto pb-2">
             {projects.map((p) => (
