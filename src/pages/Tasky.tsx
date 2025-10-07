@@ -374,7 +374,7 @@ const Tasky = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+    <>
       {/* Header simple comme Pipou */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -429,7 +429,7 @@ const Tasky = () => {
       </div>
 
       {/* Contenu principal */}
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <TaskStats tasks={tasks} />
         
         {projects.length > 0 && (
@@ -845,7 +845,7 @@ const Tasky = () => {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </>
   );
 };
 
