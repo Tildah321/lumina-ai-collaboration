@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Users, Euro, Target } from 'lucide-react';
 import { Prospect } from '@/types/prospect';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
 
 interface ProspectStatsProps {
   prospects: Prospect[];
@@ -107,29 +107,6 @@ const ProspectStats = ({ prospects }: ProspectStatsProps) => {
         </Card>
       </div>
 
-      {stats.chartData.length > 0 && (
-        <Card className="glass-glow">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Répartition par statut</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={stats.chartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="status" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip 
-                  contentStyle={{ 
-                    background: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))' 
-                  }}
-                />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

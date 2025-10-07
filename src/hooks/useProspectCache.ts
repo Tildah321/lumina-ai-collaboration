@@ -248,6 +248,7 @@ export const useProspectCache = () => {
         title: 'Succès',
         description: 'Prospect supprimé avec succès'
       });
+      await loadProspects(true);
     } catch (error) {
       console.error('Erreur suppression prospect:', error);
       setCache(prev => ({
