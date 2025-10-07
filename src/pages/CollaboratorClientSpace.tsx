@@ -114,8 +114,7 @@ const CollaboratorClientSpace = () => {
 
           setSpace(mappedSpace);
           
-          // Charger le branding du propriétaire de l'espace
-          // Charger le branding du propriétaire de l'espace
+          // Charger le branding du propriétaire de l'espace depuis Supabase
           const { data: spaceOwnerData } = await supabase
             .from('noco_space_owners')
             .select('user_id')
@@ -126,9 +125,17 @@ const CollaboratorClientSpace = () => {
           
           if (spaceOwnerData?.user_id) {
             brandingUserId = spaceOwnerData.user_id;
-          } else if (collaborator.invited_by) {
-            // Fallback: utiliser le branding de l'utilisateur qui a invité le collaborateur
-            brandingUserId = collaborator.invited_by;
+          } else {
+            // Fallback: charger l'invited_by depuis la table collaborators
+            const { data: collaboratorData } = await supabase
+              .from('collaborators')
+              .select('invited_by')
+              .eq('invitation_token', invitationToken)
+              .maybeSingle();
+              
+            if (collaboratorData?.invited_by) {
+              brandingUserId = collaboratorData.invited_by;
+            }
           }
           
           if (brandingUserId) {

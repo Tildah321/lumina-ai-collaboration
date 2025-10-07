@@ -25,6 +25,8 @@ import ClientNavigation from '@/components/layout/ClientNavigation';
 import ClientTaskManager from '@/components/tasks/ClientTaskManager';
 import clientAuthService from '@/services/clientAuthService';
 import nocodbService from '@/services/nocodbService';
+import { supabase } from '@/integrations/supabase/client';
+import { getBrandingForUser, applyBranding } from '@/lib/branding';
 
 const ClientByToken = () => {
   const { token } = useParams();
@@ -38,6 +40,7 @@ const ClientByToken = () => {
   const [needsPassword, setNeedsPassword] = useState(false);
   const [spaceId, setSpaceId] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
 
   useEffect(() => {
     const validateTokenAndLoadSpace = async () => {
@@ -139,6 +142,19 @@ const ClientByToken = () => {
           };
 
           setSpace(mappedSpace);
+
+          // Charger le branding du propriétaire de l'espace
+          const { data: spaceOwnerData } = await supabase
+            .from('noco_space_owners')
+            .select('user_id')
+            .eq('space_id', validSpaceId)
+            .maybeSingle();
+          
+          if (spaceOwnerData?.user_id) {
+            setOwnerId(spaceOwnerData.user_id);
+            const branding = await getBrandingForUser(spaceOwnerData.user_id);
+            applyBranding(branding);
+          }
 
           // Système de persistance amélioré
           const deviceId = `${navigator.userAgent.slice(0, 50)}_${screen.width}x${screen.height}`;

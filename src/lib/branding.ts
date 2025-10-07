@@ -142,10 +142,9 @@ const hexToHSL = (hex: string): string => {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 };
 
-export const applyBranding = (settings?: BrandingSettings) => {
-  const branding = settings || loadBranding();
-  if (branding.brandColor) {
-    const hsl = hexToHSL(branding.brandColor);
+export const applyBranding = (settings: BrandingSettings) => {
+  if (settings.brandColor) {
+    const hsl = hexToHSL(settings.brandColor);
     const root = document.documentElement.style;
     root.setProperty('--primary', hsl);
     root.setProperty('--primary-glow', hsl);
