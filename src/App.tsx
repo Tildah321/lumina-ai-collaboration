@@ -24,6 +24,7 @@ import CollaboratorLogin from "./components/collaboration/CollaboratorLogin";
 import CollaboratorLoginReusable from "./components/collaboration/CollaboratorLoginReusable";
 import CollaborationDashboard from "./pages/CollaborationDashboard";
 import CollaboratorClientSpace from "./pages/CollaboratorClientSpace";
+import CollaboratorCRM from "./pages/CollaboratorCRM";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -114,6 +115,7 @@ const App = () => (
             <Route path="/invite/:token" element={<CollaboratorLogin />} />
             <Route path="/collaborator-login/:token" element={<CollaboratorLoginReusable />} />
             <Route path="/collaboration-dashboard" element={<CollaborationDashboard />} />
+            <Route path="/collaborator-crm" element={<CollaboratorCRM />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

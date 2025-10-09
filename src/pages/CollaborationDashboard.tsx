@@ -241,7 +241,7 @@ const CollaborationDashboard = () => {
                 Connecté depuis {formatLoginTime(session.loginTime)}
               </Badge>
               {session.has_crm_access && (
-                <Button variant="default" onClick={() => navigate('/dashboard')} className="gap-2">
+                <Button variant="default" onClick={() => navigate('/collaborator-crm')} className="gap-2">
                   <Database className="w-4 h-4" />
                   Accéder au CRM
                 </Button>
