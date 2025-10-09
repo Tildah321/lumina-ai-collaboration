@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Users, Building, Clock, Calendar, CheckCircle, ExternalLink, FolderOpen, Eye } from 'lucide-react';
+import { LogOut, Users, Building, Clock, Calendar, CheckCircle, ExternalLink, FolderOpen, Eye, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import nocodbService from '@/services/nocodbService';
@@ -16,6 +16,7 @@ interface CollaboratorSession {
   role: string;
   invitation_token: string;
   loginTime: string;
+  has_crm_access?: boolean;
 }
 
 interface SpaceAccess {
@@ -45,17 +46,38 @@ const CollaborationDashboard = () => {
       return;
     }
 
-    try {
-      const parsedSession = JSON.parse(sessionData);
-      setSession(parsedSession);
-      // Charger les espaces accessibles et le branding
-      loadSpaceAccesses(parsedSession);
-      loadBrandingData(parsedSession);
-    } catch (error) {
-      console.error('Erreur lors du parsing de la session:', error);
-      localStorage.removeItem('collaborator_session');
-      navigate('/');
-    }
+    const loadCollaboratorData = async () => {
+      try {
+        const parsedSession = JSON.parse(sessionData);
+        
+        // Récupérer les données complètes du collaborateur incluant has_crm_access
+        const { data: collaboratorData, error } = await supabase
+          .from('collaborators')
+          .select('*')
+          .eq('invitation_token', parsedSession.invitation_token)
+          .single();
+        
+        if (!error && collaboratorData) {
+          const fullSession = {
+            ...parsedSession,
+            has_crm_access: collaboratorData.has_crm_access
+          };
+          setSession(fullSession);
+          loadSpaceAccesses(fullSession);
+          loadBrandingData(fullSession);
+        } else {
+          setSession(parsedSession);
+          loadSpaceAccesses(parsedSession);
+          loadBrandingData(parsedSession);
+        }
+      } catch (error) {
+        console.error('Erreur lors du parsing de la session:', error);
+        localStorage.removeItem('collaborator_session');
+        navigate('/');
+      }
+    };
+    
+    loadCollaboratorData();
   }, [navigate]);
 
   const loadSpaceAccesses = async (collaboratorSession: CollaboratorSession) => {
@@ -218,6 +240,12 @@ const CollaborationDashboard = () => {
                 <Clock className="w-3 h-3" />
                 Connecté depuis {formatLoginTime(session.loginTime)}
               </Badge>
+              {session.has_crm_access && (
+                <Button variant="default" onClick={() => navigate('/dashboard')} className="gap-2">
+                  <Database className="w-4 h-4" />
+                  Accéder au CRM
+                </Button>
+              )}
               <Button variant="outline" onClick={handleLogout} className="gap-2">
                 <LogOut className="w-4 h-4" />
                 Déconnexion
