@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Settings, Eye, EyeOff, Loader2, Trash2, Share2 } from 'lucide-react';
+import { Settings, Eye, EyeOff, Loader2, Trash2, Share2, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import nocodbService from '@/services/nocodbService';
@@ -19,6 +19,7 @@ interface CollaboratorManageDialogProps {
     role: string;
     status: string;
     invitation_token?: string;
+    has_crm_access?: boolean;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -30,6 +31,7 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [hasCrmAccess, setHasCrmAccess] = useState(collaborator.has_crm_access || false);
 
   // Gestion des accès aux espaces
   const [spaceAccesses, setSpaceAccesses] = useState<{ id: string; space_id: string; permissions: string[] }[]>([]);
@@ -140,10 +142,45 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
 
   useEffect(() => {
     if (!isOpen) return;
+    setHasCrmAccess(collaborator.has_crm_access || false);
     loadSpaces();
     loadSpaceAccesses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, collaborator.id]);
+
+  const handleToggleCrmAccess = async () => {
+    const newValue = !hasCrmAccess;
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Vous devez être connecté');
+
+      const { error } = await supabase
+        .from('collaborators')
+        .update({ has_crm_access: newValue })
+        .eq('id', collaborator.id);
+
+      if (error) throw error;
+
+      setHasCrmAccess(newValue);
+      toast({
+        title: newValue ? 'Accès CRM activé' : 'Accès CRM désactivé',
+        description: newValue 
+          ? 'Le collaborateur peut maintenant accéder au CRM'
+          : 'L\'accès au CRM a été retiré'
+      });
+      onUpdate();
+    } catch (error: any) {
+      console.error('Erreur mise à jour accès CRM:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de modifier l\'accès CRM',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleUpdatePassword = async () => {
     if (!newPassword.trim()) {
@@ -227,6 +264,31 @@ const CollaboratorManageDialog = ({ collaborator, isOpen, onClose, onUpdate }: C
             </div>
           </div>
           
+          <div className="space-y-2">
+            <Label>Accès au CRM</Label>
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4" />
+                  <span className="text-sm">Autoriser l'accès au CRM</span>
+                </div>
+                <Button
+                  variant={hasCrmAccess ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleToggleCrmAccess}
+                  disabled={isLoading}
+                >
+                  {hasCrmAccess ? 'Activé' : 'Désactivé'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {hasCrmAccess 
+                  ? 'Le collaborateur peut accéder au dashboard, prospects et clients'
+                  : 'Le collaborateur ne peut accéder qu\'aux espaces clients partagés'}
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="newPassword">Nouveau mot de passe</Label>
             <div className="flex gap-2">

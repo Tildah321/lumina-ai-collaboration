@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          has_crm_access: boolean
           id: string
           invitation_token: string | null
           invited_by: string
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
+          has_crm_access?: boolean
           id?: string
           invitation_token?: string | null
           invited_by: string
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
+          has_crm_access?: boolean
           id?: string
           invitation_token?: string | null
           invited_by?: string

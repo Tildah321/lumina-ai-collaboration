@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, UserPlus, Trash2, Settings, Link, CheckCircle, Clock, XCircle, Copy, Share2, MessageCircle, Eye, EyeOff } from 'lucide-react';
+import { Plus, UserPlus, Trash2, Settings, Link, CheckCircle, Clock, XCircle, Copy, Share2, MessageCircle, Eye, EyeOff, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import nocodbService from '@/services/nocodbService';
@@ -21,6 +21,7 @@ interface Collaborator {
   status: 'pending' | 'accepted' | 'declined';
   invitation_token?: string;
   created_at: string;
+  has_crm_access?: boolean;
 }
 
 interface SpaceAccess {
@@ -57,7 +58,7 @@ const CollaboratorManager = () => {
     try {
       const { data, error } = await supabase
         .from('collaborators')
-        .select('*')
+        .select('id, email, name, role, status, invitation_token, created_at, has_crm_access')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -518,7 +519,15 @@ const CollaboratorManager = () => {
               </CardHeader>
                
               <CardContent>
-                <div className="space-y-2 mb-4">
+                 <div className="space-y-2 mb-4">
+                  {collaborator.has_crm_access && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Badge variant="secondary" className="text-xs">
+                        <Database className="w-3 h-3 mr-1" />
+                        Accès CRM
+                      </Badge>
+                    </div>
+                  )}
                   {collaborator.email && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Settings className="w-4 h-4" />
