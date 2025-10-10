@@ -61,12 +61,27 @@ export const useProspectCache = () => {
       ''
     ) as string;
     
-    const website = (anyRec[PROSPECT_SITE_COLUMN] ?? '') as string;
+    const website = (
+      anyRec[PROSPECT_SITE_COLUMN] ??
+      anyRec.site_web ??
+      anyRec.website ??
+      anyRec.lien_portail ??
+      ''
+    ) as string;
     
-    const reseaux = (anyRec[PROSPECT_RESEAUX_COLUMN] ?? '') as string;
+    const reseaux = (
+      anyRec[PROSPECT_RESEAUX_COLUMN] ??
+      anyRec.reseaux ??
+      anyRec.lien_whatsapp ??
+      ''
+    ) as string;
     
-    const prixVal = anyRec[PROSPECT_PRIX_COLUMN];
-    const prix = (prixVal !== undefined && prixVal !== null) ? String(prixVal) : '';
+    const prixSource =
+      anyRec[PROSPECT_PRIX_COLUMN] ??
+      anyRec.prix ??
+      anyRec.prix_payement ??
+      anyRec.lien_payement;
+    const prix = (prixSource !== undefined && prixSource !== null) ? String(prixSource) : '';
     
     const statusMap: Record<string, string> = {
       'nouveau': 'Nouveau',
@@ -110,6 +125,8 @@ export const useProspectCache = () => {
 
     if (prospect.company !== undefined) {
       payload[PROSPECT_COMPANY_COLUMN] = prospect.company;
+      // Also set view-compatible field if present in this base
+      (payload as any).lien_onboarding = prospect.company;
     }
 
     if (prospect.phone !== undefined) {
@@ -118,16 +135,24 @@ export const useProspectCache = () => {
 
     if (prospect.website !== undefined) {
       payload[PROSPECT_SITE_COLUMN] = prospect.website;
+      (payload as any).lien_portail = prospect.website;
     }
 
     if (prospect.reseaux !== undefined) {
       payload[PROSPECT_RESEAUX_COLUMN] = prospect.reseaux;
+      (payload as any).lien_whatsapp = prospect.reseaux;
     }
 
     if (prospect.prix !== undefined) {
       const rawPrix = typeof prospect.prix === 'string' ? prospect.prix : String(prospect.prix);
       const parsed = parseFloat(rawPrix.replace(',', '.'));
+      const prixForNumeric = Number.isFinite(parsed) ? parsed : Number.NaN;
       payload[PROSPECT_PRIX_COLUMN] = Number.isFinite(parsed) ? parsed : rawPrix;
+      // Keep NocoDB view fields in sync
+      (payload as any).lien_payement = rawPrix;
+      if (Number.isFinite(prixForNumeric)) {
+        (payload as any).prix_payement = prixForNumeric;
+      }
     }
 
     return payload;
