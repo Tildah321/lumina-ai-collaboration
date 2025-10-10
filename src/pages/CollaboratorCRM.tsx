@@ -14,6 +14,7 @@ import ProspectCreateSpaceDialog from '@/components/prospection/ProspectCreateSp
 import { Prospect } from '@/types/prospect';
 import { getBrandingForUser, applyBranding, BrandingSettings } from '@/lib/branding';
 import { Logo } from '@/components/ui/logo';
+import { useProspectCache } from '@/hooks/useProspectCache';
 
 interface CollaboratorSession {
   id: string;
@@ -28,8 +29,7 @@ const CollaboratorCRM = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [session, setSession] = useState<CollaboratorSession | null>(null);
-  const [prospects, setProspects] = useState<Prospect[]>([]);
-  const [isLoadingProspects, setIsLoadingProspects] = useState(false);
+  const { prospects, isLoading: isLoadingProspects, loadProspects: loadProspectsHook, createProspect: createProspectHook, updateProspect: updateProspectHook, deleteProspect: deleteProspectHook, updateProspectStatus } = useProspectCache();
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreateSpaceOpen, setIsCreateSpaceOpen] = useState(false);
@@ -96,43 +96,8 @@ const CollaboratorCRM = () => {
     }
   };
 
-  const loadProspects = async (userId: string) => {
-    setIsLoadingProspects(true);
-    try {
-      console.log('🔄 Chargement des prospects...');
-      const response = await nocodbService.getProspects(1000, 0, true);
-      console.log('📊 Réponse NocoDB:', response);
-      const list = response.list || [];
-      console.log('📋 Nombre de prospects:', list.length);
-      
-      const mappedProspects = list.map((p: any) => {
-        console.log('🔍 Prospect brut:', p);
-        return {
-          id: p.Id?.toString() || p.id?.toString() || '',
-          name: p.nom || p.name || '',
-          company: p.entreprise || p.company || '',
-          email: p.email || '',
-          phone: p.telephone || p.phone || '',
-          website: p.site_web || p.website || '',
-          reseaux: p.cyr48yof0ean2dq || p.reseaux || '',
-          prix: p.csfu3bqetc3s1tz || p.prix || '',
-          status: p.statut || p.status || 'Nouveau',
-          lastContact: p.dernier_contact || p.lastContact || null
-        };
-      });
-      
-      console.log('✅ Prospects mappés:', mappedProspects);
-      setProspects(mappedProspects);
-    } catch (error) {
-      console.error('❌ Erreur lors du chargement des prospects:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les prospects",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingProspects(false);
-    }
+  const loadProspects = async (_userId?: string) => {
+    await loadProspectsHook(true);
   };
 
   const handleLogout = () => {
@@ -155,11 +120,8 @@ const CollaboratorCRM = () => {
   };
 
   const handleUpdateProspect = async (id: string, status: string) => {
-    if (!inviterUserId) return;
-    
     try {
-      await nocodbService.updateProspect(id, { status });
-      await loadProspects(inviterUserId);
+      await updateProspectStatus(id, status);
       toast({
         title: "Statut mis à jour",
         description: "Le statut du prospect a été modifié avec succès"
@@ -175,11 +137,8 @@ const CollaboratorCRM = () => {
   };
 
   const handleDeleteProspect = async (id: string) => {
-    if (!inviterUserId) return;
-    
     try {
-      await nocodbService.deleteProspect(id);
-      await loadProspects(inviterUserId);
+      await deleteProspectHook(id);
       toast({
         title: "Prospect supprimé",
         description: "Le prospect a été supprimé avec succès"
@@ -290,11 +249,10 @@ const CollaboratorCRM = () => {
         onSubmit={async (data) => {
           try {
             if (selectedProspect) {
-              await nocodbService.updateProspect(selectedProspect.id, data);
+              await updateProspectHook(selectedProspect.id, data);
             } else {
-              await nocodbService.createProspect(data);
+              await createProspectHook(data);
             }
-            if (inviterUserId) await loadProspects(inviterUserId);
             toast({
               title: "Succès",
               description: selectedProspect ? "Prospect mis à jour" : "Prospect créé"
