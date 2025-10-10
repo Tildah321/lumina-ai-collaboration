@@ -114,8 +114,8 @@ const CollaboratorCRM = () => {
           email: p.email || '',
           phone: p.telephone || p.phone || '',
           website: p.site_web || p.website || '',
-          reseaux: p.reseaux || '',
-          prix: p.prix || '',
+          reseaux: p.cyr48yof0ean2dq || p.reseaux || '',
+          prix: p.csfu3bqetc3s1tz || p.prix || '',
           status: p.statut || p.status || 'Nouveau',
           lastContact: p.dernier_contact || p.lastContact || null
         };
