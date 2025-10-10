@@ -99,22 +99,32 @@ const CollaboratorCRM = () => {
   const loadProspects = async (userId: string) => {
     setIsLoadingProspects(true);
     try {
+      console.log('🔄 Chargement des prospects...');
       const response = await nocodbService.getProspects(1000, 0, true);
+      console.log('📊 Réponse NocoDB:', response);
       const list = response.list || [];
-      setProspects(list.map((p: any) => ({
-        id: p.Id.toString(),
-        name: p.nom || '',
-        company: p.entreprise || '',
-        email: p.email || '',
-        phone: p.telephone || '',
-        website: p.site_web || '',
-        reseaux: p.reseaux || '',
-        prix: p.prix || '',
-        status: p.statut || 'Nouveau',
-        lastContact: p.dernier_contact || null
-      })));
+      console.log('📋 Nombre de prospects:', list.length);
+      
+      const mappedProspects = list.map((p: any) => {
+        console.log('🔍 Prospect brut:', p);
+        return {
+          id: p.Id?.toString() || p.id?.toString() || '',
+          name: p.nom || p.name || '',
+          company: p.entreprise || p.company || '',
+          email: p.email || '',
+          phone: p.telephone || p.phone || '',
+          website: p.site_web || p.website || '',
+          reseaux: p.reseaux || '',
+          prix: p.prix || '',
+          status: p.statut || p.status || 'Nouveau',
+          lastContact: p.dernier_contact || p.lastContact || null
+        };
+      });
+      
+      console.log('✅ Prospects mappés:', mappedProspects);
+      setProspects(mappedProspects);
     } catch (error) {
-      console.error('Erreur lors du chargement des prospects:', error);
+      console.error('❌ Erreur lors du chargement des prospects:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les prospects",
