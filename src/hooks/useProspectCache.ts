@@ -50,6 +50,7 @@ export const useProspectCache = () => {
     const phone = (
       anyRec[PROSPECT_PHONE_COLUMN] ||
       anyRec.telephone ||
+      anyRec['téléphone'] ||
       anyRec.numero ||
       anyRec.phone ||
       anyRec.tel ||
@@ -57,7 +58,6 @@ export const useProspectCache = () => {
       anyRec.portable ||
       anyRec['Téléphone'] ||
       anyRec.Telephone ||
-      anyRec.lien_whatsapp || // fallback
       ''
     ) as string;
     
@@ -73,6 +73,7 @@ export const useProspectCache = () => {
       anyRec[PROSPECT_RESEAUX_COLUMN] ??
       anyRec.reseaux ??
       anyRec.lien_whatsapp ??
+      anyRec.whatsapp ??
       ''
     ) as string;
     
@@ -131,6 +132,9 @@ export const useProspectCache = () => {
 
     if (prospect.phone !== undefined) {
       payload[PROSPECT_PHONE_COLUMN] = prospect.phone;
+      (payload as any).telephone = prospect.phone;
+      (payload as any).tel = prospect.phone;
+      (payload as any).mobile = prospect.phone;
     }
 
     if (prospect.website !== undefined) {
@@ -140,6 +144,7 @@ export const useProspectCache = () => {
 
     if (prospect.reseaux !== undefined) {
       payload[PROSPECT_RESEAUX_COLUMN] = prospect.reseaux;
+      (payload as any).reseaux = prospect.reseaux;
       (payload as any).lien_whatsapp = prospect.reseaux;
     }
 
