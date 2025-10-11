@@ -47,37 +47,21 @@ const CollaboratorCRM = () => {
     const loadCollaboratorData = async () => {
       try {
         const parsedSession = JSON.parse(sessionData);
-        
-        const { data: collaboratorData, error } = await supabase
-          .from('collaborators')
-          .select('*')
-          .eq('invitation_token', parsedSession.invitation_token)
-          .single();
-        
-        if (!error && collaboratorData) {
-          if (!collaboratorData.has_crm_access) {
-            toast({
-              title: "Accès refusé",
-              description: "Vous n'avez pas accès au CRM",
-              variant: "destructive"
-            });
-            navigate('/collaboration-dashboard');
-            return;
-          }
-
-          const fullSession = {
-            ...parsedSession,
-            has_crm_access: collaboratorData.has_crm_access
-          };
-          setSession(fullSession);
-          setInviterUserId(collaboratorData.invited_by);
-          loadBrandingData(collaboratorData.invited_by);
-          loadProspects(collaboratorData.invited_by);
-        } else {
-          navigate('/collaboration-dashboard');
+        setSession(parsedSession);
+        // Récupérer l'inviteur via RPC sécurisé (aucune auth Supabase requise)
+        const { data, error } = await supabase.rpc('get_collaborator_safe_info', {
+          p_collaborator_id: parsedSession.id,
+          p_email: null
+        });
+        if (error || !data || !Array.isArray(data) || data.length === 0) {
+          throw error || new Error('Collaborateur introuvable');
         }
+        const invitedBy = (data[0] as any).invited_by as string;
+        setInviterUserId(invitedBy);
+        await loadBrandingData(invitedBy);
+        await loadProspects();
       } catch (error) {
-        console.error('Erreur lors du parsing de la session:', error);
+        console.error('Erreur lors du chargement collaborateur:', error);
         localStorage.removeItem('collaborator_session');
         navigate('/');
       }

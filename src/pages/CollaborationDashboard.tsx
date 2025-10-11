@@ -49,27 +49,10 @@ const CollaborationDashboard = () => {
     const loadCollaboratorData = async () => {
       try {
         const parsedSession = JSON.parse(sessionData);
-        
-        // Récupérer les données complètes du collaborateur incluant has_crm_access
-        const { data: collaboratorData, error } = await supabase
-          .from('collaborators')
-          .select('*')
-          .eq('invitation_token', parsedSession.invitation_token)
-          .single();
-        
-        if (!error && collaboratorData) {
-          const fullSession = {
-            ...parsedSession,
-            has_crm_access: collaboratorData.has_crm_access
-          };
-          setSession(fullSession);
-          loadSpaceAccesses(fullSession);
-          loadBrandingData(fullSession);
-        } else {
-          setSession(parsedSession);
-          loadSpaceAccesses(parsedSession);
-          loadBrandingData(parsedSession);
-        }
+        // Utiliser l'info stockée en session et charger le reste via RPC sécurisé
+        setSession(parsedSession);
+        loadSpaceAccesses(parsedSession);
+        loadBrandingData(parsedSession);
       } catch (error) {
         console.error('Erreur lors du parsing de la session:', error);
         localStorage.removeItem('collaborator_session');
@@ -171,20 +154,19 @@ const CollaborationDashboard = () => {
 
   const loadBrandingData = async (collaboratorSession: CollaboratorSession) => {
     try {
-      // Obtenir l'ID de l'utilisateur qui a invité ce collaborateur
-      const { data: collaboratorData, error } = await supabase
-        .from('collaborators')
-        .select('invited_by')
-        .eq('invitation_token', collaboratorSession.invitation_token)
-        .single();
+      // Récupérer l'inviter via RPC sécurisé (pas besoin d'être connecté Supabase)
+      const { data, error } = await supabase.rpc('get_collaborator_safe_info', {
+        p_collaborator_id: collaboratorSession.id,
+        p_email: null
+      });
 
-      if (error || !collaboratorData) {
+      if (error || !data || !Array.isArray(data) || data.length === 0) {
         console.error('❌ Erreur lors de la récupération des données collaborateur:', error);
         return;
       }
 
-      // Charger le branding de l'utilisateur inviteur
-      const brandingData = await getBrandingForUser(collaboratorData.invited_by);
+      const invitedBy = (data[0] as any).invited_by as string;
+      const brandingData = await getBrandingForUser(invitedBy);
       console.log('🎨 Branding chargé pour le collaborateur:', brandingData);
       
       setBranding(brandingData);
@@ -240,12 +222,10 @@ const CollaborationDashboard = () => {
                 <Clock className="w-3 h-3" />
                 Connecté depuis {formatLoginTime(session.loginTime)}
               </Badge>
-              {session.has_crm_access && (
-                <Button variant="default" onClick={() => navigate('/collaborator-crm')} className="gap-2">
-                  <Database className="w-4 h-4" />
-                  Accéder au CRM
-                </Button>
-              )}
+              <Button variant="default" onClick={() => navigate('/collaborator-crm')} className="gap-2">
+                <Database className="w-4 h-4" />
+                Accéder au CRM
+              </Button>
               <Button variant="outline" onClick={handleLogout} className="gap-2">
                 <LogOut className="w-4 h-4" />
                 Déconnexion
