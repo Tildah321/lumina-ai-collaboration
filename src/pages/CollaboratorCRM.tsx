@@ -190,11 +190,13 @@ const CollaboratorCRM = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Gestion des Prospects</CardTitle>
-            <Button onClick={handleCreateProspect}>
-              Nouveau prospect
-            </Button>
+          <CardHeader>
+            <div className="flex flex-row items-center justify-between">
+              <CardTitle>Gestion des Prospects</CardTitle>
+              <Button onClick={handleCreateProspect}>
+                Nouveau prospect
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Tabs value={currentView} onValueChange={(v) => setCurrentView(v as 'list' | 'kanban')}>
