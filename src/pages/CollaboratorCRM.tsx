@@ -98,6 +98,11 @@ const CollaboratorCRM = () => {
     setIsDialogOpen(true);
   };
 
+  const handleCreateProspect = () => {
+    setSelectedProspect(null);
+    setIsDialogOpen(true);
+  };
+
   const handleCreateSpace = (prospect: Prospect) => {
     setSelectedProspect(prospect);
     setIsCreateSpaceOpen(true);
@@ -185,8 +190,11 @@ const CollaboratorCRM = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Gestion des Prospects</CardTitle>
+            <Button onClick={handleCreateProspect}>
+              Nouveau prospect
+            </Button>
           </CardHeader>
           <CardContent>
             <Tabs value={currentView} onValueChange={(v) => setCurrentView(v as 'list' | 'kanban')}>
