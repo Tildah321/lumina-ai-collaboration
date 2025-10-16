@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import nocodbService from '@/services/nocodbService';
 import ProspectList from '@/components/prospection/ProspectList';
 import ProspectKanban from '@/components/prospection/ProspectKanban';
+import ProspectStats from '@/components/prospection/ProspectStats';
 import { ProspectDialog } from '@/components/prospection/ProspectDialog';
 import ProspectCreateSpaceDialog from '@/components/prospection/ProspectCreateSpaceDialog';
 import { Prospect } from '@/types/prospect';
@@ -189,7 +190,9 @@ const CollaboratorCRM = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <Card>
+        <ProspectStats prospects={prospects} />
+        
+        <Card className="mt-6">
           <CardHeader>
             <div className="flex flex-row items-center justify-between">
               <CardTitle>Gestion des Prospects</CardTitle>
