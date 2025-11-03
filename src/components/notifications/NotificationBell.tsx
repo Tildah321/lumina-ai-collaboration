@@ -24,7 +24,11 @@ interface Notification {
   };
 }
 
-export const NotificationBell = () => {
+interface NotificationBellProps {
+  showLabel?: boolean;
+}
+
+export const NotificationBell = ({ showLabel = false }: NotificationBellProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -183,16 +187,23 @@ export const NotificationBell = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
-          )}
+        <Button 
+          variant="ghost" 
+          size={showLabel ? "sm" : "icon"}
+          className={showLabel ? "w-full justify-start gap-3 text-muted-foreground relative" : "relative"}
+        >
+          <div className="relative">
+            <Bell className="w-4 h-4" />
+            {unreadCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+          </div>
+          {showLabel && 'Notifications'}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96 p-0" align="end">

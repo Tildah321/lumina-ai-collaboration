@@ -187,9 +187,7 @@ const Navigation = () => {
             </div>
           )}
           
-          <div className={cn('flex justify-start', collapsed && !isMobile && 'justify-center')}>
-            <NotificationBell />
-          </div>
+          <NotificationBell showLabel={!collapsed || isMobile} />
           
           <Button
             variant="ghost"
