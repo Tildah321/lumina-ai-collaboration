@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlan } from '@/contexts/PlanContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 const Navigation = () => {
   const location = useLocation();
@@ -185,6 +186,10 @@ const Navigation = () => {
               <span className="font-medium">{user.email}</span>
             </div>
           )}
+          
+          <div className={cn('flex justify-start', collapsed && !isMobile && 'justify-center')}>
+            <NotificationBell />
+          </div>
           
           <Button
             variant="ghost"
