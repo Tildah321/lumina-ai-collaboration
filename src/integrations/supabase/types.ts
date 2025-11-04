@@ -236,6 +236,7 @@ export type Database = {
           secret_token: string | null
           updated_at: string
           user_id: string
+          webhook_type: string
         }
         Insert: {
           created_at?: string
@@ -247,6 +248,7 @@ export type Database = {
           secret_token?: string | null
           updated_at?: string
           user_id: string
+          webhook_type?: string
         }
         Update: {
           created_at?: string
@@ -258,6 +260,7 @@ export type Database = {
           secret_token?: string | null
           updated_at?: string
           user_id?: string
+          webhook_type?: string
         }
         Relationships: []
       }
@@ -294,7 +297,7 @@ export type Database = {
         }[]
       }
       get_my_collaborator_info: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           email: string
@@ -317,14 +320,8 @@ export type Database = {
           updated_at: string
         }[]
       }
-      hash_password: {
-        Args: { password: string }
-        Returns: string
-      }
-      reset_daily_ai_tokens: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      hash_password: { Args: { password: string }; Returns: string }
+      reset_daily_ai_tokens: { Args: never; Returns: undefined }
       update_collaborator_password: {
         Args: {
           collaborator_id: string

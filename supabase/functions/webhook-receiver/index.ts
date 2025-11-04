@@ -44,7 +44,7 @@ serve(async (req) => {
       // Verify the webhook exists and is active
       const { data: webhookConfig, error } = await supabaseClient
         .from('webhooks')
-        .select('id')
+        .select('id, webhook_type')
         .eq('endpoint_key', endpoint_key)
         .eq('is_active', true)
         .single();
@@ -57,7 +57,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: 'Webhook endpoint is valid' }),
+        JSON.stringify({ success: true, message: 'Webhook endpoint is valid', type: webhookConfig.webhook_type }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -150,6 +150,125 @@ serve(async (req) => {
       console.log('Webhook has secret_token configured, but allowing request without verification for external services');
     }
 
+    // Handle based on webhook type
+    if (webhookConfig.webhook_type === 'create_client') {
+      console.log('Creating client space from webhook data');
+      
+      // Extract client data from webhook payload
+      const clientName = data.name || data.client_name || data.formName || title;
+      const clientEmail = data.email || data.client_email || '';
+      const clientDescription = data.description || message || '';
+      const driveLink = data.drive_link || data.google_drive || '';
+      const paymentAmount = data.payment_amount || data.amount || '';
+      const paymentLink = data.payment_link || '';
+      const messageLink = data.message_link || '';
+      const meetingLink = data.meeting_link || '';
+      
+      if (!clientName) {
+        console.error('Missing client name in payload');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Client name is required. Provide it in "name", "client_name", or "formName" field.' 
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      // Call NocoDB API to create client space
+      const nocoDBUrl = Deno.env.get('NOCODB_BASE_URL');
+      const nocoDBToken = Deno.env.get('NOCODB_API_TOKEN');
+      
+      if (!nocoDBUrl || !nocoDBToken) {
+        console.error('NocoDB configuration missing');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Server configuration error: NocoDB not configured' 
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      try {
+        const nocoDBResponse = await fetch(`${nocoDBUrl}/api/v2/tables/m1xo1p3o54rxqze/records`, {
+          method: 'POST',
+          headers: {
+            'xc-token': nocoDBToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: clientEmail,
+            statut: 'actif',
+            description: clientDescription,
+            lien_drive: driveLink,
+            montant_paiement: paymentAmount,
+            lien_paiement: paymentLink,
+            lien_message: messageLink,
+            lien_meeting: meetingLink,
+            user_id: webhookConfig.user_id
+          })
+        });
+
+        if (!nocoDBResponse.ok) {
+          const errorText = await nocoDBResponse.text();
+          console.error('NocoDB API error:', errorText);
+          throw new Error(`NocoDB API error: ${errorText}`);
+        }
+
+        const clientSpace = await nocoDBResponse.json();
+        console.log('Client space created successfully:', clientSpace);
+
+        // Also create a notification about the new client space
+        const { error: notificationError } = await supabaseClient
+          .from('notifications')
+          .insert({
+            user_id: webhookConfig.user_id,
+            webhook_id: webhookConfig.id,
+            title: `Nouvel espace client créé: ${clientName}`,
+            message: `Un nouvel espace client a été créé automatiquement via webhook`,
+            data: { client_name: clientName, client_id: clientSpace.Id, webhook_data: data },
+            read: false
+          });
+
+        if (notificationError) {
+          console.error('Error creating notification:', notificationError);
+        }
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Client space created successfully',
+            client_id: clientSpace.Id,
+            client_name: clientName
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      } catch (error) {
+        console.error('Error creating client space:', error);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to create client space',
+            details: error.message
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+    }
+
+    // Default behavior: create notification
+    console.log('Creating notification from webhook');
+    
     // Create notification
     const { data: notification, error: notificationError } = await supabaseClient
       .from('notifications')

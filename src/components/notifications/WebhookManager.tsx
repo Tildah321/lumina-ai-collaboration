@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Webhook, Edit, Trash2, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,7 @@ interface WebhookData {
   endpoint_key: string;
   secret_token: string;
   is_active: boolean;
+  webhook_type: 'notification' | 'create_client';
 }
 
 export const WebhookManager = () => {
@@ -36,7 +38,8 @@ export const WebhookManager = () => {
     description: '',
     endpoint_key: '',
     secret_token: '',
-    is_active: true
+    is_active: true,
+    webhook_type: 'notification'
   });
 
   const generateEndpointKey = () => {
@@ -62,7 +65,7 @@ export const WebhookManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setWebhooks(data || []);
+      setWebhooks((data || []) as WebhookData[]);
     } catch (error) {
       console.error('Erreur lors du chargement des webhooks:', error);
       toast({
@@ -92,13 +95,14 @@ export const WebhookManager = () => {
 
       if (error) throw error;
 
-      setWebhooks([data, ...webhooks]);
+      setWebhooks([data as WebhookData, ...webhooks]);
       setNewWebhook({
         name: '',
         description: '',
         endpoint_key: '',
         secret_token: '',
-        is_active: true
+        is_active: true,
+        webhook_type: 'notification'
       });
       setIsCreateDialogOpen(false);
       
@@ -126,7 +130,8 @@ export const WebhookManager = () => {
           name: editingWebhook.name,
           description: editingWebhook.description,
           secret_token: editingWebhook.secret_token,
-          is_active: editingWebhook.is_active
+          is_active: editingWebhook.is_active,
+          webhook_type: editingWebhook.webhook_type
         })
         .eq('id', editingWebhook.id)
         .eq('user_id', user.id)
@@ -135,7 +140,7 @@ export const WebhookManager = () => {
 
       if (error) throw error;
 
-      setWebhooks(webhooks.map(wh => wh.id === editingWebhook.id ? data : wh));
+      setWebhooks(webhooks.map(wh => wh.id === editingWebhook.id ? data as WebhookData : wh));
       setEditingWebhook(null);
       setIsEditDialogOpen(false);
       
@@ -186,23 +191,44 @@ export const WebhookManager = () => {
 
   const copyWebhookUrl = async (webhook: WebhookData) => {
     const url = getWebhookUrl(webhook.endpoint_key);
+    
+    let bodyExample;
+    if (webhook.webhook_type === 'create_client') {
+      bodyExample = {
+        endpoint_key: webhook.endpoint_key,
+        secret_token: webhook.secret_token,
+        title: "Nouveau client",
+        data: {
+          name: "Nom du client",
+          email: "client@example.com",
+          description: "Description du projet",
+          drive_link: "https://drive.google.com/...",
+          payment_amount: "1500",
+          payment_link: "https://stripe.com/...",
+          message_link: "https://wa.me/...",
+          meeting_link: "https://calendly.com/..."
+        }
+      };
+    } else {
+      bodyExample = {
+        endpoint_key: webhook.endpoint_key,
+        secret_token: webhook.secret_token,
+        title: "Exemple de notification",
+        message: "Ceci est un message de test",
+        data: {
+          event_type: "booking",
+          timestamp: new Date().toISOString()
+        }
+      };
+    }
+    
     const fullPayload = {
       url: url,
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: {
-        endpoint_key: webhook.endpoint_key,
-        secret_token: webhook.secret_token,
-        title: "Exemple de notification",
-        message: "Ceci est un message de test",
-        data: {
-          // Ajoutez ici les données personnalisées selon vos besoins
-          event_type: "booking",
-          timestamp: new Date().toISOString()
-        }
-      }
+      body: bodyExample
     };
 
     try {
@@ -269,6 +295,26 @@ export const WebhookManager = () => {
                   value={newWebhook.description}
                   onChange={(e) => setNewWebhook({...newWebhook, description: e.target.value})}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="webhook_type">Type de webhook *</Label>
+                <Select
+                  value={newWebhook.webhook_type}
+                  onValueChange={(value: 'notification' | 'create_client') => setNewWebhook({...newWebhook, webhook_type: value})}
+                >
+                  <SelectTrigger id="webhook_type">
+                    <SelectValue placeholder="Sélectionnez un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="notification">Notification simple</SelectItem>
+                    <SelectItem value="create_client">Créer un espace client</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {newWebhook.webhook_type === 'notification' 
+                    ? 'Crée une notification dans l\'application' 
+                    : 'Crée automatiquement un nouvel espace client'}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endpoint_key">Clé d'endpoint (optionnel)</Label>
@@ -355,6 +401,9 @@ export const WebhookManager = () => {
                       <CardTitle className="text-lg">{webhook.name}</CardTitle>
                       <Badge variant={webhook.is_active ? 'default' : 'secondary'}>
                         {webhook.is_active ? 'Actif' : 'Inactif'}
+                      </Badge>
+                      <Badge variant="outline" className={webhook.webhook_type === 'create_client' ? 'bg-green-500/10 text-green-700 border-green-500/20' : ''}>
+                        {webhook.webhook_type === 'create_client' ? 'Espace client' : 'Notification'}
                       </Badge>
                     </div>
                     {webhook.description && (
@@ -458,6 +507,26 @@ export const WebhookManager = () => {
                   value={editingWebhook.description}
                   onChange={(e) => setEditingWebhook({...editingWebhook, description: e.target.value})}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-webhook_type">Type de webhook *</Label>
+                <Select
+                  value={editingWebhook.webhook_type}
+                  onValueChange={(value: 'notification' | 'create_client') => setEditingWebhook({...editingWebhook, webhook_type: value})}
+                >
+                  <SelectTrigger id="edit-webhook_type">
+                    <SelectValue placeholder="Sélectionnez un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="notification">Notification simple</SelectItem>
+                    <SelectItem value="create_client">Créer un espace client</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {editingWebhook.webhook_type === 'notification' 
+                    ? 'Crée une notification dans l\'application' 
+                    : 'Crée automatiquement un nouvel espace client'}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-secret">Token secret</Label>
