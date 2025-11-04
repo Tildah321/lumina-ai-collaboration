@@ -189,17 +189,17 @@ export const NotificationBell = ({ showLabel = false }: NotificationBellProps) =
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
-          size={showLabel ? "sm" : "icon"}
-          className={showLabel ? "w-full justify-start gap-3 text-muted-foreground relative" : "relative"}
+          size="sm"
+          className={showLabel ? "w-full justify-start gap-3 text-muted-foreground" : "w-full justify-center text-muted-foreground"}
         >
           <div className="relative">
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
               <Badge 
                 variant="destructive" 
-                className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+                className="absolute -top-1 -right-1.5 h-3.5 w-3.5 flex items-center justify-center p-0 text-[9px] font-semibold"
               >
-                {unreadCount > 9 ? '9+' : unreadCount}
+                {unreadCount > 9 ? '9' : unreadCount}
               </Badge>
             )}
           </div>
